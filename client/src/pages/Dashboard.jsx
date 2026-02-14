@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar } from 'recharts'
 import { vehicles as vehiclesApi, trips as tripsApi, alerts as alertsApi, documents as documentsApi, fleetHealth as fleetHealthApi, tripStats as tripStatsApi, insurance as insuranceApi } from '../api'
+import { useAuth } from '../App'
 import PageHeader from '../components/PageHeader'
 import KPICard from '../components/KPICard'
 import HealthScore from '../components/HealthScore'
@@ -22,6 +23,7 @@ const PENALTY_ESTIMATES = {
 const DOC_PRIORITY = { insurance: 0, PUC: 1, FC: 2, permit: 3 }
 
 export default function Dashboard() {
+  const { user } = useAuth()
   const [health, setHealth] = useState(null)
   const [monthlyData, setMonthlyData] = useState([])
   const [analytics, setAnalytics] = useState(null)
@@ -182,10 +184,16 @@ export default function Dashboard() {
       {/* ═══════════════════════════════════════════════════════════════════════
           SECTION 1: Fleet Compliance Command Center
           ═══════════════════════════════════════════════════════════════════════ */}
-      <PageHeader
-        title="Fleet Compliance Command Center"
-        subtitle="Prevent compliance failures and operational downtime."
-      />
+      <div className="mb-2">
+        <h1 className="text-xl font-bold text-slate-900">
+          {user?.name ? `Welcome back, ${user.name}` : 'Fleet Compliance Command Center'}
+        </h1>
+        <p className="text-sm text-slate-500 mt-0.5">
+          {user?.tenantName && <span className="font-medium text-slate-700">{user.tenantName}</span>}
+          {user?.tenantName && <span className="mx-1.5 text-slate-300">|</span>}
+          Prevent compliance failures and operational downtime.
+        </p>
+      </div>
 
       {/* ── Impact Banner ──────────────────────────────────────────────────── */}
       <div className="bg-emerald-50 border border-emerald-200 rounded-xl px-5 py-3.5 mb-6">

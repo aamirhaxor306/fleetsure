@@ -29,6 +29,7 @@ import insightsRoutes from './routes/insights.js'
 import fleetHealthRoutes from './routes/fleetHealth.js'
 import trackingRoutes from './routes/tracking.js'
 import insuranceRoutes from './routes/insurance.js'
+import settingsRoutes from './routes/settings.js'
 import prisma from './lib/prisma.js'
 import { runAlertEngine } from './services/alertEngine.js'
 import { startDriverBot, sendMorningBrief, sendEveningSummary, sendWeeklyReport } from './services/driverBot.js'
@@ -80,6 +81,7 @@ app.use('/api/insights', insightsRoutes)
 app.use('/api/fleet-health', fleetHealthRoutes)
 app.use('/api/tracking', trackingRoutes)
 app.use('/api/insurance', insuranceRoutes)
+app.use('/api/settings', settingsRoutes)
 
 // ── Serve client build in production ───────────────────────────────────────
 

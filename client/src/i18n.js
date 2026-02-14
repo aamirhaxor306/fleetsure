@@ -124,6 +124,7 @@ const translations = {
 
     // ── AI Insights ──────────────────────────────────────────
     navAIChat: 'AI Chat',
+    navSettings: 'Settings',
     aiBriefTitle: 'AI Fleet Brief',
     aiBriefLoading: 'Analyzing your fleet...',
     aiBriefError: 'Could not load AI brief',
@@ -292,6 +293,7 @@ const translations = {
 
     // ── AI Insights ──────────────────────────────────────────
     navAIChat: 'AI चैट',
+    navSettings: 'सेटिंग्स',
     aiBriefTitle: 'AI फ्लीट ब्रीफ',
     aiBriefLoading: 'फ्लीट का विश्लेषण हो रहा है...',
     aiBriefError: 'AI ब्रीफ लोड नहीं हो सका',

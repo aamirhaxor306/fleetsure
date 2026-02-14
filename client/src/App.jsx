@@ -18,6 +18,7 @@ import Drivers from './pages/Drivers'
 import Revenue from './pages/Revenue'
 import AIChat from './pages/AIChat'
 import InsuranceOptimizer from './pages/InsuranceOptimizer'
+import Settings from './pages/Settings'
 
 // ── Auth context ────────────────────────────────────────────
 const AuthContext = createContext(null)
@@ -90,6 +91,7 @@ function App() {
             <Route path="revenue" element={<Revenue />} />
             <Route path="ai-chat" element={<AIChat />} />
             <Route path="insurance" element={<InsuranceOptimizer />} />
+            <Route path="settings" element={<Settings />} />
 
             {/* Redirects for old routes → Fleet Health */}
             <Route path="documents" element={<Navigate to="/fleet-health" replace />} />

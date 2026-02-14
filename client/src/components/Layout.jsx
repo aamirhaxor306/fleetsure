@@ -7,7 +7,7 @@ import {
   DashboardIcon, TruckIcon, RouteIcon, UserIcon, ShieldIcon,
   BellIcon, SparkleIcon, ClipboardIcon, HeartPulseIcon, MenuIcon,
   PlusIcon, LogOutIcon, ChevronLeftIcon, SearchIcon, SidebarCollapseIcon,
-  RefreshIcon,
+  RefreshIcon, SettingsIcon,
 } from './Icons'
 
 /* ── Navigation structure: outcome-grouped ────────────────── */
@@ -44,6 +44,12 @@ const NAV_GROUPS = [
     label: 'AI ASSISTANT',
     items: [
       { to: '/ai-chat', icon: SparkleIcon, key: 'navAIChat' },
+    ],
+  },
+  {
+    label: 'ACCOUNT',
+    items: [
+      { to: '/settings', icon: SettingsIcon, key: 'navSettings' },
     ],
   },
 ]
@@ -209,9 +215,15 @@ export default function Layout() {
 
             {/* User + logout */}
             <div className="flex items-center gap-2 pl-2 border-l border-slate-200">
-              <div className="w-7 h-7 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 text-xs font-bold">
-                {user?.email?.[0]?.toUpperCase() || 'A'}
-              </div>
+              <NavLink to="/settings" className="flex items-center gap-2 hover:bg-slate-50 rounded-lg px-1.5 py-1 transition-colors">
+                <div className="w-7 h-7 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 text-xs font-bold">
+                  {user?.name?.[0]?.toUpperCase() || user?.phone?.[0] || 'U'}
+                </div>
+                <div className="hidden lg:block text-right">
+                  <div className="text-xs font-semibold text-slate-700 leading-tight">{user?.name || 'User'}</div>
+                  {user?.tenantName && <div className="text-[10px] text-slate-400 leading-tight">{user.tenantName}</div>}
+                </div>
+              </NavLink>
               <button onClick={logout} className="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors" title="Logout">
                 <LogOutIcon className="w-4 h-4" />
               </button>
