@@ -41,12 +41,8 @@ function App() {
       .catch(() => setUser(null))
   }, [])
 
-  const requestOtp = async (phone) => {
-    return authApi.requestOtp(phone)
-  }
-
-  const verifyOtp = async (phone, otp) => {
-    const res = await authApi.verifyOtp(phone, otp)
+  const firebaseLogin = async (firebaseIdToken) => {
+    const res = await authApi.firebaseLogin(firebaseIdToken)
     if (!res.needsOnboarding && res.user) {
       setUser(res.user)
     }
@@ -76,7 +72,7 @@ function App() {
 
   return (
     <LanguageProvider>
-      <AuthContext.Provider value={{ user, requestOtp, verifyOtp, onboard, logout }}>
+      <AuthContext.Provider value={{ user, firebaseLogin, onboard, logout }}>
         <Routes>
           <Route path="/login" element={user ? <Navigate to="/" /> : <Login />} />
           <Route element={user ? <Layout /> : <Navigate to="/login" />}>

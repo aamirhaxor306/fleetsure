@@ -1,13 +1,13 @@
 import { useState, useRef, useEffect } from 'react'
 import { useAuth } from '../App'
+import { auth, RecaptchaVerifier, signInWithPhoneNumber } from '../lib/firebase'
 
-// ── Step constants ──────────────────────────────────────────
 const STEP_PHONE = 'phone'
 const STEP_OTP = 'otp'
 const STEP_ONBOARD = 'onboard'
 
 export default function Login() {
-  const { requestOtp, verifyOtp, onboard } = useAuth()
+  const { firebaseLogin, onboard } = useAuth()
 
   const [step, setStep] = useState(STEP_PHONE)
   const [phone, setPhone] = useState('')
@@ -17,46 +17,90 @@ export default function Login() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [countdown, setCountdown] = useState(0)
+  const [confirmationResult, setConfirmationResult] = useState(null)
 
   const otpRefs = useRef([])
+  const recaptchaRef = useRef(null)
 
-  // ── OTP resend countdown timer ────────────────────────────
+  // ── Countdown timer ───────────────────────────────────────
   useEffect(() => {
     if (countdown <= 0) return
     const timer = setTimeout(() => setCountdown((c) => c - 1), 1000)
     return () => clearTimeout(timer)
   }, [countdown])
 
-  // ── STEP 1: Request OTP ───────────────────────────────────
-  const handleRequestOtp = async (e) => {
+  // ── Setup invisible reCAPTCHA ─────────────────────────────
+  const setupRecaptcha = () => {
+    if (recaptchaRef.current) return // already set up
+
+    recaptchaRef.current = new RecaptchaVerifier(auth, 'recaptcha-container', {
+      size: 'invisible',
+      callback: () => {
+        // reCAPTCHA solved — will proceed with signInWithPhoneNumber
+      },
+      'expired-callback': () => {
+        setError('reCAPTCHA expired. Please try again.')
+        recaptchaRef.current = null
+      },
+    })
+  }
+
+  // ── STEP 1: Send OTP via Firebase ─────────────────────────
+  const handleSendOtp = async (e) => {
     e.preventDefault()
     setError('')
     setLoading(true)
+
     try {
-      await requestOtp(phone)
+      setupRecaptcha()
+      const fullPhone = `+91${phone}`
+      const result = await signInWithPhoneNumber(auth, fullPhone, recaptchaRef.current)
+      setConfirmationResult(result)
       setStep(STEP_OTP)
       setCountdown(30)
     } catch (err) {
-      setError(err.message || 'Failed to send OTP')
+      console.error('Firebase phone auth error:', err)
+      // Reset reCAPTCHA on error
+      recaptchaRef.current = null
+      if (err.code === 'auth/too-many-requests') {
+        setError('Too many attempts. Please wait and try again.')
+      } else if (err.code === 'auth/invalid-phone-number') {
+        setError('Invalid phone number. Please check and retry.')
+      } else {
+        setError(err.message || 'Failed to send OTP')
+      }
     }
     setLoading(false)
   }
 
-  // ── STEP 2: Verify OTP ───────────────────────────────────
+  // ── STEP 2: Verify OTP via Firebase → send token to backend ─
   const handleVerifyOtp = async (e) => {
     e?.preventDefault()
     const code = otp.join('')
-    if (code.length !== 6) return
+    if (code.length !== 6 || !confirmationResult) return
     setError('')
     setLoading(true)
+
     try {
-      const res = await verifyOtp(phone, code)
+      // Verify OTP with Firebase
+      const userCredential = await confirmationResult.confirm(code)
+      // Get the Firebase ID token
+      const idToken = await userCredential.user.getIdToken()
+      // Send to our backend
+      const res = await firebaseLogin(idToken)
       if (res.needsOnboarding) {
         setStep(STEP_ONBOARD)
       }
-      // If not needsOnboarding, verifyOtp sets the user in context → redirect happens automatically
+      // If not needsOnboarding, firebaseLogin sets user in context → redirect
     } catch (err) {
-      setError(err.message || 'Invalid OTP')
+      console.error('OTP verify error:', err)
+      if (err.code === 'auth/invalid-verification-code') {
+        setError('Wrong OTP. Please check and try again.')
+      } else if (err.code === 'auth/code-expired') {
+        setError('OTP expired. Please request a new one.')
+      } else {
+        setError(err.message || 'Verification failed')
+      }
     }
     setLoading(false)
   }
@@ -68,26 +112,19 @@ export default function Login() {
     setLoading(true)
     try {
       await onboard(fleetName, ownerName)
-      // onboard sets the user in context → redirect happens automatically
     } catch (err) {
       setError(err.message || 'Onboarding failed')
     }
     setLoading(false)
   }
 
-  // ── OTP input handler ─────────────────────────────────────
+  // ── OTP input handlers ────────────────────────────────────
   const handleOtpChange = (idx, value) => {
     if (!/^\d*$/.test(value)) return
     const newOtp = [...otp]
     newOtp[idx] = value.slice(-1)
     setOtp(newOtp)
-
-    // Auto-focus next
-    if (value && idx < 5) {
-      otpRefs.current[idx + 1]?.focus()
-    }
-
-    // Auto-submit when all 6 digits are entered
+    if (value && idx < 5) otpRefs.current[idx + 1]?.focus()
     if (newOtp.every((d) => d !== '') && newOtp.join('').length === 6) {
       setTimeout(() => handleVerifyOtp(), 100)
     }
@@ -112,16 +149,26 @@ export default function Login() {
   const resendOtp = async () => {
     if (countdown > 0) return
     setError('')
+    setLoading(true)
     try {
-      await requestOtp(phone)
+      // Reset reCAPTCHA for resend
+      recaptchaRef.current = null
+      setupRecaptcha()
+      const fullPhone = `+91${phone}`
+      const result = await signInWithPhoneNumber(auth, fullPhone, recaptchaRef.current)
+      setConfirmationResult(result)
       setCountdown(30)
     } catch (err) {
       setError(err.message || 'Failed to resend OTP')
     }
+    setLoading(false)
   }
 
   return (
     <div className="min-h-screen bg-slate-900 flex items-center justify-center px-4">
+      {/* Invisible reCAPTCHA container */}
+      <div id="recaptcha-container"></div>
+
       <div className="w-full max-w-sm">
         {/* Logo */}
         <div className="text-center mb-8">
@@ -134,19 +181,18 @@ export default function Login() {
 
         {/* Card */}
         <div className="bg-white rounded-2xl p-6 shadow-2xl shadow-black/20">
-          {/* ── Error banner ── */}
           {error && (
             <div className="bg-red-50 text-red-700 text-sm rounded-lg px-3 py-2 mb-4 border border-red-100">
               {error}
             </div>
           )}
 
-          {/* ── STEP: PHONE ── */}
+          {/* ── PHONE STEP ── */}
           {step === STEP_PHONE && (
             <>
               <h2 className="text-lg font-bold text-slate-900 mb-1">Welcome</h2>
               <p className="text-sm text-slate-500 mb-5">Enter your phone number to get started</p>
-              <form onSubmit={handleRequestOtp}>
+              <form onSubmit={handleSendOtp}>
                 <div className="mb-4">
                   <label className="block text-xs font-medium text-slate-600 mb-1.5">Phone Number</label>
                   <div className="flex items-center gap-2">
@@ -174,7 +220,7 @@ export default function Login() {
             </>
           )}
 
-          {/* ── STEP: OTP ── */}
+          {/* ── OTP STEP ── */}
           {step === STEP_OTP && (
             <>
               <h2 className="text-lg font-bold text-slate-900 mb-1">Verify OTP</h2>
@@ -208,26 +254,23 @@ export default function Login() {
               </form>
               <div className="flex items-center justify-between text-xs">
                 <button
-                  onClick={() => { setStep(STEP_PHONE); setOtp(['', '', '', '', '', '']); setError('') }}
+                  onClick={() => { setStep(STEP_PHONE); setOtp(['', '', '', '', '', '']); setError(''); setConfirmationResult(null) }}
                   className="text-blue-600 hover:underline"
                 >
                   Change number
                 </button>
                 <button
                   onClick={resendOtp}
-                  disabled={countdown > 0}
+                  disabled={countdown > 0 || loading}
                   className={`${countdown > 0 ? 'text-slate-400' : 'text-blue-600 hover:underline'}`}
                 >
                   {countdown > 0 ? `Resend in ${countdown}s` : 'Resend OTP'}
                 </button>
               </div>
-              <p className="text-xs text-center text-slate-400 mt-3">
-                Check your terminal console for the OTP (dev mode)
-              </p>
             </>
           )}
 
-          {/* ── STEP: ONBOARD ── */}
+          {/* ── ONBOARD STEP ── */}
           {step === STEP_ONBOARD && (
             <>
               <h2 className="text-lg font-bold text-slate-900 mb-1">Setup Your Fleet</h2>

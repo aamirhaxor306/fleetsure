@@ -1,25 +1,42 @@
 /**
- * Fleetsure — Auth Routes (Phone + OTP)
- * ──────────────────────────────────────
- * POST /api/auth/request-otp   → send OTP to phone (console-logged in dev)
- * POST /api/auth/verify-otp    → verify OTP, return JWT
- * POST /api/auth/onboard       → first-time user sets fleet name + owner name
- * GET  /api/auth/me            → current user + tenant info
- * POST /api/auth/logout        → clear cookie
+ * Fleetsure — Auth Routes (Firebase Phone Auth)
+ * ──────────────────────────────────────────────
+ * POST /api/auth/firebase-login  → verify Firebase ID token, issue JWT
+ * POST /api/auth/onboard         → first-time user sets fleet name + owner name
+ * GET  /api/auth/me              → current user + tenant info
+ * POST /api/auth/logout          → clear cookie
  */
 import { Router } from 'express'
 import prisma from '../lib/prisma.js'
 import jwt from 'jsonwebtoken'
-import crypto from 'crypto'
+import admin from 'firebase-admin'
 import { requireAuth } from '../middleware/auth.js'
 
 const router = Router()
 
-// ── helpers ──────────────────────────────────────────────────────────────────
+// ── Initialize Firebase Admin ───────────────────────────────────────────────
 
-function generateOtp() {
-  return String(Math.floor(100000 + Math.random() * 900000)) // 6 digits
+if (!admin.apps.length) {
+  // Use service account if provided, otherwise just project ID for token verification
+  if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+    try {
+      const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT)
+      admin.initializeApp({
+        credential: admin.credential.cert(serviceAccount),
+      })
+    } catch {
+      admin.initializeApp({
+        projectId: 'fleetsure-70abb',
+      })
+    }
+  } else {
+    admin.initializeApp({
+      projectId: 'fleetsure-70abb',
+    })
+  }
 }
+
+// ── helpers ──────────────────────────────────────────────────────────────────
 
 function signToken(user) {
   return jwt.sign(
@@ -34,73 +51,41 @@ function setCookie(res, token) {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
-    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    maxAge: 7 * 24 * 60 * 60 * 1000,
   })
 }
 
-// ── POST /api/auth/request-otp ──────────────────────────────────────────────
+// ── POST /api/auth/firebase-login ───────────────────────────────────────────
 
-router.post('/request-otp', async (req, res) => {
+router.post('/firebase-login', async (req, res) => {
   try {
-    const { phone } = req.body
-    if (!phone || phone.length < 10) {
-      return res.status(400).json({ error: 'Valid phone number is required' })
+    const { firebaseIdToken } = req.body
+    if (!firebaseIdToken) {
+      return res.status(400).json({ error: 'Firebase ID token is required' })
     }
 
-    const cleanPhone = phone.replace(/\D/g, '').slice(-10) // keep last 10 digits
-    const otp = generateOtp()
-    const expiresAt = new Date(Date.now() + 5 * 60 * 1000) // 5 min
+    // Verify the Firebase ID token
+    const decoded = await admin.auth().verifyIdToken(firebaseIdToken)
+    const phoneNumber = decoded.phone_number // e.g. "+919876543210"
 
-    // Upsert user — create if first time, update OTP if existing
-    await prisma.user.upsert({
-      where: { phone: cleanPhone },
-      update: { otpCode: otp, otpExpiresAt: expiresAt },
-      create: { phone: cleanPhone, otpCode: otp, otpExpiresAt: expiresAt },
-    })
-
-    // ── DEV: Console-logged OTP ──
-    console.log(`\n📱 OTP for ${cleanPhone}: ${otp}\n`)
-
-    return res.json({ ok: true, message: 'OTP sent' })
-  } catch (err) {
-    console.error('Request OTP error:', err)
-    return res.status(500).json({ error: 'Server error' })
-  }
-})
-
-// ── POST /api/auth/verify-otp ───────────────────────────────────────────────
-
-router.post('/verify-otp', async (req, res) => {
-  try {
-    const { phone, otp } = req.body
-    if (!phone || !otp) {
-      return res.status(400).json({ error: 'Phone and OTP are required' })
+    if (!phoneNumber) {
+      return res.status(400).json({ error: 'Phone number not found in token' })
     }
 
-    const cleanPhone = phone.replace(/\D/g, '').slice(-10)
+    // Extract last 10 digits (Indian phone)
+    const cleanPhone = phoneNumber.replace(/\D/g, '').slice(-10)
 
-    const user = await prisma.user.findUnique({ where: { phone: cleanPhone } })
+    // Find or create user
+    let user = await prisma.user.findUnique({ where: { phone: cleanPhone } })
+
     if (!user) {
-      return res.status(401).json({ error: 'Phone not found' })
+      user = await prisma.user.create({
+        data: { phone: cleanPhone },
+      })
     }
 
-    if (user.otpCode !== otp) {
-      return res.status(401).json({ error: 'Invalid OTP' })
-    }
-
-    if (user.otpExpiresAt && user.otpExpiresAt < new Date()) {
-      return res.status(401).json({ error: 'OTP expired' })
-    }
-
-    // Clear OTP after successful verification
-    await prisma.user.update({
-      where: { id: user.id },
-      data: { otpCode: null, otpExpiresAt: null },
-    })
-
-    // If user doesn't have a tenant yet, mark as needs-onboarding
+    // If user doesn't have a tenant yet → needs onboarding
     if (!user.tenantId) {
-      // Issue a temporary token for the onboarding step
       const tempToken = jwt.sign(
         { userId: user.id, tenantId: null, role: user.role },
         process.env.JWT_SECRET,
@@ -129,8 +114,11 @@ router.post('/verify-otp', async (req, res) => {
       },
     })
   } catch (err) {
-    console.error('Verify OTP error:', err)
-    return res.status(500).json({ error: 'Server error' })
+    console.error('Firebase login error:', err)
+    if (err.code === 'auth/id-token-expired') {
+      return res.status(401).json({ error: 'Token expired. Please login again.' })
+    }
+    return res.status(401).json({ error: 'Invalid Firebase token' })
   }
 })
 
@@ -143,13 +131,11 @@ router.post('/onboard', requireAuth, async (req, res) => {
       return res.status(400).json({ error: 'Fleet name and owner name are required' })
     }
 
-    // If user already has a tenant, reject
     const existing = await prisma.user.findUnique({ where: { id: req.userId } })
     if (existing?.tenantId) {
       return res.status(400).json({ error: 'Already onboarded' })
     }
 
-    // Create tenant + link user
     const tenant = await prisma.tenant.create({
       data: { name: fleetName.trim() },
     })
@@ -159,7 +145,6 @@ router.post('/onboard', requireAuth, async (req, res) => {
       data: { tenantId: tenant.id, name: ownerName.trim(), role: 'owner' },
     })
 
-    // Re-issue full token with tenantId
     const token = signToken(user)
     setCookie(res, token)
 
