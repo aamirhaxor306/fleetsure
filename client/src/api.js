@@ -1,0 +1,218 @@
+const BASE = '/api'
+
+async function request(path, opts = {}) {
+  const res = await fetch(`${BASE}${path}`, {
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json', ...opts.headers },
+    ...opts,
+  })
+  if (res.status === 401 && !path.startsWith('/auth')) {
+    window.location.href = '/login'
+    throw new Error('Not authenticated')
+  }
+  const data = await res.json()
+  if (!res.ok) throw new Error(data.error || 'Request failed')
+  return data
+}
+
+// ── Auth (Phone + OTP) ───────────────────────────────────
+export const auth = {
+  requestOtp: (phone) =>
+    request('/auth/request-otp', { method: 'POST', body: JSON.stringify({ phone }) }),
+  verifyOtp: (phone, otp) =>
+    request('/auth/verify-otp', { method: 'POST', body: JSON.stringify({ phone, otp }) }),
+  onboard: (fleetName, ownerName) =>
+    request('/auth/onboard', { method: 'POST', body: JSON.stringify({ fleetName, ownerName }) }),
+  me: () => request('/auth/me'),
+  logout: () => request('/auth/logout', { method: 'POST' }),
+}
+
+// ── Vehicles ─────────────────────────────────────────────
+export const vehicles = {
+  list: () => request('/vehicles'),
+  get: (id) => request(`/vehicles/${id}`),
+  create: (data) =>
+    request('/vehicles', { method: 'POST', body: JSON.stringify(data) }),
+  update: (id, data) =>
+    request(`/vehicles/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  fetchRC: (vehicleNumber) =>
+    request('/vehicles/fetch-rc', { method: 'POST', body: JSON.stringify({ vehicleNumber }) }),
+}
+
+// ── Maintenance ──────────────────────────────────────────
+export const maintenance = {
+  list: (vehicleId) =>
+    request(`/maintenance${vehicleId ? `?vehicleId=${vehicleId}` : ''}`),
+  create: (data) =>
+    request('/maintenance', { method: 'POST', body: JSON.stringify(data) }),
+}
+
+// ── Documents ────────────────────────────────────────────
+export const documents = {
+  list: (vehicleId) =>
+    request(`/documents${vehicleId ? `?vehicleId=${vehicleId}` : ''}`),
+  create: (data) =>
+    request('/documents', { method: 'POST', body: JSON.stringify(data) }),
+  update: (id, data) =>
+    request(`/documents/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+}
+
+// ── Alerts ───────────────────────────────────────────────
+export const alerts = {
+  list: (showResolved = false) =>
+    request(`/alerts${showResolved ? '?resolved=true' : ''}`),
+  resolve: (id) =>
+    request(`/alerts/${id}/resolve`, { method: 'PUT' }),
+  runEngine: () =>
+    request('/alerts/run', { method: 'POST' }),
+}
+
+// ── Trips ────────────────────────────────────────────────
+export const trips = {
+  list: () => request('/trips'),
+  get: (id) => request(`/trips/${id}`),
+  create: (data) =>
+    request('/trips', { method: 'POST', body: JSON.stringify(data) }),
+  analytics: () => request('/trips/analytics'),
+}
+
+// ── Drivers ──────────────────────────────────────────────
+export const drivers = {
+  list: () => request('/drivers'),
+  get: (id) => request(`/drivers/${id}`),
+  create: (data) =>
+    request('/drivers', { method: 'POST', body: JSON.stringify(data) }),
+  update: (id, data) =>
+    request(`/drivers/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  remove: (id) =>
+    request(`/drivers/${id}`, { method: 'DELETE' }),
+}
+
+// ── Saved Routes ─────────────────────────────────────────
+export const savedRoutes = {
+  list: () => request('/saved-routes'),
+  create: (data) =>
+    request('/saved-routes', { method: 'POST', body: JSON.stringify(data) }),
+  update: (id, data) =>
+    request(`/saved-routes/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  remove: (id) =>
+    request(`/saved-routes/${id}`, { method: 'DELETE' }),
+}
+
+// ── Renewals ─────────────────────────────────────────────
+export const renewals = {
+  list: (status) =>
+    request(`/renewals${status ? `?status=${status}` : ''}`),
+  expiring: () => request('/renewals/expiring'),
+  get: (id) => request(`/renewals/${id}`),
+  create: (data) =>
+    request('/renewals', { method: 'POST', body: JSON.stringify(data) }),
+  fetchQuotes: (id, data = {}) =>
+    request(`/renewals/${id}/fetch-quotes`, { method: 'POST', body: JSON.stringify(data) }),
+  selectQuote: (id, quoteId) =>
+    request(`/renewals/${id}/select/${quoteId}`, { method: 'PUT' }),
+  confirm: (id) =>
+    request(`/renewals/${id}/confirm`, { method: 'PUT' }),
+  complete: (id, newExpiryDate) =>
+    request(`/renewals/${id}/complete`, { method: 'PUT', body: JSON.stringify({ newExpiryDate }) }),
+}
+
+// ── Renewal Partners ─────────────────────────────────────
+export const renewalPartners = {
+  list: () => request('/renewal-partners'),
+  create: (data) =>
+    request('/renewal-partners', { method: 'POST', body: JSON.stringify(data) }),
+}
+
+// ── Monthly Bills ────────────────────────────────────────
+export const monthlyBills = {
+  list: () => request('/monthly-bills'),
+  get: (id) => request(`/monthly-bills/${id}`),
+  create: (data) =>
+    request('/monthly-bills', { method: 'POST', body: JSON.stringify(data) }),
+  parsePdf: async (file) => {
+    const formData = new FormData()
+    formData.append('file', file)
+    const res = await fetch('/api/monthly-bills/parse-pdf', {
+      method: 'POST',
+      credentials: 'include',
+      body: formData,
+    })
+    if (!res.ok) {
+      const data = await res.json()
+      throw new Error(data.error || 'Upload failed')
+    }
+    return res.json()
+  },
+  reconcile: (id, data) =>
+    request(`/monthly-bills/${id}/reconcile`, { method: 'PUT', body: JSON.stringify(data) }),
+}
+
+// ── Revenue ─────────────────────────────────────────────
+export const revenue = {
+  summary: () => request('/revenue'),
+}
+
+// ── OCR (Server-side PaddleOCR) ─────────────────────────
+export const ocr = {
+  scanLoadingSlip: async (imageFile) => {
+    const formData = new FormData()
+    formData.append('image', imageFile)
+    const res = await fetch('/api/ocr/loading-slip', {
+      method: 'POST',
+      credentials: 'include',
+      body: formData,
+    })
+    if (res.status === 401) {
+      window.location.href = '/login'
+      throw new Error('Not authenticated')
+    }
+    const data = await res.json()
+    if (!res.ok) throw new Error(data.error || 'OCR failed')
+    return data
+  },
+}
+
+// ── Tyres ────────────────────────────────────────────────
+export const tyres = {
+  listForVehicle: (vehicleId) => request(`/tyres/vehicle/${vehicleId}`),
+  create: (data) =>
+    request('/tyres', { method: 'POST', body: JSON.stringify(data) }),
+  update: (id, data) =>
+    request(`/tyres/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  remove: (id) =>
+    request(`/tyres/${id}`, { method: 'DELETE' }),
+}
+
+// ── Summary ──────────────────────────────────────────────
+export const summary = {
+  weekly: () => request('/summary/weekly'),
+}
+
+// ── AI Insights ─────────────────────────────────────────
+export const insights = {
+  daily: () => request('/insights/daily'),
+  chat: (question) =>
+    request('/insights/chat', { method: 'POST', body: JSON.stringify({ question }) }),
+  suggestions: () => request('/insights/suggestions'),
+  agent: (message, conversationId) =>
+    request('/insights/agent', { method: 'POST', body: JSON.stringify({ message, conversationId }) }),
+  agentConfirm: (conversationId, confirmed) =>
+    request('/insights/agent/confirm', { method: 'POST', body: JSON.stringify({ conversationId, confirmed }) }),
+}
+
+// ── Fleet Health ────────────────────────────────────────
+export const fleetHealth = {
+  score: () => request('/fleet-health'),
+}
+
+// ── Insurance Optimizer ─────────────────────────────────
+export const insurance = {
+  optimizer: () => request('/insurance/optimizer'),
+  benefits: () => request('/insurance/benefits'),
+}
+
+// ── Trip Monthly Stats ──────────────────────────────────
+export const tripStats = {
+  monthly: () => request('/trips/monthly-stats'),
+}

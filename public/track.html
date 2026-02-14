@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Fleetsure Live Tracking</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+  :root {
+    --bg: #0f172a;
+    --card: #1e293b;
+    --border: #334155;
+    --text: #f1f5f9;
+    --muted: #94a3b8;
+    --green: #22c55e;
+    --red: #ef4444;
+    --amber: #f59e0b;
+    --blue: #3b82f6;
+    --cyan: #06b6d4;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── Header ─────────────────────────────────────── */
+  .header {
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+  }
+  .header-left { display: flex; align-items: center; gap: 8px; }
+  .logo {
+    width: 28px; height: 28px;
+    background: var(--blue);
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 700;
+  }
+  .header-title { font-size: 14px; font-weight: 600; }
+  .status-badge {
+    display: flex; align-items: center; gap: 6px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 11px; font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .status-badge.active { background: rgba(34,197,94,0.15); color: var(--green); }
+  .status-badge.waiting { background: rgba(245,158,11,0.15); color: var(--amber); }
+  .status-badge.stopped { background: rgba(148,163,184,0.15); color: var(--muted); }
+  .pulse-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    animation: pulse 2s infinite;
+  }
+  .pulse-dot.green { background: var(--green); }
+  .pulse-dot.amber { background: var(--amber); }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.8); }
+  }
+
+  /* ── Trip Bar ───────────────────────────────────── */
+  .trip-bar {
+    padding: 10px 16px;
+    background: var(--card);
+    display: flex; align-items: center; justify-content: space-between;
+    font-size: 12px; color: var(--muted);
+  }
+  .trip-route { font-weight: 600; color: var(--text); font-size: 13px; }
+  .trip-vehicle { font-size: 11px; opacity: 0.7; }
+  .trip-timer { font-variant-numeric: tabular-nums; font-size: 18px; font-weight: 700; color: var(--cyan); }
+
+  /* ── Speedometer ────────────────────────────────── */
+  .speedo-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 24px 16px 16px;
+  }
+  .speedo-svg { width: 260px; height: 160px; }
+  .speed-value {
+    font-size: 72px;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+    margin-top: -8px;
+  }
+  .speed-unit { font-size: 14px; color: var(--muted); font-weight: 500; margin-top: 2px; }
+  .speed-max {
+    margin-top: 8px;
+    font-size: 12px; color: var(--muted);
+    display: flex; gap: 16px;
+  }
+  .speed-max span { color: var(--text); font-weight: 600; }
+
+  /* ── Stats Grid ─────────────────────────────────── */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--border);
+    margin: 16px;
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .stat-cell {
+    background: var(--card);
+    padding: 14px 8px;
+    text-align: center;
+  }
+  .stat-icon { font-size: 18px; margin-bottom: 4px; }
+  .stat-value { font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .stat-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; }
+  .stat-value.red { color: var(--red); }
+  .stat-value.amber { color: var(--amber); }
+  .stat-value.green { color: var(--green); }
+
+  /* ── Events Log ─────────────────────────────────── */
+  .events-section {
+    margin: 0 16px 16px;
+    background: var(--card);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .events-header {
+    padding: 10px 14px;
+    font-size: 12px; font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+  }
+  .event-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    font-size: 12px;
+  }
+  .event-item:last-child { border-bottom: none; }
+  .event-dot {
+    width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+  }
+  .event-dot.harsh_brake { background: var(--red); }
+  .event-dot.harsh_accel { background: var(--amber); }
+  .event-dot.sharp_turn { background: var(--blue); }
+  .event-text { flex: 1; color: var(--text); }
+  .event-time { color: var(--muted); font-variant-numeric: tabular-nums; }
+  .no-events { padding: 20px; text-align: center; color: var(--muted); font-size: 13px; }
+
+  /* ── Control Button ─────────────────────────────── */
+  .controls {
+    padding: 16px;
+    padding-bottom: max(16px, env(safe-area-inset-bottom));
+  }
+  .btn {
+    width: 100%;
+    padding: 14px;
+    border: none;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: transform 0.1s, opacity 0.2s;
+  }
+  .btn:active { transform: scale(0.98); }
+  .btn-start { background: var(--green); color: #000; }
+  .btn-stop { background: var(--red); color: #fff; }
+  .btn-disabled { background: var(--border); color: var(--muted); pointer-events: none; }
+
+  /* ── GPS Permission ─────────────────────────────── */
+  .permission-screen {
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    text-align: center;
+    padding: 40px 24px;
+    min-height: 60vh;
+  }
+  .permission-icon { font-size: 64px; margin-bottom: 16px; }
+  .permission-title { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
+  .permission-text { font-size: 14px; color: var(--muted); line-height: 1.5; margin-bottom: 24px; max-width: 300px; }
+</style>
+</head>
+<body>
+
+<div id="app">
+  <!-- Header -->
+  <div class="header">
+    <div class="header-left">
+      <div class="logo">F</div>
+      <div class="header-title">Fleetsure Tracker</div>
+    </div>
+    <div id="statusBadge" class="status-badge waiting">
+      <div class="pulse-dot amber"></div>
+      Waiting
+    </div>
+  </div>
+
+  <!-- Trip Info Bar -->
+  <div class="trip-bar">
+    <div>
+      <div class="trip-route" id="tripRoute">Loading...</div>
+      <div class="trip-vehicle" id="tripVehicle"></div>
+    </div>
+    <div class="trip-timer" id="tripTimer">00:00</div>
+  </div>
+
+  <!-- Speedometer -->
+  <div class="speedo-wrap">
+    <svg class="speedo-svg" viewBox="0 0 260 160">
+      <!-- Background arc -->
+      <path d="M 30 140 A 110 110 0 0 1 230 140" fill="none" stroke="#334155" stroke-width="12" stroke-linecap="round"/>
+      <!-- Speed arc (animated) -->
+      <path id="speedArc" d="M 30 140 A 110 110 0 0 1 230 140" fill="none" stroke="#22c55e" stroke-width="12" stroke-linecap="round" stroke-dasharray="345" stroke-dashoffset="345"/>
+      <!-- Tick marks -->
+      <g id="ticks" opacity="0.3"></g>
+      <!-- Speed limit marker at 70 km/h -->
+      <circle cx="61" cy="58" r="3" fill="#ef4444" opacity="0.6"/>
+      <text x="61" y="48" text-anchor="middle" fill="#ef4444" font-size="8" opacity="0.6">70</text>
+    </svg>
+    <div class="speed-value" id="speedValue">0</div>
+    <div class="speed-unit">km/h</div>
+    <div class="speed-max">
+      Avg: <span id="avgSpeed">0</span> km/h &nbsp;|&nbsp; Max: <span id="maxSpeed">0</span> km/h
+    </div>
+  </div>
+
+  <!-- Stats Grid -->
+  <div class="stats-grid">
+    <div class="stat-cell">
+      <div class="stat-icon">🛑</div>
+      <div class="stat-value red" id="brakeCount">0</div>
+      <div class="stat-label">Harsh Brakes</div>
+    </div>
+    <div class="stat-cell">
+      <div class="stat-icon">🚀</div>
+      <div class="stat-value amber" id="accelCount">0</div>
+      <div class="stat-label">Harsh Accel</div>
+    </div>
+    <div class="stat-cell">
+      <div class="stat-icon">↩️</div>
+      <div class="stat-value green" id="turnCount">0</div>
+      <div class="stat-label">Sharp Turns</div>
+    </div>
+  </div>
+
+  <!-- Events Log -->
+  <div class="events-section">
+    <div class="events-header">Live Events</div>
+    <div id="eventsLog">
+      <div class="no-events">Tracking shuru karo — events yahan dikhenge</div>
+    </div>
+  </div>
+
+  <!-- Control Button -->
+  <div class="controls">
+    <button class="btn btn-start" id="mainBtn" onclick="toggleTracking()">
+      <span>▶</span> GPS Tracking Shuru Karo
+    </button>
+  </div>
+</div>
+
+<script>
+// ── Config ─────────────────────────────────────────────────────────────────
+const params = new URLSearchParams(window.location.search);
+const TRIP_ID = params.get('tripId');
+const DRIVER_ID = params.get('driverId');
+const API_BASE = window.location.origin + '/api/tracking';
+const SEND_INTERVAL = 3000; // ms
+
+// ── State ──────────────────────────────────────────────────────────────────
+let tracking = false;
+let watchId = null;
+let sendTimer = null;
+let startTime = null;
+let timerInterval = null;
+let currentSpeed = 0;
+let maxSpeedVal = 0;
+let speedSamples = [];
+let pendingLocations = [];
+let harshBrakes = 0;
+let harshAccels = 0;
+let sharpTurns = 0;
+let events = [];
+let lastAccel = { x: 0, y: 0, z: 0, t: 0 };
+let currentLat = 0, currentLng = 0;
+
+// ── Init ───────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  // Try to expand in Telegram
+  if (window.Telegram?.WebApp) {
+    window.Telegram.WebApp.expand();
+    window.Telegram.WebApp.setHeaderColor('#0f172a');
+    window.Telegram.WebApp.setBackgroundColor('#0f172a');
+  }
+  loadTripInfo();
+  drawTicks();
+});
+
+async function loadTripInfo() {
+  if (!TRIP_ID) {
+    document.getElementById('tripRoute').textContent = 'Demo Mode';
+    document.getElementById('tripVehicle').textContent = 'No trip ID — testing in browser';
+    return;
+  }
+  try {
+    const res = await fetch(`${API_BASE}/trip-info/${TRIP_ID}`);
+    const trip = await res.json();
+    const shortLoc = (s) => { const p = (s || '').split(' - '); return p.length > 1 ? p.slice(1).join(' - ').trim() : s || '?'; };
+    document.getElementById('tripRoute').textContent = `${shortLoc(trip.loadingLocation)} → ${shortLoc(trip.destination)}`;
+    document.getElementById('tripVehicle').textContent = `${trip.vehicle?.vehicleNumber || ''} • ${trip.driver?.name || ''}`;
+  } catch (e) {
+    document.getElementById('tripRoute').textContent = 'Trip data unavailable';
+  }
+}
+
+// ── Speedometer Drawing ────────────────────────────────────────────────────
+function drawTicks() {
+  const g = document.getElementById('ticks');
+  for (let i = 0; i <= 120; i += 20) {
+    const angle = -180 + (i / 120) * 180;
+    const rad = angle * Math.PI / 180;
+    const cx = 130 + 100 * Math.cos(rad);
+    const cy = 140 + 100 * Math.sin(rad);
+    const tx = 130 + 85 * Math.cos(rad);
+    const ty = 140 + 85 * Math.sin(rad);
+    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    line.setAttribute('x1', cx); line.setAttribute('y1', cy);
+    line.setAttribute('x2', tx); line.setAttribute('y2', ty);
+    line.setAttribute('stroke', '#94a3b8'); line.setAttribute('stroke-width', '2');
+    g.appendChild(line);
+    const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    const lx = 130 + 76 * Math.cos(rad);
+    const ly = 140 + 76 * Math.sin(rad);
+    text.setAttribute('x', lx); text.setAttribute('y', ly + 3);
+    text.setAttribute('text-anchor', 'middle');
+    text.setAttribute('fill', '#94a3b8'); text.setAttribute('font-size', '9');
+    text.textContent = i;
+    g.appendChild(text);
+  }
+}
+
+function updateSpeedGauge(speed) {
+  const clamped = Math.min(120, Math.max(0, speed));
+  const pct = clamped / 120;
+  const arcLen = 345;
+  const offset = arcLen * (1 - pct);
+  const arc = document.getElementById('speedArc');
+  arc.setAttribute('stroke-dashoffset', offset);
+
+  // Color based on speed
+  if (speed > 70) arc.setAttribute('stroke', '#ef4444');
+  else if (speed > 50) arc.setAttribute('stroke', '#f59e0b');
+  else arc.setAttribute('stroke', '#22c55e');
+
+  document.getElementById('speedValue').textContent = Math.round(speed);
+}
+
+// ── Toggle Tracking ────────────────────────────────────────────────────────
+function toggleTracking() {
+  if (!tracking) startTracking();
+  else stopTracking();
+}
+
+async function startTracking() {
+  // Request GPS
+  if (!navigator.geolocation) {
+    alert('GPS is not available on this device.');
+    return;
+  }
+
+  try {
+    // Request accelerometer permission (iOS)
+    if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
+      const perm = await DeviceMotionEvent.requestPermission();
+      if (perm !== 'granted') {
+        console.warn('Accelerometer permission denied');
+      }
+    }
+  } catch (e) { /* ignore */ }
+
+  tracking = true;
+  startTime = Date.now();
+
+  // Update UI
+  setStatus('active', 'Tracking');
+  const btn = document.getElementById('mainBtn');
+  btn.className = 'btn btn-stop';
+  btn.innerHTML = '<span>⬛</span> Tracking Band Karo';
+
+  // Start timer
+  timerInterval = setInterval(updateTimer, 1000);
+
+  // Start GPS watch
+  watchId = navigator.geolocation.watchPosition(onGpsUpdate, onGpsError, {
+    enableHighAccuracy: true,
+    maximumAge: 2000,
+    timeout: 10000,
+  });
+
+  // Start accelerometer
+  window.addEventListener('devicemotion', onDeviceMotion);
+
+  // Start periodic send
+  sendTimer = setInterval(sendBatch, SEND_INTERVAL);
+}
+
+async function stopTracking() {
+  tracking = false;
+
+  // Stop GPS
+  if (watchId !== null) {
+    navigator.geolocation.clearWatch(watchId);
+    watchId = null;
+  }
+
+  // Stop accelerometer
+  window.removeEventListener('devicemotion', onDeviceMotion);
+
+  // Stop timers
+  if (sendTimer) { clearInterval(sendTimer); sendTimer = null; }
+  if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+
+  // Send remaining
+  await sendBatch();
+
+  // Compute score on server
+  if (TRIP_ID && DRIVER_ID) {
+    try {
+      const res = await fetch(`${API_BASE}/stop`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tripId: TRIP_ID, driverId: DRIVER_ID, latitude: currentLat, longitude: currentLng }),
+      });
+      const data = await res.json();
+      if (data.score) {
+        showFinalScore(data.score);
+      }
+    } catch (e) {
+      console.error('Stop error:', e);
+    }
+  }
+
+  setStatus('stopped', 'Stopped');
+  const btn = document.getElementById('mainBtn');
+  btn.className = 'btn btn-start';
+  btn.innerHTML = '<span>▶</span> Phir Se Shuru Karo';
+}
+
+// ── GPS Updates ────────────────────────────────────────────────────────────
+function onGpsUpdate(pos) {
+  const { latitude, longitude, speed, heading, accuracy } = pos.coords;
+  currentLat = latitude;
+  currentLng = longitude;
+
+  // Speed: GPS gives m/s, convert to km/h
+  const speedKmh = (speed !== null && speed >= 0) ? speed * 3.6 : 0;
+  currentSpeed = Math.round(speedKmh * 10) / 10;
+
+  if (currentSpeed > maxSpeedVal) maxSpeedVal = currentSpeed;
+  speedSamples.push(currentSpeed);
+
+  // Update UI
+  updateSpeedGauge(currentSpeed);
+  document.getElementById('maxSpeed').textContent = Math.round(maxSpeedVal);
+  const avg = speedSamples.length > 0 ? Math.round(speedSamples.reduce((a, b) => a + b, 0) / speedSamples.length) : 0;
+  document.getElementById('avgSpeed').textContent = avg;
+
+  // Queue for batch send
+  pendingLocations.push({
+    tripId: TRIP_ID,
+    driverId: DRIVER_ID,
+    latitude, longitude,
+    speed: currentSpeed,
+    heading: heading || null,
+    accuracy: accuracy || null,
+  });
+}
+
+function onGpsError(err) {
+  console.warn('GPS error:', err.message);
+  if (err.code === 1) {
+    setStatus('waiting', 'GPS Denied');
+  }
+}
+
+// ── Accelerometer ──────────────────────────────────────────────────────────
+function onDeviceMotion(e) {
+  if (!tracking) return;
+  const acc = e.accelerationIncludingGravity;
+  if (!acc) return;
+
+  const now = Date.now();
+  const dt = now - lastAccel.t;
+  if (dt < 200) return; // debounce at 5Hz
+
+  const x = acc.x || 0;
+  const y = acc.y || 0;
+
+  // Detect events (thresholds tuned for phone in truck cab)
+  // Harsh brake: sudden negative Y (phone face-up, Y = forward)
+  if (y < -4.0 && currentSpeed > 10) {
+    harshBrakes++;
+    addEvent('harsh_brake', Math.abs(y));
+  }
+  // Harsh acceleration: positive Y spike
+  else if (y > 4.0 && currentSpeed > 5) {
+    harshAccels++;
+    addEvent('harsh_accel', y);
+  }
+  // Sharp turn: X-axis spike
+  else if (Math.abs(x) > 3.5 && currentSpeed > 10) {
+    sharpTurns++;
+    addEvent('sharp_turn', Math.abs(x));
+  }
+
+  lastAccel = { x, y, z: acc.z || 0, t: now };
+
+  // Update UI
+  document.getElementById('brakeCount').textContent = harshBrakes;
+  document.getElementById('accelCount').textContent = harshAccels;
+  document.getElementById('turnCount').textContent = sharpTurns;
+}
+
+function addEvent(type, severity) {
+  const ev = {
+    tripId: TRIP_ID,
+    driverId: DRIVER_ID,
+    type,
+    severity: Math.round(severity * 100) / 100,
+    latitude: currentLat,
+    longitude: currentLng,
+    speed: currentSpeed,
+    time: new Date(),
+  };
+  events.push(ev);
+
+  // Send immediately
+  if (TRIP_ID && DRIVER_ID) {
+    fetch(`${API_BASE}/event`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(ev),
+    }).catch(() => {});
+  }
+
+  // Update events log UI
+  updateEventsLog();
+}
+
+function updateEventsLog() {
+  const container = document.getElementById('eventsLog');
+  if (events.length === 0) {
+    container.innerHTML = '<div class="no-events">Tracking shuru karo — events yahan dikhenge</div>';
+    return;
+  }
+
+  const labels = {
+    harsh_brake: '🛑 Harsh Brake',
+    harsh_accel: '🚀 Harsh Acceleration',
+    sharp_turn: '↩️ Sharp Turn',
+  };
+
+  const recent = events.slice(-5).reverse();
+  container.innerHTML = recent.map(ev => {
+    const t = new Date(ev.time);
+    const timeStr = t.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    return `
+      <div class="event-item">
+        <div class="event-dot ${ev.type}"></div>
+        <div class="event-text">${labels[ev.type] || ev.type} <span style="color:var(--muted)">(${ev.severity}g @ ${Math.round(ev.speed)} km/h)</span></div>
+        <div class="event-time">${timeStr}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+// ── Batch Send ─────────────────────────────────────────────────────────────
+async function sendBatch() {
+  if (!TRIP_ID || !DRIVER_ID || pendingLocations.length === 0) return;
+
+  const batch = pendingLocations.splice(0, pendingLocations.length);
+  // Send each point (could be batched in a real production setup)
+  for (const loc of batch) {
+    try {
+      await fetch(`${API_BASE}/location`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(loc),
+      });
+    } catch (e) {
+      // Re-queue on failure
+      pendingLocations.push(loc);
+      break;
+    }
+  }
+}
+
+// ── Timer ──────────────────────────────────────────────────────────────────
+function updateTimer() {
+  if (!startTime) return;
+  const elapsed = Date.now() - startTime;
+  const mins = Math.floor(elapsed / 60000);
+  const secs = Math.floor((elapsed % 60000) / 1000);
+  document.getElementById('tripTimer').textContent =
+    `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+}
+
+// ── Status Badge ───────────────────────────────────────────────────────────
+function setStatus(state, label) {
+  const badge = document.getElementById('statusBadge');
+  badge.className = `status-badge ${state}`;
+  const dotClass = state === 'active' ? 'green' : 'amber';
+  badge.innerHTML = `<div class="pulse-dot ${dotClass}"></div> ${label}`;
+}
+
+// ── Final Score ────────────────────────────────────────────────────────────
+function showFinalScore(score) {
+  const app = document.getElementById('app');
+
+  const getColor = (s) => s >= 80 ? 'var(--green)' : s >= 60 ? 'var(--amber)' : 'var(--red)';
+  const getLabel = (s) => s >= 80 ? 'Excellent' : s >= 60 ? 'Good' : s < 40 ? 'Poor' : 'Needs Improvement';
+
+  app.innerHTML = `
+    <div class="header">
+      <div class="header-left">
+        <div class="logo">F</div>
+        <div class="header-title">Trip Complete</div>
+      </div>
+      <div class="status-badge stopped"><div class="pulse-dot amber"></div> Done</div>
+    </div>
+
+    <div style="padding: 32px 24px; text-align: center;">
+      <div style="font-size: 14px; color: var(--muted); margin-bottom: 8px;">DRIVING SCORE</div>
+      <div style="position: relative; width: 180px; height: 180px; margin: 0 auto;">
+        <svg viewBox="0 0 180 180" style="transform: rotate(-90deg);">
+          <circle cx="90" cy="90" r="78" fill="none" stroke="var(--border)" stroke-width="10"/>
+          <circle cx="90" cy="90" r="78" fill="none" stroke="${getColor(score.overallScore)}" stroke-width="10"
+            stroke-dasharray="${2 * Math.PI * 78}" stroke-dashoffset="${2 * Math.PI * 78 * (1 - score.overallScore / 100)}"
+            stroke-linecap="round"/>
+        </svg>
+        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center;">
+          <div style="font-size: 48px; font-weight: 800;">${score.overallScore}</div>
+          <div style="font-size: 12px; color: ${getColor(score.overallScore)}; font-weight: 600;">${getLabel(score.overallScore)}</div>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 24px; text-align: left;">
+        ${scoreBar('Speed', score.speedScore, '🏎️')}
+        ${scoreBar('Braking', score.brakingScore, '🛑')}
+        ${scoreBar('Acceleration', score.accelerationScore, '🚀')}
+        ${scoreBar('Cornering', score.corneringScore, '↩️')}
+      </div>
+
+      <div style="margin-top: 24px; background: var(--card); border-radius: 12px; padding: 16px; text-align: left;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 13px;">
+          <div><span style="color: var(--muted);">Avg Speed</span><br><strong>${Math.round(score.avgSpeed)} km/h</strong></div>
+          <div><span style="color: var(--muted);">Max Speed</span><br><strong>${Math.round(score.maxSpeed)} km/h</strong></div>
+          <div><span style="color: var(--muted);">Distance</span><br><strong>${score.totalDistanceKm.toFixed(1)} km</strong></div>
+          <div><span style="color: var(--muted);">Duration</span><br><strong>${Math.round(score.totalDurationMin)} min</strong></div>
+          <div><span style="color: var(--muted);">Overspeeding</span><br><strong style="color: ${score.overspeedingPct > 10 ? 'var(--red)' : 'var(--green)'}">${score.overspeedingPct}%</strong></div>
+          <div><span style="color: var(--muted);">Harsh Events</span><br><strong>${score.harshBrakeCount + score.harshAccelCount + score.sharpTurnCount}</strong></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button class="btn btn-start" onclick="closeMiniApp()">
+        ✅ Done — Telegram pe wapas jao
+      </button>
+    </div>
+  `;
+}
+
+function scoreBar(label, value, icon) {
+  const getColor = (s) => s >= 80 ? 'var(--green)' : s >= 60 ? 'var(--amber)' : 'var(--red)';
+  return `
+    <div style="background: var(--card); border-radius: 10px; padding: 12px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+        <span style="font-size: 12px; color: var(--muted);">${icon} ${label}</span>
+        <span style="font-size: 16px; font-weight: 700; color: ${getColor(value)};">${value}</span>
+      </div>
+      <div style="height: 4px; background: var(--border); border-radius: 2px; overflow: hidden;">
+        <div style="height: 100%; width: ${value}%; background: ${getColor(value)}; border-radius: 2px; transition: width 0.5s;"></div>
+      </div>
+    </div>
+  `;
+}
+
+function closeMiniApp() {
+  if (window.Telegram?.WebApp) {
+    window.Telegram.WebApp.close();
+  } else {
+    window.close();
+  }
+}
+</script>
+</body>
+</html>

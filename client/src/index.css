@@ -1,0 +1,204 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Enterprise Design System ───────────────────────── */
+
+:root {
+  --brand-600: 37 99 235;
+  --brand-700: 29 78 216;
+  --surface: 255 255 255;
+  --surface-dim: 248 250 252;
+  --sidebar-w: 240px;
+  --sidebar-collapsed-w: 64px;
+}
+
+/* ── Base ───────────────────────────────────────────── */
+
+body {
+  @apply text-slate-800 antialiased text-sm;
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  background: #f8fafc;
+}
+
+/* ── Scrollbar ──────────────────────────────────────── */
+
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { @apply bg-transparent; }
+::-webkit-scrollbar-thumb { @apply bg-slate-300 rounded-full; }
+::-webkit-scrollbar-thumb:hover { @apply bg-slate-400; }
+
+/* ── Card ───────────────────────────────────────────── */
+
+.card {
+  @apply bg-white rounded-lg border border-slate-200 shadow-card;
+}
+.card:hover {
+  @apply shadow-card-hover;
+}
+
+/* ── KPI Card ───────────────────────────────────────── */
+
+.kpi-card {
+  @apply bg-white rounded-lg border border-slate-200 shadow-card p-4 relative overflow-hidden;
+}
+.kpi-card::before {
+  content: '';
+  @apply absolute top-0 left-0 w-1 h-full;
+}
+.kpi-card.blue::before    { @apply bg-blue-500; }
+.kpi-card.emerald::before { @apply bg-emerald-500; }
+.kpi-card.amber::before   { @apply bg-amber-500; }
+.kpi-card.red::before     { @apply bg-red-500; }
+.kpi-card.violet::before  { @apply bg-violet-500; }
+.kpi-card.cyan::before    { @apply bg-cyan-500; }
+
+.kpi-card .kpi-value {
+  @apply text-2xl font-bold tracking-tight text-slate-900;
+}
+.kpi-card .kpi-label {
+  @apply text-xs font-medium text-slate-500 uppercase tracking-wider mt-0.5;
+}
+.kpi-card .kpi-trend {
+  @apply text-xs font-semibold mt-1;
+}
+.kpi-card .kpi-trend.up { @apply text-emerald-600; }
+.kpi-card .kpi-trend.down { @apply text-red-600; }
+
+/* ── Chart Card ─────────────────────────────────────── */
+
+.chart-card {
+  @apply bg-white rounded-lg border border-slate-200 shadow-card p-5;
+}
+.chart-card h3 {
+  @apply text-sm font-semibold text-slate-700 mb-4;
+}
+
+/* ── Badges ────────────────────────────────────────── */
+
+.badge {
+  @apply inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold;
+}
+.badge-high     { @apply bg-red-50 text-red-700 ring-1 ring-red-200; }
+.badge-medium   { @apply bg-amber-50 text-amber-700 ring-1 ring-amber-200; }
+.badge-low      { @apply bg-blue-50 text-blue-700 ring-1 ring-blue-200; }
+.badge-active   { @apply bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200; }
+.badge-idle     { @apply bg-slate-100 text-slate-600 ring-1 ring-slate-200; }
+.badge-pending  { @apply bg-amber-50 text-amber-700 ring-1 ring-amber-200; }
+.badge-success  { @apply bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200; }
+
+/* ── Section headers ──────────────────────────────── */
+
+.section-title {
+  @apply text-[11px] font-semibold text-slate-400 uppercase tracking-widest;
+}
+
+/* ── Table styles ─────────────────────────────────── */
+
+.data-table {
+  @apply w-full text-sm;
+}
+.data-table thead tr {
+  @apply border-b border-slate-200 bg-slate-50;
+}
+.data-table th {
+  @apply px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider;
+}
+.data-table tbody tr {
+  @apply border-b border-slate-100 hover:bg-blue-50/40 transition-colors;
+}
+.data-table tbody tr:last-child {
+  @apply border-b-0;
+}
+.data-table td {
+  @apply px-4 py-3;
+}
+
+/* ── Input field ───────────────────────────────────── */
+
+.inp {
+  @apply w-full px-3 py-2 rounded-lg border border-slate-200 text-sm
+         focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400
+         outline-none bg-white transition-all placeholder:text-slate-400;
+}
+
+/* ── Button styles ─────────────────────────────────── */
+
+.btn-primary {
+  @apply px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg
+         hover:bg-blue-700 active:bg-blue-800 transition-all
+         shadow-sm hover:shadow-md;
+}
+
+.btn-secondary {
+  @apply px-4 py-2 bg-white text-slate-700 text-sm font-semibold rounded-lg
+         border border-slate-200 hover:bg-slate-50 active:bg-slate-100 transition-all;
+}
+
+.btn-ghost {
+  @apply px-3 py-1.5 text-sm font-medium text-slate-500 rounded-lg
+         hover:bg-slate-100 active:bg-slate-200 transition-all;
+}
+
+.btn-danger {
+  @apply px-4 py-2 bg-red-600 text-white text-sm font-semibold rounded-lg
+         hover:bg-red-700 active:bg-red-800 transition-all;
+}
+
+/* ── SlideOver panel ───────────────────────────────── */
+
+.slide-over-backdrop {
+  @apply fixed inset-0 bg-black/30 backdrop-blur-sm z-50 transition-opacity;
+}
+
+.slide-over-panel {
+  @apply fixed inset-y-0 right-0 w-full max-w-md bg-white shadow-2xl z-50
+         transform transition-transform duration-200 ease-out;
+}
+
+/* ── Status Dot ────────────────────────────────────── */
+
+.status-dot {
+  @apply inline-block w-2 h-2 rounded-full;
+}
+.status-dot.green  { @apply bg-emerald-500; }
+.status-dot.amber  { @apply bg-amber-500; }
+.status-dot.red    { @apply bg-red-500; }
+.status-dot.blue   { @apply bg-blue-500; }
+.status-dot.gray   { @apply bg-slate-400; }
+
+/* ── Health Score ──────────────────────────────────── */
+
+.health-score {
+  @apply relative inline-flex items-center justify-center;
+}
+.health-score .score-ring {
+  transform: rotate(-90deg);
+}
+
+/* ── Page Layout ───────────────────────────────────── */
+
+.page-content {
+  @apply px-6 py-6;
+}
+
+/* ── Animations ────────────────────────────────────── */
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(16px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+/* ── Legacy compat (old class names → new) ─────────── */
+
+.stat-card { @apply kpi-card; }
+.stat-card .stat-value { @apply kpi-value; }
+.stat-card .stat-label { @apply kpi-label; }
+.clean-table { @apply data-table; }
+.page-wide { @apply max-w-full; }
+.page { @apply max-w-3xl mx-auto; }

@@ -1,0 +1,513 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Tenant (one per fleet owner / company) ─────────────────────────────────
+
+model Tenant {
+  id        String   @id @default(uuid())
+  name      String                        // "Sharma Transport"
+  plan      String   @default("free")     // free / pro
+  createdAt DateTime @default(now()) @map("created_at")
+
+  users             User[]
+  vehicles          Vehicle[]
+  maintenanceLogs   MaintenanceLog[]
+  documents         Document[]
+  alerts            Alert[]
+  savedRoutes       SavedRoute[]
+  trips             Trip[]
+  tripExpenses      TripExpense[]
+  monthlyBills      MonthlyBill[]
+  platformTransactions PlatformTransaction[]
+  renewalPartners   RenewalPartner[]
+  renewalRequests   RenewalRequest[]
+  renewalQuotes     RenewalQuote[]
+  drivers           Driver[]
+  locationLogs      LocationLog[]
+  drivingEvents     DrivingEvent[]
+  drivingScores     DrivingScore[]
+  tyres             Tyre[]
+
+  @@map("tenants")
+}
+
+// ─── User (fleet owner, manager, or viewer) ─────────────────────────────────
+
+model User {
+  id           String    @id @default(uuid())
+  tenantId     String?   @map("tenant_id")
+  phone        String    @unique
+  name         String?
+  role         String    @default("owner")  // owner / manager / viewer
+  otpCode      String?   @map("otp_code")
+  otpExpiresAt DateTime? @map("otp_expires_at")
+  createdAt    DateTime  @default(now()) @map("created_at")
+
+  tenant Tenant? @relation(fields: [tenantId], references: [id])
+
+  @@map("users")
+}
+
+// ─── Vehicles ────────────────────────────────────────────────────────────────
+
+enum VehicleStatus {
+  active
+  idle
+}
+
+model Vehicle {
+  id            String        @id @default(uuid())
+  tenantId      String        @map("tenant_id")
+  vehicleNumber String        @map("vehicle_number")
+  vehicleType   String        @map("vehicle_type")
+  purchaseYear  Int           @map("purchase_year")
+  approxKm      Int           @default(0) @map("approx_km")
+  status        VehicleStatus @default(active)
+  createdAt     DateTime      @default(now()) @map("created_at")
+
+  // Optional insurance fields
+  previousPolicyNumber String? @map("previous_policy_number")
+  previousInsurer      String? @map("previous_insurer")
+  policyType           String? @map("policy_type")
+  idv                  Int?
+  ncbPercentage        Int?    @map("ncb_percentage")
+
+  axleConfig       String        @default("6W") @map("axle_config")
+
+  tenant           Tenant          @relation(fields: [tenantId], references: [id])
+  maintenanceLogs  MaintenanceLog[]
+  documents        Document[]
+  alerts           Alert[]
+  trips            Trip[]
+  renewalRequests  RenewalRequest[]
+  tyres            Tyre[]
+  drivers          Driver[]
+
+  @@unique([tenantId, vehicleNumber])
+  @@map("vehicles")
+}
+
+// ─── Maintenance Logs ────────────────────────────────────────────────────────
+
+enum MaintenanceType {
+  engine
+  tyre
+  brake
+  clutch
+  general
+}
+
+model MaintenanceLog {
+  id              String          @id @default(uuid())
+  tenantId        String          @map("tenant_id")
+  vehicleId       String          @map("vehicle_id")
+  maintenanceType MaintenanceType @map("maintenance_type")
+  description     String?
+  amount          Int
+  workshopName    String?         @map("workshop_name")
+  maintenanceDate DateTime        @map("maintenance_date") @db.Date
+  createdAt       DateTime        @default(now()) @map("created_at")
+
+  tenant  Tenant  @relation(fields: [tenantId], references: [id])
+  vehicle Vehicle @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+
+  @@map("maintenance_logs")
+}
+
+// ─── Documents ───────────────────────────────────────────────────────────────
+
+enum DocumentType {
+  insurance
+  FC
+  permit
+  PUC
+}
+
+model Document {
+  id           String       @id @default(uuid())
+  tenantId     String       @map("tenant_id")
+  vehicleId    String       @map("vehicle_id")
+  documentType DocumentType @map("document_type")
+  expiryDate   DateTime     @map("expiry_date") @db.Date
+  reminderDays Int          @default(30) @map("reminder_days")
+  createdAt    DateTime     @default(now()) @map("created_at")
+
+  tenant          Tenant           @relation(fields: [tenantId], references: [id])
+  vehicle         Vehicle          @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  renewalRequests RenewalRequest[]
+
+  @@map("documents")
+}
+
+// ─── Alerts ──────────────────────────────────────────────────────────────────
+
+enum AlertType {
+  high_maintenance
+  repeated_issue
+  document_expiry
+  idle_vehicle
+}
+
+enum Severity {
+  low
+  medium
+  high
+}
+
+model Alert {
+  id        String    @id @default(uuid())
+  tenantId  String    @map("tenant_id")
+  vehicleId String?   @map("vehicle_id")
+  alertType AlertType @map("alert_type")
+  message   String
+  severity  Severity
+  resolved  Boolean   @default(false)
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  tenant  Tenant   @relation(fields: [tenantId], references: [id])
+  vehicle Vehicle? @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+
+  @@map("alerts")
+}
+
+// ─── Saved Routes ────────────────────────────────────────────────────────────
+
+model SavedRoute {
+  id                 String   @id @default(uuid())
+  tenantId           String   @map("tenant_id")
+  shortName          String   @map("short_name")
+  loadingLocation    String   @map("loading_location")
+  destination        String
+  distance           Int
+  ratePerKm          Float    @map("rate_per_km")
+  defaultFuelLitres  Float    @map("default_fuel_litres")
+  defaultDieselRate  Float    @default(92.67) @map("default_diesel_rate")
+  defaultFuelExpense Float    @map("default_fuel_expense")
+  defaultToll        Float    @map("default_toll")
+  defaultCash        Float    @default(2000) @map("default_cash")
+  createdAt          DateTime @default(now()) @map("created_at")
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+
+  @@unique([tenantId, loadingLocation, destination])
+  @@map("saved_routes")
+}
+
+// ─── Trips ───────────────────────────────────────────────────────────────────
+
+enum TripStatus {
+  logged
+  reconciled
+}
+
+model Trip {
+  id                   String     @id @default(uuid())
+  tenantId             String     @map("tenant_id")
+  vehicleId            String     @map("vehicle_id")
+  driverId             String?    @map("driver_id")
+  loadingLocation      String     @map("loading_location")
+  destination          String
+  freightAmount        Float?     @map("freight_amount")
+  distance             Int
+  ratePerKm            Float      @map("rate_per_km")
+  fuelLitres           Float      @map("fuel_litres")
+  dieselRate           Float      @map("diesel_rate")
+  fuelExpense          Float      @map("fuel_expense")
+  toll                 Float
+  cashExpense          Float      @map("cash_expense")
+  status               TripStatus @default(logged)
+  tripDate             DateTime?  @map("trip_date") @db.Date
+  loadingSlipNumber    String?    @map("loading_slip_number")
+  loadingSlipImageUrl  String?    @map("loading_slip_image_url")
+  monthlyBillId        String?    @map("monthly_bill_id")
+  startLat             Float?     @map("start_lat")
+  startLng             Float?     @map("start_lng")
+  endLat               Float?     @map("end_lat")
+  endLng               Float?     @map("end_lng")
+  createdAt            DateTime   @default(now()) @map("created_at")
+
+  tenant        Tenant         @relation(fields: [tenantId], references: [id])
+  vehicle       Vehicle        @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  driver        Driver?        @relation(fields: [driverId], references: [id])
+  monthlyBill   MonthlyBill?   @relation(fields: [monthlyBillId], references: [id])
+  locationLogs  LocationLog[]
+  expenses      TripExpense[]
+  drivingEvents DrivingEvent[]
+  drivingScore  DrivingScore?
+
+  @@map("trips")
+}
+
+// ─── Trip Expenses ───────────────────────────────────────────────────────────
+
+model TripExpense {
+  id          String   @id @default(uuid())
+  tenantId    String   @map("tenant_id")
+  tripId      String   @map("trip_id")
+  type        String
+  amount      Float
+  quantity    Float?
+  rate        Float?
+  description String?
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+  trip   Trip   @relation(fields: [tripId], references: [id], onDelete: Cascade)
+
+  @@map("trip_expenses")
+}
+
+// ─── Monthly Bills ───────────────────────────────────────────────────────────
+
+model MonthlyBill {
+  id           String    @id @default(uuid())
+  tenantId     String    @map("tenant_id")
+  month        Int
+  year         Int
+  totalAmount  Float     @map("total_amount")
+  tripCount    Int?      @map("trip_count")
+  sourceFile   String?   @map("source_file")
+  reconciledAt DateTime? @map("reconciled_at")
+  createdAt    DateTime  @default(now()) @map("created_at")
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+  trips  Trip[]
+
+  @@unique([tenantId, month, year])
+  @@map("monthly_bills")
+}
+
+// ─── Platform Revenue Tracking ───────────────────────────────────────────────
+
+model PlatformTransaction {
+  id               String       @id @default(uuid())
+  tenantId         String       @map("tenant_id")
+  renewalRequestId String       @unique @map("renewal_request_id")
+  quoteAmount      Float        @map("quote_amount")
+  commissionPct    Float        @map("commission_pct")
+  commissionAmount Float        @map("commission_amount")
+  partnerName      String       @map("partner_name")
+  vehicleNumber    String       @map("vehicle_number")
+  documentType     DocumentType @map("document_type")
+  status           String       @default("pending")
+  createdAt        DateTime     @default(now()) @map("created_at")
+
+  tenant         Tenant         @relation(fields: [tenantId], references: [id])
+  renewalRequest RenewalRequest @relation(fields: [renewalRequestId], references: [id])
+
+  @@map("platform_transactions")
+}
+
+// ─── Renewal Partners ────────────────────────────────────────────────────────
+
+enum PartnerType {
+  insurance_api
+  insurance_broker
+  rto_agent
+  puc_center
+}
+
+model RenewalPartner {
+  id             String      @id @default(uuid())
+  tenantId       String      @map("tenant_id")
+  name           String
+  partnerType    PartnerType @map("partner_type")
+  phone          String?
+  email          String?
+  apiEndpoint    String?     @map("api_endpoint")
+  commissionPct  Float       @default(0) @map("commission_pct")
+  serviceArea    String?     @map("service_area")
+  active         Boolean     @default(true)
+  createdAt      DateTime    @default(now()) @map("created_at")
+
+  tenant Tenant         @relation(fields: [tenantId], references: [id])
+  quotes RenewalQuote[]
+
+  @@map("renewal_partners")
+}
+
+// ─── Renewal Requests ────────────────────────────────────────────────────────
+
+enum RenewalStatus {
+  pending
+  quotes_received
+  confirmed
+  renewed
+  cancelled
+}
+
+model RenewalRequest {
+  id              String        @id @default(uuid())
+  tenantId        String        @map("tenant_id")
+  vehicleId       String        @map("vehicle_id")
+  documentId      String        @map("document_id")
+  documentType    DocumentType  @map("document_type")
+  status          RenewalStatus @default(pending)
+  vehicleSnapshot Json?         @map("vehicle_snapshot")
+  selectedQuoteId String?       @map("selected_quote_id")
+  requestedAt     DateTime      @default(now()) @map("requested_at")
+  renewedAt       DateTime?     @map("renewed_at")
+  createdAt       DateTime      @default(now()) @map("created_at")
+
+  tenant              Tenant              @relation(fields: [tenantId], references: [id])
+  vehicle             Vehicle             @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  document            Document            @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  quotes              RenewalQuote[]
+  platformTransaction PlatformTransaction?
+
+  @@map("renewal_requests")
+}
+
+// ─── Renewal Quotes ──────────────────────────────────────────────────────────
+
+enum QuoteSource {
+  api
+  manual
+}
+
+model RenewalQuote {
+  id                String       @id @default(uuid())
+  tenantId          String       @map("tenant_id")
+  requestId         String       @map("request_id")
+  partnerId         String       @map("partner_id")
+  partnerName       String       @map("partner_name")
+  amount            Float
+  coverageDetails   Json?        @map("coverage_details")
+  premiumBreakdown  Json?        @map("premium_breakdown")
+  validUntil        DateTime     @map("valid_until") @db.Date
+  selected          Boolean      @default(false)
+  source            QuoteSource  @default(manual)
+  createdAt         DateTime     @default(now()) @map("created_at")
+
+  tenant  Tenant         @relation(fields: [tenantId], references: [id])
+  request RenewalRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  partner RenewalPartner @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+
+  @@map("renewal_quotes")
+}
+
+// ─── Drivers ─────────────────────────────────────────────────────────────────
+
+model Driver {
+  id              String    @id @default(uuid())
+  tenantId        String    @map("tenant_id")
+  name            String
+  phone           String
+  licenseNumber   String?   @map("license_number")
+  licensePhotoUrl String?   @map("license_photo_url")
+  aadhaarNumber   String?   @map("aadhaar_number")
+  aadhaarPhotoUrl String?   @map("aadhaar_photo_url")
+  telegramChatId  String?   @unique @map("telegram_chat_id")
+  vehicleId       String?   @map("vehicle_id")
+  active          Boolean   @default(true)
+  createdAt       DateTime  @default(now()) @map("created_at")
+
+  tenant        Tenant         @relation(fields: [tenantId], references: [id])
+  vehicle       Vehicle?       @relation(fields: [vehicleId], references: [id])
+  trips         Trip[]
+  locationLogs  LocationLog[]
+  drivingEvents DrivingEvent[]
+
+  @@unique([tenantId, phone])
+  @@map("drivers")
+}
+
+// ─── Location Tracking ───────────────────────────────────────────────────────
+
+model LocationLog {
+  id        String   @id @default(uuid())
+  tenantId  String   @map("tenant_id")
+  driverId  String   @map("driver_id")
+  tripId    String?  @map("trip_id")
+  latitude  Float
+  longitude Float
+  speed     Float?
+  heading   Float?
+  timestamp DateTime @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+  driver Driver @relation(fields: [driverId], references: [id], onDelete: Cascade)
+  trip   Trip?  @relation(fields: [tripId], references: [id])
+
+  @@map("location_logs")
+}
+
+// ─── Driving Events ──────────────────────────────────────────────────────────
+
+model DrivingEvent {
+  id        String   @id @default(uuid())
+  tenantId  String   @map("tenant_id")
+  tripId    String   @map("trip_id")
+  driverId  String   @map("driver_id")
+  type      String
+  severity  Float
+  latitude  Float
+  longitude Float
+  speed     Float?
+  timestamp DateTime @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+  trip   Trip   @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  driver Driver @relation(fields: [driverId], references: [id], onDelete: Cascade)
+
+  @@map("driving_events")
+}
+
+// ─── Driving Score ───────────────────────────────────────────────────────────
+
+model DrivingScore {
+  id                String @id @default(uuid())
+  tenantId          String @map("tenant_id")
+  tripId            String @unique @map("trip_id")
+  overallScore      Int    @map("overall_score")
+  speedScore        Int    @map("speed_score")
+  brakingScore      Int    @map("braking_score")
+  accelerationScore Int    @map("acceleration_score")
+  corneringScore    Int    @map("cornering_score")
+  avgSpeed          Float  @map("avg_speed")
+  maxSpeed          Float  @map("max_speed")
+  overspeedingPct   Float  @map("overspeeding_pct")
+  harshBrakeCount   Int    @map("harsh_brake_count")
+  harshAccelCount   Int    @map("harsh_accel_count")
+  sharpTurnCount    Int    @map("sharp_turn_count")
+  idleMinutes       Float  @map("idle_minutes")
+  totalDistanceKm   Float  @map("total_distance_km")
+  totalDurationMin  Float  @map("total_duration_min")
+  createdAt         DateTime @default(now()) @map("created_at")
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+  trip   Trip   @relation(fields: [tripId], references: [id], onDelete: Cascade)
+
+  @@map("driving_scores")
+}
+
+// ─── Tyre Management ─────────────────────────────────────────────────────────
+
+model Tyre {
+  id              String    @id @default(uuid())
+  tenantId        String    @map("tenant_id")
+  vehicleId       String    @map("vehicle_id")
+  position        String
+  brand           String?
+  model           String?   @map("tyre_model")
+  serialNumber    String?   @map("serial_number")
+  installedDate   DateTime  @map("installed_date") @db.Date
+  installedKm     Int       @map("installed_km")
+  expectedLifeKm  Int       @default(80000) @map("expected_life_km")
+  condition       String    @default("good")
+  lastInspectedAt DateTime? @map("last_inspected_at")
+  notes           String?
+  createdAt       DateTime  @default(now()) @map("created_at")
+
+  tenant  Tenant  @relation(fields: [tenantId], references: [id])
+  vehicle Vehicle @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, vehicleId, position])
+  @@map("tyres")
+}
