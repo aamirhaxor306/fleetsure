@@ -21,6 +21,7 @@ import InsuranceOptimizer from './pages/InsuranceOptimizer'
 import Settings from './pages/Settings'
 import DocumentGenerator from './pages/DocumentGenerator'
 import FASTag from './pages/FASTag'
+import InstallPrompt from './components/InstallPrompt'
 
 // ── Auth context ────────────────────────────────────────────
 const AuthContext = createContext(null)
@@ -80,6 +81,7 @@ function App() {
   return (
     <LanguageProvider>
       <AuthContext.Provider value={{ user, requestOtp, verifyOtp, onboard, logout }}>
+        <InstallPrompt />
         <Routes>
           <Route path="/login" element={user ? <Navigate to="/" /> : <Login />} />
           <Route element={user ? <Layout /> : <Navigate to="/login" />}>
