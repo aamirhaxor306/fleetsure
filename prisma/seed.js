@@ -85,16 +85,17 @@ async function main() {
   const T = tenant.id
   console.log(`  Created tenant: ${tenant.name} (${T})`)
 
-  // ── 2. Create demo User (phone: 9999999999, role: owner) ─────────────────
+  // ── 2. Create demo User (email: demo@fleetsure.in, role: owner) ───────────
   const demoUser = await prisma.user.create({
     data: {
       tenantId: T,
+      email: 'demo@fleetsure.in',
       phone: '9999999999',
       name: 'Fleet Owner',
       role: 'owner',
     },
   })
-  console.log(`  Created user: ${demoUser.phone} (${demoUser.role})`)
+  console.log(`  Created user: ${demoUser.email} (${demoUser.role})`)
 
   // ── 3. Upsert vehicles from trip data ─────────────────────────────────────
   const uniqueTrucks = [...new Set(TRIP_DATA.map((t) => t.truck))]
@@ -448,16 +449,192 @@ async function main() {
     orderBy: { createdAt: 'asc' },
   })
 
-  if (sampleTrip) {
-    const mockDriver = await prisma.driver.create({
+  // ── Seed multiple drivers ──────────────────────────────────────────────────
+  const driverData = [
+    { name: 'Rajesh Kumar', phone: '9876500001', licenseNumber: 'MP0420230012345' },
+    { name: 'Suresh Yadav', phone: '9876500002', licenseNumber: 'MP0420210056789' },
+    { name: 'Vikram Singh', phone: '9876500003', licenseNumber: 'MP0420220098765' },
+    { name: 'Mohan Patel', phone: '9876500004', licenseNumber: 'MP0420200034567' },
+    { name: 'Anil Sharma', phone: '9876500005', licenseNumber: 'MP0420230045678' },
+    { name: 'Deepak Verma', phone: '9876500006', licenseNumber: 'MP0420210067890' },
+  ]
+
+  const createdDrivers = []
+  for (let di = 0; di < driverData.length; di++) {
+    const v = allVehicles[di % allVehicles.length]
+    const driver = await prisma.driver.create({
       data: {
         tenantId: T,
-        name: 'Rajesh Kumar',
-        phone: '9876500001',
-        licenseNumber: 'MP0420230012345',
-        vehicleId: sampleTrip.vehicleId,
+        ...driverData[di],
+        vehicleId: v.id,
       },
     })
+    createdDrivers.push(driver)
+  }
+  console.log(`  Seeded ${createdDrivers.length} drivers`)
+
+  // ── Assign drivers to existing trips ──────────────────────────────────────
+  const allTrips = await prisma.trip.findMany({ where: { tenantId: T }, orderBy: { createdAt: 'asc' } })
+  for (let ti = 0; ti < allTrips.length; ti++) {
+    const driver = createdDrivers[ti % createdDrivers.length]
+    await prisma.trip.update({
+      where: { id: allTrips[ti].id },
+      data: { driverId: driver.id },
+    })
+  }
+  console.log(`  Assigned drivers to ${allTrips.length} trips`)
+
+  // ── Seed recent unreconciled (logged) trips ───────────────────────────────
+  const recentTripData = [
+    { loading: '12434 - GAIL GANDHAR BP', dest: '12507 - INDORE LPG PLANT', dist: 972, rate: 3.5164, fuel: 324, dieselRate: 92.67, fuelExp: 30025.08, toll: 7776, cash: 2000, daysAgo: 1 },
+    { loading: '12692 - RAIPUR LPG PLANT', dest: '12504 - JABALPUR LPG PLANT', dist: 1090, rate: 3.5164, fuel: 363, dieselRate: 92.67, fuelExp: 33670.10, toll: 8720, cash: 2000, daysAgo: 1 },
+    { loading: '12459 - GCPL DAHEJ LPG PVT IMPORT FACL', dest: '12520 - BHOPAL-LPG', dist: 1384, rate: 3.5164, fuel: 461, dieselRate: 92.67, fuelExp: 42751.76, toll: 11072, cash: 2000, daysAgo: 2 },
+    { loading: '12459 - GCPL DAHEJ LPG PVT IMPORT FACL', dest: '12507 - INDORE LPG PLANT', dist: 992, rate: 3.5164, fuel: 331, dieselRate: 92.67, fuelExp: 30642.88, toll: 7936, cash: 2000, daysAgo: 2 },
+    { loading: '12811 - CHERLAPALLY LPG', dest: '12504 - JABALPUR LPG PLANT', dist: 1620, rate: 3.5164, fuel: 540, dieselRate: 92.67, fuelExp: 50041.80, toll: 12960, cash: 2000, daysAgo: 3 },
+    { loading: '12503 - VIJAIPUR GAIL - LPG', dest: '12504 - JABALPUR LPG PLANT', dist: 1032, rate: 3.5327, fuel: 344, dieselRate: 92.67, fuelExp: 31878.48, toll: 8256, cash: 2000, daysAgo: 3 },
+    { loading: '12459 - GCPL DAHEJ LPG PVT IMPORT FACL', dest: '12530 - MALHOTRA CHHINDWARA HP PVT BOT', dist: 1588, rate: 3.5164, fuel: 529, dieselRate: 92.67, fuelExp: 49053.32, toll: 12704, cash: 2000, daysAgo: 4 },
+    { loading: '12434 - GAIL GANDHAR BP', dest: '12507 - INDORE LPG PLANT', dist: 972, rate: 3.5164, fuel: 324, dieselRate: 92.67, fuelExp: 30025.08, toll: 7776, cash: 2000, daysAgo: 5 },
+    { loading: '12692 - RAIPUR LPG PLANT', dest: '12504 - JABALPUR LPG PLANT', dist: 1090, rate: 3.5164, fuel: 363, dieselRate: 92.67, fuelExp: 33670.10, toll: 8720, cash: 2000, daysAgo: 6 },
+    { loading: '12459 - GCPL DAHEJ LPG PVT IMPORT FACL', dest: '12520 - BHOPAL-LPG', dist: 1384, rate: 3.5164, fuel: 461, dieselRate: 92.67, fuelExp: 42751.76, toll: 11072, cash: 2000, daysAgo: 7 },
+  ]
+
+  let loggedTripCount = 0
+  for (const rt of recentTripData) {
+    const vehicle = allVehicles[loggedTripCount % allVehicles.length]
+    const driver = createdDrivers[loggedTripCount % createdDrivers.length]
+    const tripDate = new Date(now.getTime() - rt.daysAgo * 24 * 60 * 60 * 1000)
+    await prisma.trip.create({
+      data: {
+        tenantId: T,
+        vehicleId: vehicle.id,
+        driverId: driver.id,
+        loadingLocation: rt.loading,
+        destination: rt.dest,
+        distance: rt.dist,
+        ratePerKm: rt.rate,
+        fuelLitres: rt.fuel,
+        dieselRate: rt.dieselRate,
+        fuelExpense: rt.fuelExp,
+        toll: rt.toll,
+        cashExpense: rt.cash,
+        status: 'logged',
+        tripDate,
+        createdAt: tripDate,
+      },
+    })
+    loggedTripCount++
+  }
+  console.log(`  Seeded ${loggedTripCount} recent unreconciled trips`)
+
+  // ── Spread existing reconciled trip dates over past 60 days ────────────────
+  for (let ti = 0; ti < allTrips.length; ti++) {
+    const daysAgo = 7 + Math.floor((ti / allTrips.length) * 53)
+    const tripDate = new Date(now.getTime() - daysAgo * 24 * 60 * 60 * 1000)
+    await prisma.trip.update({
+      where: { id: allTrips[ti].id },
+      data: { tripDate, createdAt: tripDate },
+    })
+  }
+  console.log(`  Spread ${allTrips.length} reconciled trips over past 60 days`)
+
+  // ── Seed Monthly Bills ────────────────────────────────────────────────────
+  const currentMonth = now.getMonth() + 1
+  const currentYear = now.getFullYear()
+  const billMonths = [
+    { month: currentMonth, year: currentYear, total: 0, reconciled: false },
+    { month: currentMonth === 1 ? 12 : currentMonth - 1, year: currentMonth === 1 ? currentYear - 1 : currentYear, total: 2850000, reconciled: true },
+    { month: currentMonth <= 2 ? 10 + currentMonth : currentMonth - 2, year: currentMonth <= 2 ? currentYear - 1 : currentYear, total: 3120000, reconciled: true },
+  ]
+
+  for (const bm of billMonths) {
+    await prisma.monthlyBill.create({
+      data: {
+        tenantId: T,
+        month: bm.month,
+        year: bm.year,
+        totalAmount: bm.total,
+        tripCount: bm.total > 0 ? Math.round(bm.total / 65000) : 0,
+        reconciledAt: bm.reconciled ? new Date(now.getTime() - 10 * 24 * 60 * 60 * 1000) : null,
+      },
+    })
+  }
+  console.log(`  Seeded ${billMonths.length} monthly bills`)
+
+  // ── Seed Alerts ───────────────────────────────────────────────────────────
+  const alertData = [
+    { vehicleIdx: 0, alertType: 'document_expiry', message: 'Insurance for MP04HE9634 expired 5 days ago. Penalty risk: ₹2,000-4,000. Vehicle can be impounded.', severity: 'high', resolved: false },
+    { vehicleIdx: 1, alertType: 'document_expiry', message: 'Insurance for MP04HE9365 expiring in 10 days. Start renewal process now.', severity: 'high', resolved: false },
+    { vehicleIdx: 2, alertType: 'document_expiry', message: 'PUC for MP04HE9665 expiring in 7 days. Fine: ₹10,000 under MV Act 2019.', severity: 'medium', resolved: false },
+    { vehicleIdx: 3, alertType: 'document_expiry', message: 'FC for MP04HE9614 expiring in 15 days. Book inspection appointment.', severity: 'medium', resolved: false },
+    { vehicleIdx: 0, alertType: 'high_maintenance', message: 'MP04HE9634 has spent ₹45,000 on maintenance in last 90 days. Above fleet average by 65%.', severity: 'high', resolved: false },
+    { vehicleIdx: 4, alertType: 'high_maintenance', message: 'MP04HE9620 engine repair cost ₹18,000. Third repair in 6 months — consider overhaul.', severity: 'medium', resolved: false },
+    { vehicleIdx: 5, alertType: 'repeated_issue', message: 'MP04HE9633 has had 3 brake-related repairs in last 4 months. Inspect brake system thoroughly.', severity: 'high', resolved: false },
+    { vehicleIdx: 6, alertType: 'idle_vehicle', message: 'MP04HE9609 has been idle for 12 days. Daily idle cost: ₹2,500 (EMI + insurance + depreciation).', severity: 'medium', resolved: false },
+    { vehicleIdx: 7, alertType: 'idle_vehicle', message: 'MP04HE9623 has no trips logged in 8 days. Check driver availability.', severity: 'low', resolved: false },
+    { vehicleIdx: 2, alertType: 'document_expiry', message: 'Permit for MP04HE9665 expiring in 20 days. National permit renewal: ₹16,500.', severity: 'low', resolved: false },
+    { vehicleIdx: 0, alertType: 'document_expiry', message: 'PUC for MP04HE9634 expired. Vehicle cleared after renewal.', severity: 'medium', resolved: true },
+    { vehicleIdx: 1, alertType: 'high_maintenance', message: 'MP04HE9365 brake pad replaced. Issue resolved.', severity: 'low', resolved: true },
+  ]
+
+  let alertCount = 0
+  for (const a of alertData) {
+    const vehicle = allVehicles[a.vehicleIdx % allVehicles.length]
+    const daysAgo = a.resolved ? 15 + Math.floor(Math.random() * 20) : Math.floor(Math.random() * 10)
+    await prisma.alert.create({
+      data: {
+        tenantId: T,
+        vehicleId: vehicle.id,
+        alertType: a.alertType,
+        message: a.message,
+        severity: a.severity,
+        resolved: a.resolved,
+        createdAt: new Date(now.getTime() - daysAgo * 24 * 60 * 60 * 1000),
+      },
+    })
+    alertCount++
+  }
+  console.log(`  Seeded ${alertCount} alerts (${alertData.filter(a => !a.resolved).length} unresolved)`)
+
+  // ── Seed more maintenance with recent dates ───────────────────────────────
+  const recentMaintData = [
+    { vehicleIdx: 0, type: 'engine', desc: 'Engine oil change + filter replacement', amount: 8500, workshop: 'Sharma Motors', daysAgo: 5 },
+    { vehicleIdx: 0, type: 'brake', desc: 'Front brake shoe replacement', amount: 4200, workshop: 'Sharma Motors', daysAgo: 15 },
+    { vehicleIdx: 0, type: 'general', desc: 'Air filter + fuel filter change', amount: 3200, workshop: 'National Garage', daysAgo: 25 },
+    { vehicleIdx: 1, type: 'tyre', desc: 'Front left tyre replaced - MRF Steel Muscle', amount: 19500, workshop: 'Highway Tyre Center', daysAgo: 8 },
+    { vehicleIdx: 2, type: 'brake', desc: 'Brake drum resurfacing', amount: 5500, workshop: 'Gupta Auto', daysAgo: 12 },
+    { vehicleIdx: 2, type: 'brake', desc: 'Brake pad replacement - rear axle', amount: 3800, workshop: 'Gupta Auto', daysAgo: 45 },
+    { vehicleIdx: 2, type: 'brake', desc: 'Brake cylinder leak repair', amount: 6200, workshop: 'Gupta Auto', daysAgo: 90 },
+    { vehicleIdx: 3, type: 'clutch', desc: 'Clutch plate + pressure plate replaced', amount: 14500, workshop: 'National Garage', daysAgo: 20 },
+    { vehicleIdx: 4, type: 'engine', desc: 'Turbocharger repair', amount: 35000, workshop: 'Authorized Service', daysAgo: 10 },
+    { vehicleIdx: 4, type: 'engine', desc: 'Radiator flush + coolant change', amount: 4500, workshop: 'Authorized Service', daysAgo: 60 },
+    { vehicleIdx: 4, type: 'engine', desc: 'Injector nozzle replacement', amount: 12000, workshop: 'Authorized Service', daysAgo: 120 },
+    { vehicleIdx: 5, type: 'general', desc: 'Full vehicle service - 15000km interval', amount: 7800, workshop: 'Highway Service', daysAgo: 3 },
+    { vehicleIdx: 6, type: 'tyre', desc: 'Tyre rotation + wheel alignment', amount: 2800, workshop: 'Highway Tyre Center', daysAgo: 18 },
+    { vehicleIdx: 7, type: 'general', desc: 'Battery replacement - Exide 150AH', amount: 12000, workshop: 'National Garage', daysAgo: 7 },
+    { vehicleIdx: 8, type: 'general', desc: 'Suspension leaf spring replaced', amount: 8500, workshop: 'Sharma Motors', daysAgo: 22 },
+  ]
+
+  let recentMaintCount = 0
+  for (const m of recentMaintData) {
+    const vehicle = allVehicles[m.vehicleIdx % allVehicles.length]
+    await prisma.maintenanceLog.create({
+      data: {
+        tenantId: T,
+        vehicleId: vehicle.id,
+        maintenanceType: m.type,
+        description: m.desc,
+        amount: m.amount,
+        workshopName: m.workshop,
+        maintenanceDate: new Date(now.getTime() - m.daysAgo * 24 * 60 * 60 * 1000),
+      },
+    })
+    recentMaintCount++
+  }
+  console.log(`  Seeded ${recentMaintCount} recent maintenance records`)
+
+  // ── Seed driving data for sample trip ─────────────────────────────────────
+  if (sampleTrip) {
+    const mockDriver = createdDrivers[0]
 
     await prisma.trip.update({
       where: { id: sampleTrip.id },
@@ -570,8 +747,54 @@ async function main() {
     console.log('  Skipping driving data — no Indore trip found')
   }
 
+  // ── Seed driving scores for more trips ────────────────────────────────────
+  const scorableTrips = await prisma.trip.findMany({
+    where: { tenantId: T, drivingScore: null, driverId: { not: null } },
+    take: 12,
+    orderBy: { createdAt: 'desc' },
+  })
+
+  const scoreTemplates = [
+    { overall: 88, speed: 90, braking: 85, accel: 88, corner: 92, avg: 48.5, max: 68, overspeed: 4.2, hBrake: 1, hAccel: 0, sTurn: 0, idle: 8 },
+    { overall: 65, speed: 60, braking: 70, accel: 62, corner: 72, avg: 56.8, max: 82, overspeed: 18.5, hBrake: 4, hAccel: 3, sTurn: 2, idle: 22 },
+    { overall: 92, speed: 95, braking: 90, accel: 91, corner: 94, avg: 45.2, max: 65, overspeed: 2.1, hBrake: 0, hAccel: 0, sTurn: 0, idle: 5 },
+    { overall: 71, speed: 68, braking: 75, accel: 70, corner: 74, avg: 52.1, max: 76, overspeed: 14.3, hBrake: 3, hAccel: 2, sTurn: 1, idle: 15 },
+    { overall: 80, speed: 82, braking: 78, accel: 80, corner: 82, avg: 49.7, max: 72, overspeed: 8.6, hBrake: 2, hAccel: 1, sTurn: 1, idle: 10 },
+    { overall: 58, speed: 52, braking: 60, accel: 55, corner: 68, avg: 59.4, max: 88, overspeed: 24.7, hBrake: 6, hAccel: 4, sTurn: 3, idle: 28 },
+  ]
+
+  let dScoreCount = 0
+  for (let si = 0; si < scorableTrips.length; si++) {
+    const trip = scorableTrips[si]
+    const tmpl = scoreTemplates[si % scoreTemplates.length]
+    try {
+      await prisma.drivingScore.create({
+        data: {
+          tenantId: T,
+          tripId: trip.id,
+          overallScore: tmpl.overall,
+          speedScore: tmpl.speed,
+          brakingScore: tmpl.braking,
+          accelerationScore: tmpl.accel,
+          corneringScore: tmpl.corner,
+          avgSpeed: tmpl.avg,
+          maxSpeed: tmpl.max,
+          overspeedingPct: tmpl.overspeed,
+          harshBrakeCount: tmpl.hBrake,
+          harshAccelCount: tmpl.hAccel,
+          sharpTurnCount: tmpl.sTurn,
+          idleMinutes: tmpl.idle,
+          totalDistanceKm: trip.distance * 0.52,
+          totalDurationMin: trip.distance * 0.25,
+        },
+      })
+      dScoreCount++
+    } catch { /* skip if already exists */ }
+  }
+  console.log(`  Seeded ${dScoreCount} additional driving scores`)
+
   console.log('\nSeeding complete!')
-  console.log(`\n  Login with phone: 9999999999`)
+  console.log(`\n  Login with email: demo@fleetsure.in`)
   console.log(`  OTP will be printed in server console\n`)
 }
 

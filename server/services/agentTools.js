@@ -6,6 +6,7 @@
  */
 
 import prisma from '../lib/prisma.js'
+import { searchKnowledge, getCategories, getChunksByCategory } from './ragRetriever.js'
 
 // ── Helper ──────────────────────────────────────────────────────────────────
 const inr = (n) => n != null ? `₹${Number(n).toLocaleString('en-IN')}` : '—'
@@ -535,6 +536,28 @@ const readTools = [
         topVehicle: sorted[0] ? { vehicle: sorted[0][0], ...sorted[0][1] } : null,
         bottomVehicle: sorted.length > 1 ? { vehicle: sorted[sorted.length - 1][0], ...sorted[sorted.length - 1][1] } : null,
       }
+    },
+  },
+
+  // 23. searchFleetKnowledge
+  {
+    name: 'searchFleetKnowledge',
+    description: 'Search the Indian fleet industry knowledge base for regulations, benchmarks, best practices, insurance rules, MV Act compliance, maintenance schedules, financial advice, and more. Use this when the user asks about industry knowledge, regulations, or best practices.',
+    parameters: {
+      type: 'object',
+      properties: {
+        query: { type: 'string', description: 'Search query about Indian fleet industry (e.g., "NCB rules for commercial vehicles", "overloading penalties", "fuel efficiency benchmarks")' },
+        category: { type: 'string', description: 'Optional: filter by category (insurance, motor-vehicle-act, state-rto, fuel-optimization, route-economics, maintenance, driver-management, financial, industry-benchmarks)' },
+      },
+      required: ['query'],
+    },
+    async execute({ query, category }) {
+      if (category) {
+        const chunks = getChunksByCategory(category, 5)
+        if (chunks.length > 0) return { results: chunks, source: 'knowledge-base', category }
+      }
+      const results = searchKnowledge(query, 5)
+      return { results, source: 'knowledge-base', query }
     },
   },
 ]

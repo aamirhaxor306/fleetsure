@@ -1,0 +1,136 @@
+{
+  "chunks": [
+    {
+      "id": "irdai-regulations-commercial",
+      "title": "IRDAI Regulations for Commercial Vehicles in India",
+      "content": "The Insurance Regulatory and Development Authority of India (IRDAI) mandates all commercial vehicles plying on Indian roads to carry valid third-party motor insurance. Third-party liability cover is compulsory under the Motor Vehicles Act 1988; driving without it can result in fines up to Rs 2,000 and/or imprisonment. IRDAI periodically revises tariff rates for commercial vehicles—typically announced annually—and insurers cannot deviate from these prescribed rates for third-party cover. For new commercial vehicles registered after September 1, 2018, IRDAI mandates long-term third-party policies of 3 years for goods carriers and 5 years for passenger vehicles. Fleet operators must ensure compliance with IRDAI norms for policy documentation, claim settlement timelines, and grievance redressal mechanisms.",
+      "tags": ["IRDAI", "regulations", "commercial vehicles", "Motor Vehicles Act", "mandatory insurance", "third-party"]
+    },
+    {
+      "id": "policy-types-comprehensive",
+      "title": "Comprehensive Motor Insurance for Commercial Vehicles",
+      "content": "Comprehensive motor insurance covers both Own Damage (OD) to your vehicle and Third-Party (TP) liability—making it the most complete protection for fleet operators. It protects against theft, accidents, natural calamities (flood, cyclone, earthquake), fire, explosion, riots, and malicious acts. Third-party cover under comprehensive policies indemnifies you for bodily injury, death, or property damage caused to others by your vehicle. Most fleet owners prefer comprehensive cover for high-value assets and vehicles operating in theft-prone routes. While comprehensive policies cost more than third-party-only policies, they provide peace of mind and full financial protection for your fleet assets.",
+      "tags": ["comprehensive", "policy types", "own damage", "third-party", "fleet insurance", "full cover"]
+    },
+    {
+      "id": "policy-types-third-party-standalone",
+      "title": "Third-Party Only and Standalone OD Policies",
+      "content": "Third-party-only policies fulfil the legal minimum requirement and cover liability for injury, death, or property damage to others—but offer no protection for your own vehicle. Standalone Own Damage (OD) policies cover only damage to your vehicle and must be purchased alongside a valid third-party policy when you want OD cover without bundling. Third-party-only is common for older, low-value commercial vehicles where the premium-to-IDV ratio makes comprehensive uneconomical. Standalone OD gives flexibility to choose different insurers for TP and OD, or to renew OD separately if TP is long-term. Fleet operators often use third-party-only for ageing trucks in the 8–10 year bracket to reduce costs.",
+      "tags": ["third-party only", "standalone OD", "policy types", "own damage", "legal minimum", "fleet"]
+    },
+    {
+      "id": "third-party-premium-rates",
+      "title": "IRDAI Third-Party Premium Rates for Goods Vehicles",
+      "content": "IRDAI prescribes fixed third-party premium rates for goods-carrying commercial vehicles based on Gross Vehicle Weight (GVW). For vehicles exceeding 12 tonnes GVW, the annual third-party premium is Rs 18,500. For vehicles between 7.5 and 12 tonnes GVW, the premium is Rs 7,890 per year. For goods vehicles under 7.5 tonnes GVW, the third-party premium is Rs 3,850 annually. These rates are uniform across all insurers—no insurer can offer discounts or charge more for the mandatory third-party portion. Fleet operators must verify GVW classification from the vehicle registration certificate (RC) to ensure correct premium calculation.",
+      "tags": ["third-party premium", "IRDAI", "GVW", "goods vehicles", "Rs 18500", "Rs 7890", "Rs 3850"]
+    },
+    {
+      "id": "ncb-slabs-india",
+      "title": "No Claim Bonus (NCB) Slabs for Commercial Vehicles",
+      "content": "No Claim Bonus rewards claim-free years with discounts on Own Damage premium at renewal. In India, NCB slabs for commercial vehicles are: Year 1 (first claim-free year) = 20% discount, Year 2 = 25%, Year 3 = 35%, Year 4 = 45%, and Year 5 and beyond = 50% maximum. NCB applies only to the OD portion of the premium, not to third-party or add-on covers. One claim in a policy year typically resets NCB to zero for the next year, though some insurers offer NCB protection add-ons. Fleet operators should weigh small claims against NCB loss—often it is cheaper to pay minor repairs out-of-pocket than to lose 20–50% OD discount.",
+      "tags": ["NCB", "no claim bonus", "discount", "slabs", "20%", "25%", "35%", "45%", "50%"]
+    },
+    {
+      "id": "ncb-transfer-rules",
+      "title": "NCB Transfer Between Vehicles and Policies",
+      "content": "NCB earned on a vehicle can be transferred when you sell the vehicle—the seller gets an NCB retention certificate valid for 3 years to use on a new vehicle. When buying a new commercial vehicle, you can use NCB from your previous vehicle by submitting the NCB retention letter and policy documents. NCB cannot be transferred between different owners; only the policyholder who earned it can utilise it. If you have multiple vehicles, each earns NCB independently—NCB from one truck cannot be used for another's renewal. Fleet operators replacing vehicles must obtain NCB retention letters at the time of policy cancellation or vehicle sale to avoid losing accumulated bonus.",
+      "tags": ["NCB transfer", "NCB retention", "vehicle sale", "policy transfer", "fleet"]
+    },
+    {
+      "id": "claim-process-overview",
+      "title": "Claim Process for Commercial Vehicle Insurance",
+      "content": "For accident claims, immediately inform the insurer (usually within 24–48 hours) and file an FIR at the nearest police station—the FIR number is mandatory for claim processing. The insurer appoints a surveyor who inspects the vehicle, assesses damage, and prepares a survey report; for cashless claims, the surveyor's approval precedes repair work. In cashless mode, the insurer settles directly with the network garage; in reimbursement mode, you pay the workshop and submit bills for refund. For theft claims, you need FIR, duplicate keys, RC copy, and a 90-day waiting period before claim settlement. Commercial vehicle claims typically take 7–15 days for survey and 15–30 days for settlement, depending on documentation and dispute resolution.",
+      "tags": ["claim process", "FIR", "surveyor", "cashless", "reimbursement", "workshop"]
+    },
+    {
+      "id": "claim-cashless-vs-reimbursement",
+      "title": "Cashless vs Reimbursement Claims for Fleet",
+      "content": "Cashless claims allow you to get repairs done at insurer-empanelled network garages without upfront payment—the insurer settles directly with the workshop. Reimbursement claims let you use any workshop; you pay first and submit original bills, RC, policy copy, and claim form for refund within 30 days of repair. Cashless is convenient for fleet operators with multiple vehicles as it reduces working capital blockage, but network garage availability in remote areas can be limited. Reimbursement offers flexibility for trucks that break down far from network garages. Ensure your fleet policy lists adequate network garages along your operating routes before opting for cashless.",
+      "tags": ["cashless", "reimbursement", "network garage", "claim settlement", "fleet"]
+    },
+    {
+      "id": "addons-zero-depreciation-rsa",
+      "title": "Add-ons: Zero Depreciation, RSA, Engine Protector",
+      "content": "Zero Depreciation (or Bumper-to-Bumper) add-on waives the depreciation deduction on parts during claim settlement—you get full replacement value instead of depreciated value. Roadside Assistance (RSA) provides towing, battery jump-start, fuel delivery, and minor repairs; essential for trucks stranded on highways. Engine Protector covers hydrostatic lock and consequential engine damage from water ingress—critical for vehicles plying in flood-prone regions like Assam, Bihar, or during monsoon. Zero depreciation is cost-effective for new vehicles (under 3 years) where depreciation deduction would be significant. RSA add-ons typically cost Rs 500–1,500 per vehicle and are highly recommended for long-haul fleet operations.",
+      "tags": ["add-ons", "zero depreciation", "RSA", "engine protector", "bumper-to-bumper"]
+    },
+    {
+      "id": "addons-return-to-invoice-consumable-pa",
+      "title": "Add-ons: Return to Invoice, Consumable Cover, PA Cover",
+      "content": "Return to Invoice (RTI) add-on pays the invoice value (or IDV, whichever is lower) in case of total loss or theft—bridging the gap between depreciated IDV and actual purchase price. Consumable cover includes nuts, bolts, engine oil, coolant, and other consumables used during repair—normally excluded from standard OD claims. Personal Accident (PA) cover for owner-driver is mandatory at Rs 15 lakh since September 2019; additional PA cover for employees or drivers can be purchased as add-ons. RTI is valuable for new vehicles in the first 2–3 years. Consumable cover prevents surprise deductions during claim settlement and is relatively inexpensive.",
+      "tags": ["return to invoice", "RTI", "consumable cover", "PA cover", "personal accident", "add-ons"]
+    },
+    {
+      "id": "idv-calculation",
+      "title": "IDV (Insured Declared Value) Calculation",
+      "content": "IDV is the maximum amount the insurer will pay in case of total loss or theft—it represents the current market value of the vehicle. IDV is calculated as the manufacturer's listed selling price (ex-showroom) minus depreciation as per IRDAI schedule. Insurers cap IDV; you cannot insure for more than the calculated value, but you can opt for lower IDV to reduce premium (not recommended). IDV directly affects Own Damage premium—typically 3–5% of IDV forms the base OD rate. At renewal, IDV is recalculated with applicable depreciation; fleet operators should ensure IDV is not understated to avoid underinsurance and proportionate claim deduction.",
+      "tags": ["IDV", "insured declared value", "depreciation", "ex-showroom", "total loss"]
+    },
+    {
+      "id": "depreciation-schedule",
+      "title": "Depreciation Schedule for Commercial Vehicle IDV",
+      "content": "IRDAI mandates a standard depreciation schedule for calculating IDV: vehicles less than 6 months old depreciate by 5%; 6 months to 1 year by 15%; 1–2 years by 20%; 2–3 years by 30%; 3–4 years by 40%; and 4–5 years by 50%. For vehicles older than 5 years, IDV is mutually agreed between insurer and policyholder, typically with 40–50% depreciation. Depreciation also applies to claim settlements—replacement parts are paid after deducting depreciation (unless Zero Depreciation add-on is taken). Fleet operators should track vehicle age and ensure IDV at renewal reflects correct depreciation to avoid disputes during total loss claims.",
+      "tags": ["depreciation", "schedule", "IDV", "vehicle age", "5%", "15%", "20%", "30%", "40%", "50%"]
+    },
+    {
+      "id": "fleet-discount-policies",
+      "title": "Fleet Discount Policies for Commercial Vehicles",
+      "content": "Insurers offer fleet discounts of 5–15% when 10 or more vehicles are insured with the same company under a fleet policy. Discounts increase with fleet size—20+ vehicles may get 10–12%, 50+ vehicles 12–15%. Fleet policies simplify administration: single point of contact, consolidated renewals, and often a dedicated relationship manager. Some insurers offer additional benefits like priority claim handling, custom payment terms, and fleet-specific add-on packages. To qualify, vehicles must typically be under the same ownership (company or individual) and insured together. Fleet operators should obtain quotes from multiple insurers and negotiate based on claim history and vehicle count.",
+      "tags": ["fleet discount", "fleet policy", "10+ vehicles", "5-15%", "bulk discount"]
+    },
+    {
+      "id": "major-indian-insurers-cv",
+      "title": "Major Indian Insurers for Commercial Vehicles",
+      "content": "Leading insurers for commercial vehicle fleet in India include New India Assurance (largest PSU, extensive branch network), ICICI Lombard (strong digital processes, quick claims), Bajaj Allianz (competitive pricing, good fleet products), HDFC ERGO (wide garage network), Go Digit (digital-first, competitive premiums), Tata AIG (international expertise, fleet focus), and United India Insurance (PSU, rural presence). PSU insurers (New India, United India) often have better reach in tier-2/3 cities and highways. Private insurers typically offer faster claim settlement and digital renewal. Fleet operators should compare claim settlement ratios, network garage coverage on their routes, and add-on flexibility before selecting an insurer.",
+      "tags": ["insurers", "New India", "ICICI Lombard", "Bajaj Allianz", "HDFC ERGO", "Go Digit", "Tata AIG", "United India"]
+    },
+    {
+      "id": "when-to-file-claim-threshold",
+      "title": "When to File vs Not File Claims: Rs 50,000 Rule",
+      "content": "A practical rule of thumb for fleet operators: avoid filing claims for repairs under Rs 50,000 to protect your NCB. Losing 20–50% NCB on the OD premium over subsequent years often outweighs a one-time small claim payout. For example, if your OD premium is Rs 80,000 and you have 35% NCB, filing a Rs 40,000 claim costs you Rs 28,000 in NCB (35% of 80,000) plus potential premium loading—net loss. Exceptions: third-party claims (where you're liable), theft, or total loss must always be reported. Document out-of-pocket repairs for vehicle history; some insurers may still load premium based on claim frequency even for unreported incidents.",
+      "tags": ["claim threshold", "Rs 50000", "NCB", "when to file", "out-of-pocket"]
+    },
+    {
+      "id": "renewal-timing-break-in-insurance",
+      "title": "Renewal Timing and Break-in-Insurance Rules",
+      "content": "Ideal renewal window is 90 days before policy expiry—insurers allow early renewal and you avoid last-minute rush or lapses. Renewing 30–45 days before expiry is common; renewing after expiry means a break in insurance and loss of NCB. If policy lapses, you lose accumulated NCB and must restart from 0%; the vehicle also runs illegally without valid third-party cover. Some insurers offer a grace period of a few days post-expiry for renewal without break, but this is not guaranteed. Fleet operators should set up renewal reminders 60–90 days in advance and use fleet management systems to track policy expiry dates across all vehicles.",
+      "tags": ["renewal", "90 days", "break-in-insurance", "NCB loss", "lapse", "grace period"]
+    },
+    {
+      "id": "own-damage-premium-calculation",
+      "title": "Own Damage Premium Calculation for Commercial Vehicles",
+      "content": "Own Damage premium is calculated as a percentage of IDV—typically 3–5% base rate depending on vehicle age, make, model, and geographical zone. Newer vehicles (under 2 years) attract higher OD rates (4–5%); older vehicles (4+ years) may get 3–3.5% as they have lower IDV. Geographical zones (Zone A metros vs Zone B rest of India) affect rates; vehicles registered in high-theft or high-accident areas pay more. NCB discount is applied on the OD premium. Add-ons are charged separately. Example: IDV Rs 10 lakh, base rate 4%, = Rs 40,000 OD premium; with 35% NCB = Rs 26,000. Fleet operators should request premium breakdown to verify calculations.",
+      "tags": ["own damage", "OD premium", "IDV", "3-5%", "base rate", "calculation"]
+    },
+    {
+      "id": "mandatory-pa-cover-owner-driver",
+      "title": "Mandatory PA Cover for Owner-Driver: Rs 15 Lakh",
+      "content": "Since September 2019, IRDAI mandates compulsory Personal Accident cover of Rs 15 lakh for the owner-driver of commercial vehicles. This covers death or permanent total disability of the person driving the vehicle when the policy is in their name. The premium for this mandatory PA cover is included in the third-party premium—no separate payment. If the vehicle is driven by employees or hired drivers, separate PA cover for them must be purchased as an add-on. Fleet operators with company-owned vehicles must ensure PA cover for all authorised drivers. Non-compliance can lead to claim rejection and legal issues in case of driver injury or death.",
+      "tags": ["PA cover", "personal accident", "Rs 15 lakh", "owner-driver", "mandatory", "September 2019"]
+    },
+    {
+      "id": "long-term-policies-cv",
+      "title": "Long-Term Policies for New Commercial Vehicles",
+      "content": "For new commercial vehicles registered on or after September 1, 2018, third-party insurance is mandatory for 3 years (goods vehicles) or 5 years (passenger vehicles like buses, taxis). This long-term TP is bundled at the time of vehicle purchase and cannot be avoided. Own Damage cover remains annual—you renew OD each year while TP runs for 3/5 years. Benefits: no break in TP cover, fixed TP premium for the period, compliance assured. Drawback: if you sell the vehicle, TP balance may not be fully refundable; transfer to new owner requires insurer approval. Fleet operators buying new trucks must budget for 3-year TP premium upfront.",
+      "tags": ["long-term", "3-year TP", "5-year TP", "new vehicles", "September 2018", "mandatory"]
+    },
+    {
+      "id": "insurance-fraud-indian-trucking",
+      "title": "Insurance Fraud in Indian Trucking and Prevention",
+      "content": "Common frauds in Indian commercial vehicle insurance include staged accidents, inflated repair bills, fake theft claims, and collusion with surveyors or workshops. Staged accidents involve deliberate damage to claim insurance; insurers use forensic analysis and pattern detection to identify such cases. Inflated bills occur when workshops add unnecessary parts or labour; always get a second opinion for major repairs and use network garages. Fake theft claims require FIR and 90-day waiting period; insurers verify with police and track vehicle recovery. To avoid fraud allegations: maintain genuine documentation, avoid cash transactions with workshops, report accidents promptly, and cooperate fully with surveyors. Fraud detection can lead to policy cancellation and legal action.",
+      "tags": ["fraud", "staged accident", "fake theft", "prevention", "surveyor", "Indian trucking"]
+    },
+    {
+      "id": "e-insurance-evahan-digital",
+      "title": "E-Insurance (e-Vahan) and Digital Policy Management",
+      "content": "E-insurance or digital insurance policies are stored in electronic format with Insurance Repository (IR) and linked to your vehicle via e-Vahan integration. Policy documents can be accessed anytime through the repository portal or insurer app—no need for physical copies. e-Vahan allows traffic police to verify insurance validity electronically during checks, reducing harassment and document loss. Renewals can be done online; digital policies are legally valid as per IRDAI. Fleet operators benefit from centralised digital storage, easy retrieval for audits, and integration with fleet management software. Ensure your insurer supports e-insurance and register with an IR (e.g., NSDL, CDSL, Karvy) for seamless digital policy management.",
+      "tags": ["e-insurance", "e-Vahan", "digital policy", "insurance repository", "online renewal"]
+    },
+    {
+      "id": "gst-on-insurance-premium",
+      "title": "GST on Insurance Premium: 18%",
+      "content": "Insurance premium in India attracts 18% GST (Goods and Services Tax), which is over and above the base premium. The GST component is shown separately on the policy document and premium receipt. For fleet operators, GST on insurance is input tax credit (ITC) eligible if the vehicles are used for business—you can claim the 18% GST against your output tax liability. Ensure your insurer provides a proper GST invoice with your business GSTIN for ITC claim. The total amount you pay = base premium + GST; for a Rs 1,00,000 premium, you pay Rs 1,18,000. Budget for GST when calculating total fleet insurance cost.",
+      "tags": ["GST", "18%", "insurance premium", "input tax credit", "ITC", "commercial vehicles"]
+    }
+  ]
+}

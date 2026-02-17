@@ -1,0 +1,94 @@
+{
+  "chunks": [
+    {
+      "id": "mva-001",
+      "title": "Motor Vehicle Act 2019 Amendments - Key Changes for Commercial Vehicles",
+      "content": "The Motor Vehicles (Amendment) Act, 2019 brought significant changes for commercial vehicle operators. Key amendments include: (1) Stricter penalties for traffic violations with up to 10x increase in fines; (2) Mandatory linking of driving license and vehicle registration with Aadhaar; (3) National Register of Driving Licenses and Vehicle Registration for real-time verification; (4) Cashless treatment of accident victims during golden hour; (5) Protection for Good Samaritans who assist accident victims; (6) Mandatory fitness certification for transport vehicles; (7) Recall of defective vehicles by manufacturers; (8) Simplified process for vehicle registration and permit issuance; (9) Stricter norms for aggregators and ride-sharing platforms; (10) Enhanced provisions for electronic monitoring and enforcement. Fleet operators must ensure full compliance with these amendments to avoid penalties and operational disruptions.",
+      "tags": ["MV Act 2019", "amendments", "commercial vehicles", "legislation", "compliance"]
+    },
+    {
+      "id": "mva-002",
+      "title": "Mandatory Documents for Commercial Vehicles",
+      "content": "Every commercial vehicle must carry the following mandatory documents: (1) Registration Certificate (RC) - proof of vehicle registration with RTO; (2) Certificate of Insurance - third-party insurance is mandatory under Section 146 of MV Act; (3) Fitness Certificate (FC) - required for all transport vehicles, valid 2 years for new vehicles then annual; (4) Pollution Under Control (PUC) Certificate - valid for 6 months, mandatory for BS-VI compliance; (5) Permit - State permit for intra-state or National permit for inter-state operations; (6) Driver's License - valid license appropriate for vehicle class (LMV/HMV). All documents must be valid, original or certified copies, and produced on demand by enforcement authorities. Driving without any mandatory document attracts penalties under the MV Act.",
+      "tags": ["mandatory documents", "RC", "insurance", "FC", "PUC", "permit", "driving license"]
+    },
+    {
+      "id": "mva-003",
+      "title": "Penalty Schedule - Overloading and Weight Violations",
+      "content": "Overloading penalties under MV Act 2019: Base penalty of Rs 20,000 for overloading. Additional penalty of Rs 2,000 per extra tonne of excess load. The driver and owner may both be held liable. Vehicle may be detained until excess load is removed. Repeat offenders face higher penalties. Overloading causes accelerated road wear, bridge damage, and safety hazards. Enforcement is conducted at weighbridges and check posts. E-way bill requirements mandate declared weight - discrepancies can trigger penalties. Fleet operators must implement load monitoring and ensure vehicles never exceed Gross Vehicle Weight (GVW) or axle load limits.",
+      "tags": ["penalty", "overloading", "Rs 20000", "Rs 2000 per tonne", "weight violation"]
+    },
+    {
+      "id": "mva-004",
+      "title": "Penalty Schedule - Insurance, License, and Permit Violations",
+      "content": "Penalty schedule for document violations: No Insurance - Rs 2,000 for first offence, Rs 4,000 for repeat offence, plus possible vehicle impoundment; No valid Driving License - Rs 5,000; Driving without Permit - Rs 10,000; No Registration Certificate - Rs 5,000. Additional penalties may apply for driving without license in case of disqualification. Third-party insurance is compulsory - driving without it not only attracts fine but also makes owner liable for unlimited compensation in case of accident. Fleet operators must maintain valid insurance for all vehicles and ensure drivers have appropriate licenses before deployment.",
+      "tags": ["penalty", "insurance", "license", "permit", "Rs 2000", "Rs 4000", "Rs 5000", "Rs 10000"]
+    },
+    {
+      "id": "mva-005",
+      "title": "Penalty Schedule - Speeding and Drunk Driving",
+      "content": "Traffic violation penalties: Speeding - Rs 1,000 to Rs 2,000 depending on excess speed; Drunk Driving - Rs 10,000 and/or imprisonment up to 6 months for first offence; repeat drunk driving - Rs 15,000 and/or imprisonment up to 2 years. Commercial vehicle drivers face additional consequences including permit suspension and license disqualification. Speeding in commercial vehicles is particularly dangerous due to load and braking distance. Many states have implemented automated speed detection (cameras, speed guns). Drunk driving has zero tolerance - blood alcohol limit is 30 mg/100ml for commercial drivers. Fleet operators should implement driver sobriety checks and speed monitoring systems.",
+      "tags": ["penalty", "speeding", "drunk driving", "Rs 1000", "Rs 2000", "Rs 10000"]
+    },
+    {
+      "id": "mva-006",
+      "title": "Fitness Certificate - Validity and Requirements",
+      "content": "Fitness Certificate (FC) is mandatory for all transport vehicles. Validity: New vehicles - 2 years from first registration; Thereafter - annual renewal. Required test items at authorized testing stations: (1) Brake efficiency test; (2) Steering play and alignment; (3) Lighting system; (4) Horn; (5) Rear view mirrors; (6) Tyre condition and tread depth; (7) Suspension; (8) Exhaust emission (PUC); (9) Body condition and structural integrity; (10) Safety equipment. FC must be obtained from designated Automated Fitness Centres or authorized testing stations. Driving without valid FC attracts penalty and vehicle may be impounded. FC renewal should be scheduled before expiry to avoid operational disruption.",
+      "tags": ["fitness certificate", "FC", "validity", "2 years", "annual", "testing"]
+    },
+    {
+      "id": "mva-007",
+      "title": "PUC Certificate - Validity and BS-VI Emission Norms",
+      "content": "Pollution Under Control (PUC) certificate is mandatory for all vehicles. Validity: 6 months - must be renewed before expiry. Emission norms: BS-VI (Bharat Stage VI) mandatory for all new vehicles from April 1, 2020. BS-VI norms significantly reduce permissible limits for CO, HC, NOx, and PM. PUC testing measures: Petrol - CO and HC levels; Diesel - Opacity (smoke density). Testing available at authorized petrol pumps and emission testing centres. Driving without valid PUC attracts penalty of Rs 1,000 (first offence) and Rs 2,000 (repeat). PUC is also checked during fitness certification. Fleet operators must maintain PUC compliance calendar and ensure timely renewal for all vehicles.",
+      "tags": ["PUC", "pollution", "6 months", "BS-VI", "emission norms", "April 2020"]
+    },
+    {
+      "id": "mva-008",
+      "title": "Axle Load Limits by Vehicle Type",
+      "content": "Axle load limits as per Central Motor Vehicles Rules: Single Axle - Maximum 10.2 tonnes; Tandem Axle (2 axles) - Maximum 19 tonnes; Tridem Axle (3 axles) - Maximum 24 tonnes. Gross Vehicle Weight (GVW) limits: 2-axle truck - 16.2 tonnes; 3-axle truck - 25 tonnes; 4-axle truck - 31 tonnes; 5-axle truck - 38 tonnes; 6-axle truck - 44 tonnes. These limits apply to vehicles plying on national highways. Some states may have different limits for state roads. Overloading beyond axle limits causes disproportionate road damage - fourth power law means doubling axle load causes 16x more damage. Fleet operators must configure loads to stay within both axle and GVW limits.",
+      "tags": ["axle load", "single axle", "tandem", "tridem", "10.2T", "19T", "24T", "GVW"]
+    },
+    {
+      "id": "mva-009",
+      "title": "Driving Hours Rules and Rest Periods",
+      "content": "Commercial vehicle driving hour regulations: Maximum 8 hours continuous driving - mandatory break required after 8 hours. Total driving time should not exceed 9 hours in a day (or 10 hours with extension in exceptional circumstances). Mandatory rest period: Minimum 30 minutes break after 4 hours of continuous driving. Weekly rest: Minimum 24 consecutive hours of rest in a week. Record keeping: Drivers must maintain log sheets (optional but recommended for fleet operators). Fatigue is a major cause of commercial vehicle accidents. Fleet management systems should incorporate driving hour monitoring and alert drivers when approaching limits. Violations may attract penalties under state transport rules.",
+      "tags": ["driving hours", "8 hours", "rest periods", "fatigue", "log sheet"]
+    },
+    {
+      "id": "mva-010",
+      "title": "Age Limits for Commercial Vehicle Drivers",
+      "content": "Minimum age requirements for commercial vehicle driving licenses: Light Motor Vehicle (LMV) - 18 years minimum; Heavy Motor Vehicle (HMV) - 20 years minimum. Additional requirements for HMV: Must hold valid LMV license for at least 1 year in some states. Transport vehicles (goods/passenger): Same age limits apply. Medical fitness certificate required for commercial license - vision, hearing, and general health. License validity: Commercial licenses typically valid for 3 years, renewable with medical fitness. Drivers under 18 cannot legally drive any motor vehicle. Fleet operators must verify driver age and license class before deployment. Employing underage drivers attracts severe penalties.",
+      "tags": ["age limit", "driver", "LMV", "HMV", "18 years", "20 years"]
+    },
+    {
+      "id": "mva-011",
+      "title": "Hit and Run Compensation Scheme",
+      "content": "Hit and run accident compensation under MV Act: Death - Rs 2,00,000 (2 lakh) to legal heirs; Grievous injury - Rs 50,000 to victim. This compensation is from the Solatium Fund, funded by insurance companies' contribution. Claim process: Application to Claims Enquiry Officer; Documents required - FIR, post-mortem (death), medical reports (injury), identity proof. Time limit: Claim should be filed within 6 months of accident. Hit and run means driver fled scene and could not be identified. This scheme ensures victims get immediate relief regardless of driver identification. Fleet operators must ensure vehicles are properly insured - identified vehicles' compensation comes from insurer. Proper driver training can prevent hit and run situations.",
+      "tags": ["hit and run", "compensation", "Rs 2 lakh", "Rs 50000", "death", "injury", "Solatium Fund"]
+    },
+    {
+      "id": "mva-012",
+      "title": "Vehicle Scrapping Policy - 15 Years for Commercial Vehicles",
+      "content": "National Vehicle Scrapping Policy: Commercial vehicles - Mandatory fitness test after 15 years; if failed, vehicle must be scrapped. Private vehicles - 20 years (if failed fitness) or optional scrapping. Scrapping benefits: Scrap certificate enables tax benefits on new vehicle purchase; State governments may offer 25% road tax rebate, 5% discount from manufacturers. Fitness testing after age limit: Commercial vehicles (15+ years) must pass fitness test at government testing station; failure means mandatory scrapping. Deregistration: Vehicle must be deregistered before scrapping at authorized scrapping centres. Fleet operators should plan vehicle replacement cycle considering 15-year commercial vehicle limit. Older vehicles have higher maintenance costs and lower fuel efficiency.",
+      "tags": ["scrapping", "15 years", "commercial vehicles", "fitness", "deregistration"]
+    },
+    {
+      "id": "mva-013",
+      "title": "Good Samaritan Law Protections",
+      "content": "Good Samaritan guidelines under MV Act protect those who help accident victims: (1) No civil or criminal liability for helping in good faith; (2) Cannot be compelled to reveal identity or be witness unless willing; (3) Cannot be detained or questioned for long; (4) No liability for any injury/death during rescue attempt if acting in good faith; (5) Hospitals cannot demand payment before treatment - golden hour treatment is cashless. These protections encourage bystanders to help accident victims without fear of legal harassment. Fleet operators should train drivers to assist accident victims and know their rights. Drivers assisting at accident scenes are protected. Document any assistance provided for insurance/legal purposes.",
+      "tags": ["Good Samaritan", "protection", "accident", "bystander", "legal protection"]
+    },
+    {
+      "id": "mva-014",
+      "title": "Electronic Monitoring and Speed Governor Requirements",
+      "content": "Speed governor requirements for commercial vehicles: Goods vehicles - Mandatory speed limiter set to maximum 72 km/h (some states 60 km/h for certain categories). Speed governors must be type-approved and sealed. Electronic monitoring: GPS-based vehicle tracking may be mandated for certain categories. Speed limiters prevent overspeeding which is major cause of truck accidents. Installation: Must be from approved manufacturers, installed at authorized centres. Tampering with speed governor is illegal and attracts penalties. Some states require speed governor for passenger vehicles (buses) as well. Fleet operators must ensure all applicable vehicles have functional, sealed speed governors. Regular verification during fitness certification.",
+      "tags": ["speed governor", "72 km/h", "electronic monitoring", "goods vehicles", "GPS"]
+    },
+    {
+      "id": "mva-015",
+      "title": "Aggregator Regulations for Fleet Operators",
+      "content": "Motor Vehicles Act provisions for aggregators (ride-sharing, logistics platforms): Aggregators must obtain license from state transport authority. Requirements: Valid license; Compliance with safety norms; Insurance for vehicles and drivers; Driver verification and training. Fleet operators partnering with aggregators (Ola, Uber, Porter, etc.) must ensure: (1) Vehicles meet aggregator platform requirements; (2) Drivers have valid licenses and documentation; (3) Insurance covers commercial use; (4) Compliance with platform-specific norms. State governments may have additional aggregator regulations. Penalties for unlicensed aggregator operations. Fleet operators running their own app-based services may need aggregator license. Dynamic pricing and surge pricing are regulated in some states.",
+      "tags": ["aggregator", "regulations", "Ola", "Uber", "Porter", "license", "fleet operators"]
+    }
+  ]
+}

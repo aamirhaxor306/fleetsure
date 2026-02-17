@@ -32,10 +32,10 @@ function Section({ title, subtitle, children }) {
 export default function Settings() {
   const { user, logout } = useAuth()
   const [tab, setTab] = useState('profile')
-  const [profile, setProfile] = useState({ name: '', phone: '' })
-  const [company, setCompany] = useState({ name: '', plan: '' })
+  const [profile, setProfile] = useState({ name: '', email: '' })
+  const [company, setCompany] = useState({ name: '', plan: '', address: '', city: '', gstin: '', phone: '' })
   const [team, setTeam] = useState([])
-  const [invitePhone, setInvitePhone] = useState('')
+  const [inviteEmail, setInviteEmail] = useState('')
   const [inviteRole, setInviteRole] = useState('viewer')
   const [saving, setSaving] = useState(false)
   const [success, setSuccess] = useState('')
@@ -48,8 +48,8 @@ export default function Settings() {
   const loadData = async () => {
     try {
       const p = await settingsApi.getProfile()
-      setProfile({ name: p.name || '', phone: p.phone || '' })
-      setCompany({ name: p.tenantName || '', plan: p.plan || 'free' })
+      setProfile({ name: p.name || '', email: p.email || '' })
+      setCompany({ name: p.tenantName || '', plan: p.plan || 'free', address: p.tenantAddress || '', city: p.tenantCity || '', gstin: p.tenantGstin || '', phone: p.tenantPhone || '' })
       const t = await settingsApi.getTeam()
       setTeam(Array.isArray(t) ? t : [])
     } catch {}
@@ -73,7 +73,7 @@ export default function Settings() {
   const handleSaveCompany = async () => {
     setSaving(true)
     try {
-      await settingsApi.updateCompany({ name: company.name })
+      await settingsApi.updateCompany({ name: company.name, address: company.address, city: company.city, gstin: company.gstin, phone: company.phone })
       flash('Company updated')
     } catch (e) { flash(e.message, true) }
     setSaving(false)
@@ -81,13 +81,13 @@ export default function Settings() {
 
   const handleInvite = async (e) => {
     e.preventDefault()
-    if (!invitePhone || invitePhone.length < 10) return
+    if (!inviteEmail || !inviteEmail.includes('@')) return
     setSaving(true)
     try {
-      const res = await settingsApi.inviteUser({ phone: invitePhone, role: inviteRole })
+      const res = await settingsApi.inviteUser({ email: inviteEmail, role: inviteRole })
       if (res.error) throw new Error(res.error)
       flash('User invited')
-      setInvitePhone('')
+      setInviteEmail('')
       loadData()
     } catch (e) { flash(e.message, true) }
     setSaving(false)
@@ -158,14 +158,14 @@ export default function Settings() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-slate-600 mb-1">Phone Number</label>
+                  <label className="block text-xs font-medium text-slate-600 mb-1">Email</label>
                   <input
                     type="text"
                     className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm bg-slate-50 text-slate-500"
-                    value={`+91 ${profile.phone}`}
+                    value={profile.email}
                     disabled
                   />
-                  <p className="text-[11px] text-slate-400 mt-1">Phone number cannot be changed (used for login)</p>
+                  <p className="text-[11px] text-slate-400 mt-1">Email cannot be changed (used for login)</p>
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-slate-600 mb-1">Role</label>
@@ -199,6 +199,54 @@ export default function Settings() {
                     disabled={user?.role !== 'owner'}
                   />
                   {user?.role !== 'owner' && <p className="text-[11px] text-slate-400 mt-1">Only the owner can change the company name</p>}
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-600 mb-1">Address</label>
+                  <input
+                    type="text"
+                    className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                    value={company.address}
+                    onChange={e => setCompany({ ...company, address: e.target.value })}
+                    placeholder="123, Industrial Area, Sector 5"
+                    disabled={user?.role !== 'owner'}
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-medium text-slate-600 mb-1">City</label>
+                    <input
+                      type="text"
+                      className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                      value={company.city}
+                      onChange={e => setCompany({ ...company, city: e.target.value })}
+                      placeholder="Mumbai"
+                      disabled={user?.role !== 'owner'}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-slate-600 mb-1">Phone</label>
+                    <input
+                      type="text"
+                      className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                      value={company.phone}
+                      onChange={e => setCompany({ ...company, phone: e.target.value })}
+                      placeholder="+91 98765 43210"
+                      disabled={user?.role !== 'owner'}
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-600 mb-1">GSTIN</label>
+                  <input
+                    type="text"
+                    className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none font-mono"
+                    value={company.gstin}
+                    onChange={e => setCompany({ ...company, gstin: e.target.value.toUpperCase() })}
+                    placeholder="22AAAAA0000A1Z5"
+                    maxLength={15}
+                    disabled={user?.role !== 'owner'}
+                  />
+                  <p className="text-[11px] text-slate-400 mt-1">Your GST Identification Number (appears on invoices)</p>
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-slate-600 mb-1">Plan</label>
@@ -248,11 +296,11 @@ export default function Settings() {
                     <div key={m.id} className="flex items-center justify-between py-3 first:pt-0 last:pb-0">
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 text-xs font-bold">
-                          {m.name?.[0]?.toUpperCase() || m.phone?.[0]}
+                          {m.name?.[0]?.toUpperCase() || m.email?.[0]?.toUpperCase()}
                         </div>
                         <div>
                           <div className="text-sm font-medium text-slate-900">{m.name || 'Unnamed'}</div>
-                          <div className="text-xs text-slate-500">+91 {m.phone}</div>
+                          <div className="text-xs text-slate-500">{m.email}</div>
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
@@ -286,13 +334,13 @@ export default function Settings() {
             <Section title="Invite Team Member" subtitle="Add a manager or viewer to your fleet">
               <form onSubmit={handleInvite} className="flex items-end gap-3">
                 <div className="flex-1">
-                  <label className="block text-xs font-medium text-slate-600 mb-1">Phone Number</label>
+                  <label className="block text-xs font-medium text-slate-600 mb-1">Email Address</label>
                   <input
-                    type="tel"
+                    type="email"
                     className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                    value={invitePhone}
-                    onChange={e => setInvitePhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
-                    placeholder="Phone number"
+                    value={inviteEmail}
+                    onChange={e => setInviteEmail(e.target.value)}
+                    placeholder="team@company.com"
                   />
                 </div>
                 <div>
@@ -308,13 +356,13 @@ export default function Settings() {
                 </div>
                 <button
                   type="submit"
-                  disabled={saving || invitePhone.length < 10}
+                  disabled={saving || !inviteEmail.includes('@')}
                   className="bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 text-white text-sm font-medium rounded-lg px-5 py-2 transition whitespace-nowrap"
                 >
                   Invite
                 </button>
               </form>
-              <p className="text-[11px] text-slate-400 mt-2">The invited user will see your fleet data when they log in with this phone number.</p>
+              <p className="text-[11px] text-slate-400 mt-2">The invited user will see your fleet data when they log in with this email.</p>
             </Section>
           </>
         )}

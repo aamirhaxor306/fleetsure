@@ -194,6 +194,210 @@ body {
   to { opacity: 1; transform: translateX(0); }
 }
 
+/* ── Trips Dashboard (BlackBuck-style) ───────────────── */
+
+.trips-dashboard {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 56px - 48px);
+  margin: -24px;
+  overflow: hidden;
+}
+
+.trips-loading {
+  height: calc(100vh - 56px - 48px);
+  margin: -24px;
+  padding: 16px;
+}
+
+/* Top bar */
+.trips-topbar {
+  @apply flex items-center gap-3 px-4 py-2.5 bg-white border-b border-slate-200 shrink-0;
+  min-height: 52px;
+}
+.trips-topbar-left {
+  @apply flex items-center gap-3 flex-1 min-w-0;
+}
+.trips-topbar-right {
+  @apply flex items-center gap-2 shrink-0;
+}
+
+/* Search */
+.trips-search {
+  @apply relative flex-shrink-0;
+  width: 280px;
+}
+.trips-search-icon {
+  @apply absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none;
+}
+.trips-search-input {
+  @apply w-full pl-8 pr-8 py-1.5 rounded-md border border-slate-200 text-sm
+         focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400
+         outline-none bg-slate-50 transition-all placeholder:text-slate-400;
+}
+.trips-search-clear {
+  @apply absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600
+         w-5 h-5 flex items-center justify-center rounded-full hover:bg-slate-200
+         text-base leading-none transition-colors;
+}
+
+/* Filter tabs */
+.trips-tabs {
+  @apply flex items-center gap-0.5 bg-slate-100 rounded-lg p-0.5;
+}
+.trips-tab {
+  @apply px-3 py-1.5 text-xs font-semibold rounded-md transition-all
+         text-slate-500 hover:text-slate-700 whitespace-nowrap;
+}
+.trips-tab.active {
+  @apply bg-white text-slate-900 shadow-sm;
+}
+.trips-tab-count {
+  @apply ml-1 text-slate-400;
+}
+.trips-tab.active .trips-tab-count {
+  @apply text-blue-500;
+}
+
+/* Split pane */
+.trips-split {
+  @apply flex flex-1 min-h-0 overflow-hidden;
+}
+
+/* Left panel: trip list */
+.trips-list-panel {
+  @apply flex flex-col bg-white border-r border-slate-200 shrink-0;
+  width: 420px;
+}
+.trips-list-header {
+  @apply px-4 py-2 border-b border-slate-100 bg-slate-50/50;
+}
+.trips-list-scroll {
+  @apply flex-1 overflow-y-auto;
+}
+
+/* Empty state */
+.trips-empty {
+  @apply flex flex-col items-center justify-center py-16 px-4;
+}
+
+/* Trip card */
+.trip-card {
+  @apply px-4 py-3 border-b border-slate-100 cursor-pointer transition-all;
+}
+.trip-card:hover {
+  @apply bg-slate-50;
+}
+.trip-card.selected {
+  @apply bg-blue-50 border-l-2 border-l-blue-500;
+}
+.trip-card-top {
+  @apply flex items-center justify-between mb-1.5;
+}
+.trip-card-status {
+  @apply flex items-center gap-2;
+}
+.trip-status-dot {
+  @apply w-2 h-2 rounded-full shrink-0;
+}
+.trip-status-dot.green { @apply bg-emerald-500; }
+.trip-status-dot.amber { @apply bg-amber-500; }
+.trip-card-vehicle {
+  @apply font-mono text-xs font-bold text-slate-800 tracking-wide;
+}
+.trip-card-actions {
+  @apply flex items-center gap-1;
+}
+
+/* Route visualization */
+.trip-card-route {
+  @apply flex gap-2.5 mb-2;
+}
+.trip-route-line {
+  @apply flex flex-col items-center gap-0 shrink-0 py-0.5;
+  width: 10px;
+}
+.trip-route-dot {
+  @apply w-2 h-2 rounded-full shrink-0;
+}
+.trip-route-dot.start {
+  @apply bg-emerald-500;
+}
+.trip-route-dot.end {
+  @apply bg-red-500;
+}
+.trip-route-connector {
+  @apply w-px flex-1 bg-slate-300;
+  min-height: 14px;
+}
+.trip-route-names {
+  @apply flex flex-col gap-0.5 min-w-0;
+}
+.trip-route-from,
+.trip-route-to {
+  @apply text-xs text-slate-600 truncate leading-snug;
+}
+
+/* Trip metadata */
+.trip-card-meta {
+  @apply flex items-center gap-3 flex-wrap;
+}
+.trip-meta-item {
+  @apply inline-flex items-center gap-1 text-[11px] text-slate-400;
+}
+.trip-meta-freight {
+  @apply text-slate-700 font-medium;
+}
+.trip-meta-pending {
+  @apply text-amber-600 font-medium;
+}
+
+/* Map panel */
+.trips-map-panel {
+  @apply flex-1 relative bg-slate-100 min-w-0;
+}
+.trips-map-loading {
+  @apply flex items-center justify-center h-full;
+}
+
+/* Leaflet overrides for this page */
+.trips-map-panel .leaflet-container {
+  height: 100% !important;
+  width: 100% !important;
+  z-index: 1;
+}
+
+/* Responsive: stack on mobile */
+@media (max-width: 768px) {
+  .trips-dashboard {
+    height: auto;
+    min-height: calc(100vh - 56px - 48px);
+  }
+  .trips-split {
+    @apply flex-col;
+  }
+  .trips-list-panel {
+    width: 100%;
+    max-height: 50vh;
+  }
+  .trips-map-panel {
+    min-height: 300px;
+    height: 50vh;
+  }
+  .trips-topbar {
+    @apply flex-col items-stretch gap-2;
+  }
+  .trips-topbar-left {
+    @apply flex-col items-stretch;
+  }
+  .trips-search {
+    width: 100%;
+  }
+  .trips-topbar-right {
+    @apply justify-end;
+  }
+}
+
 /* ── Legacy compat (old class names → new) ─────────── */
 
 .stat-card { @apply kpi-card; }

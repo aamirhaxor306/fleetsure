@@ -44,7 +44,7 @@ router.get('/optimizer', async (req, res) => {
 
     // ── 2. Fetch all completed renewal requests with quotes ──────────────
     const completedRenewals = await prisma.renewalRequest.findMany({
-      where: { status: 'renewed', documentType: 'insurance' },
+      where: { tenantId: req.tenantId, status: 'renewed', documentType: 'insurance' },
       include: {
         quotes: { orderBy: { amount: 'asc' } },
         vehicle: { select: { vehicleNumber: true, previousInsurer: true } },

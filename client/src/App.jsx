@@ -19,6 +19,7 @@ import Revenue from './pages/Revenue'
 import AIChat from './pages/AIChat'
 import InsuranceOptimizer from './pages/InsuranceOptimizer'
 import Settings from './pages/Settings'
+import DocumentGenerator from './pages/DocumentGenerator'
 
 // ── Auth context ────────────────────────────────────────────
 const AuthContext = createContext(null)
@@ -42,8 +43,12 @@ function App() {
       .catch(() => setUser(null))
   }, [])
 
-  const firebaseLogin = async (firebaseIdToken) => {
-    const res = await authApi.firebaseLogin(firebaseIdToken)
+  const requestOtp = async (email) => {
+    return await authApi.requestOtp(email)
+  }
+
+  const verifyOtp = async (email, otp) => {
+    const res = await authApi.verifyOtp(email, otp)
     if (!res.needsOnboarding && res.user) {
       setUser(res.user)
     }
@@ -73,7 +78,7 @@ function App() {
 
   return (
     <LanguageProvider>
-      <AuthContext.Provider value={{ user, firebaseLogin, onboard, logout }}>
+      <AuthContext.Provider value={{ user, requestOtp, verifyOtp, onboard, logout }}>
         <Routes>
           <Route path="/login" element={user ? <Navigate to="/" /> : <Login />} />
           <Route element={user ? <Layout /> : <Navigate to="/login" />}>
@@ -92,9 +97,7 @@ function App() {
             <Route path="ai-chat" element={<AIChat />} />
             <Route path="insurance" element={<InsuranceOptimizer />} />
             <Route path="settings" element={<Settings />} />
-
-            {/* Redirects for old routes → Fleet Health */}
-            <Route path="documents" element={<Navigate to="/fleet-health" replace />} />
+            <Route path="documents" element={<DocumentGenerator />} />
             <Route path="alerts" element={<Navigate to="/fleet-health" replace />} />
             <Route path="maintenance" element={<Navigate to="/fleet-health" replace />} />
           </Route>

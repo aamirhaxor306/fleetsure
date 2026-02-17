@@ -1,0 +1,76 @@
+{
+  "chunks": [
+    {
+      "id": "route-econ-001",
+      "title": "NHAI Toll Rates for Multi-Axle Trucks",
+      "content": "National Highway Authority of India (NHAI) toll rates for multi-axle trucks typically range from Rs 2.5 to Rs 4.0 per kilometre on national highways. Rates vary by highway section, with newer expressways commanding premium rates. Toll charges are based on vehicle classification—2-axle, 3-4 axle, and 5+ axle trucks have different rates. FASTag has made toll collection seamless and often offers 2-3% cashback. Budget approximately Rs 3 per km for toll planning on major NH corridors. Some states have higher toll rates on state-run expressways. Factor toll costs into freight rate calculations—they can represent 15-25% of operating cost on long hauls.",
+      "tags": ["NHAI", "toll rates", "multi-axle", "FASTag", "national highway", "toll cost"]
+    },
+    {
+      "id": "route-econ-002",
+      "title": "Golden Quadrilateral Routes and Economics",
+      "content": "The Golden Quadrilateral connects India's four major metros—Delhi, Mumbai, Chennai, and Kolkata—forming the backbone of national freight movement. Delhi-Mumbai (1,419 km) is the busiest corridor with 24-36 hour transit times and freight rates of Rs 3.0-3.5 per km. Mumbai-Chennai (1,290 km) serves industrial and port traffic. Chennai-Kolkata (1,673 km) connects South to East. Kolkata-Delhi (1,453 km) completes the loop through agricultural heartland. These routes offer the best road quality, multiple fuel and rest options, and predictable transit times. Freight rates on GQ routes are typically 10-15% lower than secondary routes due to competition and volume.",
+      "tags": ["Golden Quadrilateral", "Delhi-Mumbai", "Mumbai-Chennai", "Chennai-Kolkata", "Kolkata-Delhi", "GQ", "major corridors"]
+    },
+    {
+      "id": "route-econ-003",
+      "title": "Dedicated Freight Corridor Impact on Road Freight",
+      "content": "The Eastern and Western Dedicated Freight Corridors (DFC) are shifting bulk commodity movement from road to rail. Eastern DFC (Ludhiana to Dankuni) and Western DFC (Dadri to JNPT) handle container and bulk cargo. Road freight will remain dominant for last-mile, time-sensitive, and smaller consignments. DFC may reduce road freight rates by 5-10% on competing routes through modal shift. Truck operators should focus on first-and-last-mile connectivity to DFC terminals. Intermodal logistics—road to rail—will grow. DFC completion may ease road congestion on parallel NH routes, improving truck transit times.",
+      "tags": ["DFC", "Dedicated Freight Corridor", "rail freight", "modal shift", "Eastern DFC", "Western DFC"]
+    },
+    {
+      "id": "route-econ-004",
+      "title": "Major Trucking Corridors in India",
+      "content": "Key trucking corridors drive India's freight economics. Delhi-Mundra port (1,100 km) serves export-import traffic with 20-28 hour transit. Mumbai-Delhi (1,419 km) is the highest-volume corridor. Chennai-Bangalore (350 km) connects IT and manufacturing hubs with 6-8 hour transit. Kolkata-Guwahati (1,020 km) serves Northeast connectivity with 24-36 hours through challenging terrain. Other critical routes include Delhi-Kolkata, Mumbai-Bangalore, and Hyderabad-Chennai. Corridor selection affects freight rates, fuel costs, toll charges, and driver availability. Established corridors have better infrastructure and support services.",
+      "tags": ["trucking corridors", "Delhi-Mundra", "Mumbai-Delhi", "Chennai-Bangalore", "Kolkata-Guwahati", "freight routes"]
+    },
+    {
+      "id": "route-econ-005",
+      "title": "Freight Rate Benchmarks by Route and Season",
+      "content": "Indian truck freight rates typically range from Rs 2.5 to Rs 4.0 per kilometre depending on multiple factors. Route popularity affects rates—busy corridors have lower per-km rates due to competition. Load type matters: general cargo Rs 2.5-3.0, refrigerated Rs 3.5-4.5, hazardous Rs 4.0-5.0 per km. Full truckload (FTL) commands better rates than part load (PTL). Season significantly impacts rates: harvest season (Oct-Mar) sees 15-25% premium in agricultural regions. Monsoon (Jul-Sep) adds 10-15% for difficult routes. Diwali and festive season create 20-30% spikes. Lock in contracts during lean periods for better rates.",
+      "tags": ["freight rates", "Rs per km", "FTL", "PTL", "benchmarks", "seasonal rates"]
+    },
+    {
+      "id": "route-econ-006",
+      "title": "Seasonal Demand Patterns in Indian Trucking",
+      "content": "Indian freight demand follows distinct seasonal patterns. Agriculture harvest season (October-March) sees peak movement of grains, sugarcane, and produce—rates spike in Punjab, UP, Maharashtra, and Karnataka. Monsoon (July-September) causes slowdowns: 15-20% reduced trips on affected routes, damaged roads, and higher rates for difficult terrain. Diwali and festive season (October-November) creates demand surge for consumer goods—plan capacity 2-3 weeks ahead. Year-end (December) sees export rush. Summer (April-June) is relatively stable. Budget for 20-30% rate variance between peak and lean seasons when planning annual logistics costs.",
+      "tags": ["seasonal demand", "harvest season", "monsoon", "Diwali", "festive season", "demand patterns"]
+    },
+    {
+      "id": "route-econ-007",
+      "title": "Backhaul Optimization and Load Boards",
+      "content": "Empty return trips destroy profitability—backhaul optimization can improve revenue by 20-40%. Load boards like Porter, Trukky, Vahak, and Locus connect shippers with available trucks. Register on multiple platforms for better coverage. Plan backhaul loads before departure; last-minute arrangements get poor rates. Consider slightly longer return routes if they offer loads. Some corridors have natural backhaul flows: Mundra-Delhi (imports) vs Delhi-Mundra (exports). Dedicated fleet operators can partner with complementary shippers for round-trip contracts. Factor 70-80% backhaul utilization in realistic revenue projections.",
+      "tags": ["backhaul", "load boards", "Porter", "Trukky", "Vahak", "return load", "optimization"]
+    },
+    {
+      "id": "route-econ-008",
+      "title": "National Highway vs State Highway Cost Comparison",
+      "content": "Route choice between NH and state highways significantly impacts operating economics. National highways typically have tolls of Rs 2.5-4.0 per km but offer 60-80 km/h average speeds and lower fuel consumption. State highways often have lower or no tolls but add 20-40% to transit time due to congestion, towns, and poorer road quality. Fuel consumption increases 15-25% on state highways. For long hauls (500+ km), NH routes usually have lower total cost despite tolls. State highways may make sense for short distances or when avoiding specific toll plazas. Calculate total cost (fuel + toll + time + wear) for each option.",
+      "tags": ["NH", "state highway", "toll comparison", "route cost", "highway selection"]
+    },
+    {
+      "id": "route-econ-009",
+      "title": "E-way Bill and GST Implications on Route Planning",
+      "content": "E-way bill compliance affects route planning and transit times. For inter-state movement of goods exceeding Rs 50,000, e-way bills are mandatory. Validity is based on distance: 100 km = 1 day, then 1 day per 100 km. Plan routes to complete transit within e-way validity—extensions require updates. GST implications: ensure consignment value and HSN codes are correctly declared. Route deviations may require e-way bill amendments. Checkpoints can cause delays; maintain proper documentation. Integrated e-way and fleet management systems help plan compliant routes. Non-compliance attracts penalties of 10% of tax or Rs 10,000.",
+      "tags": ["e-way bill", "GST", "route planning", "compliance", "inter-state", "documentation"]
+    },
+    {
+      "id": "route-econ-010",
+      "title": "Average Transit Times for Major Indian Corridors",
+      "content": "Transit time benchmarks help in delivery commitments and capacity planning. Delhi-Mumbai: 24-36 hours (1,419 km) depending on traffic. Mumbai-Chennai: 28-40 hours (1,290 km). Delhi-Kolkata: 30-42 hours (1,453 km). Chennai-Bangalore: 6-8 hours (350 km). Mumbai-Bangalore: 18-24 hours (985 km). Kolkata-Guwahati: 24-36 hours (1,020 km) with terrain challenges. Add 20-30% buffer for monsoon, festivals, or breakdowns. Night driving restrictions in some states affect schedules. Document actual vs planned times to improve future estimates and identify problematic segments.",
+      "tags": ["transit time", "corridor", "delivery time", "planning", "benchmarks"]
+    },
+    {
+      "id": "route-econ-011",
+      "title": "Toll Plaza Optimization and FASTag Benefits",
+      "content": "Efficient toll management reduces delays and costs. FASTag is mandatory and offers 2-3% cashback on NHAI plazas. Dedicated FASTag lanes reduce wait time from 15-30 minutes to under 2 minutes at busy plazas. Plan fuel stops near toll plazas to minimize stops. Some routes have multiple toll options—choose based on total cost and time. Corporate FASTag programs provide consolidated billing and better tracking. Maintain adequate FASTag balance; low balance causes lane rejection and delays. Integrate FASTag data with fleet systems for accurate toll cost allocation per trip.",
+      "tags": ["FASTag", "toll plaza", "cashback", "toll optimization", "NHAI"]
+    },
+    {
+      "id": "route-econ-012",
+      "title": "Permit and State Entry Requirements",
+      "content": "Inter-state trucking requires awareness of state-specific permit requirements. National permit allows pan-India movement but has higher fees. State permits restrict operations to specific states. Some states require additional taxes or entry fees for goods vehicles. Check state border requirements—documents, pollution certificates, and fitness. Overloading fines vary by state; ensure compliance to avoid delays. Certain goods (hazardous, oversized) need special permits with validity periods. Plan routes considering permit coverage—detours to avoid non-permitted states add significant distance. Maintain permit renewal calendar to avoid operational disruptions.",
+      "tags": ["permit", "national permit", "state permit", "inter-state", "compliance", "entry requirements"]
+    }
+  ]
+}

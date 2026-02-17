@@ -7,7 +7,7 @@ import {
   DashboardIcon, TruckIcon, RouteIcon, UserIcon, ShieldIcon,
   BellIcon, SparkleIcon, ClipboardIcon, HeartPulseIcon, MenuIcon,
   PlusIcon, LogOutIcon, ChevronLeftIcon, SearchIcon, SidebarCollapseIcon,
-  RefreshIcon, SettingsIcon,
+  RefreshIcon, SettingsIcon, FileTextIcon,
 } from './Icons'
 
 /* ── Navigation structure: outcome-grouped ────────────────── */
@@ -44,6 +44,12 @@ const NAV_GROUPS = [
     label: 'AI ASSISTANT',
     items: [
       { to: '/ai-chat', icon: SparkleIcon, key: 'navAIChat' },
+    ],
+  },
+  {
+    label: 'DOCUMENTS',
+    items: [
+      { to: '/documents', icon: FileTextIcon, key: 'navDocuments' },
     ],
   },
   {
@@ -217,7 +223,7 @@ export default function Layout() {
             <div className="flex items-center gap-2 pl-2 border-l border-slate-200">
               <NavLink to="/settings" className="flex items-center gap-2 hover:bg-slate-50 rounded-lg px-1.5 py-1 transition-colors">
                 <div className="w-7 h-7 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 text-xs font-bold">
-                  {user?.name?.[0]?.toUpperCase() || user?.phone?.[0] || 'U'}
+                  {user?.name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || 'U'}
                 </div>
                 <div className="hidden lg:block text-right">
                   <div className="text-xs font-semibold text-slate-700 leading-tight">{user?.name || 'User'}</div>

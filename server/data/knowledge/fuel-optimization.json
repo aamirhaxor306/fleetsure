@@ -1,0 +1,76 @@
+{
+  "chunks": [
+    {
+      "id": "fuel-opt-001",
+      "title": "Diesel Prices by Region in India",
+      "content": "Diesel prices in India vary significantly by region due to state taxes and transportation costs. In North India, diesel typically ranges from Rs 87-92 per litre across states like Delhi, Punjab, Haryana, and Uttar Pradesh. Southern states including Karnataka, Tamil Nadu, Kerala, and Andhra Pradesh see prices of Rs 89-95 per litre. Western regions (Maharashtra, Gujarat, Rajasthan) average Rs 88-93 per litre, while Eastern states (West Bengal, Odisha, Bihar, Assam) have the highest range at Rs 90-96 per litre. Fleet operators should factor regional price differentials when planning fuel stops on long-haul routes.",
+      "tags": ["diesel", "fuel prices", "regional pricing", "North India", "South India", "West India", "East India", "fleet fuel cost"]
+    },
+    {
+      "id": "fuel-opt-002",
+      "title": "Fuel Efficiency Benchmarks for Indian Trucks",
+      "content": "Understanding fuel efficiency benchmarks helps fleet managers set realistic targets and identify underperforming vehicles. Tata Prima trucks typically achieve 3.5-4.0 km/L under loaded conditions on highways. Ashok Leyland vehicles range from 3.2-3.8 km/L depending on model and load. BharatBenz offers better efficiency at 3.8-4.2 km/L with modern engine technology. Eicher light commercial vehicles lead with 4.0-4.5 km/L for lighter loads. LPG tankers, due to their specialized design and weight, achieve 2.8-3.5 km/L. These figures assume optimal driving conditions and proper maintenance.",
+      "tags": ["fuel efficiency", "km/L", "Tata Prima", "Ashok Leyland", "BharatBenz", "Eicher", "LPG tanker", "benchmarks"]
+    },
+    {
+      "id": "fuel-opt-003",
+      "title": "Driving Habits Impact on Fuel Consumption",
+      "content": "Driver behavior significantly impacts fleet fuel economy. Gentle acceleration can save 10-15% fuel compared to aggressive throttle input. Maintaining steady speed at 50-60 km/h is optimal for trucks on highways, as speeds above 70 km/h dramatically increase air resistance and fuel consumption. Avoiding sudden braking and anticipating traffic flow reduces fuel wastage. Idling for more than 3 minutes consumes fuel without mileage—turn off engines during long waits. Fleet operators should invest in driver training programs to instill fuel-efficient driving habits.",
+      "tags": ["driving habits", "acceleration", "optimal speed", "fuel savings", "driver training", "idling"]
+    },
+    {
+      "id": "fuel-opt-004",
+      "title": "Tyre Pressure Impact on Fuel Economy",
+      "content": "Under-inflated tyres are a major hidden cost for fleet operators. Running tyres below recommended pressure increases rolling resistance, costing 1-2% additional fuel per trip. For a fleet running 100 trucks covering 50,000 km monthly, this translates to substantial annual losses. Over-inflation reduces grip and tyre life. Check tyre pressure weekly when tyres are cold, and maintain manufacturer-specified levels. Many modern trucks have TPMS (Tyre Pressure Monitoring Systems) that alert drivers to pressure drops. Proper inflation also extends tyre life by 20-30%.",
+      "tags": ["tyre pressure", "under-inflation", "rolling resistance", "fuel cost", "TPMS", "tyre maintenance"]
+    },
+    {
+      "id": "fuel-opt-005",
+      "title": "Fuel Adulteration Detection and Prevention",
+      "content": "Fuel adulteration with kerosene, solvents, or used oil is prevalent at unbranded pumps and costs fleets through engine damage and reduced efficiency. Signs of adulteration include unusual smoke, knocking, reduced power, and faster filter clogging. Always refuel at branded HPCL, BPCL, IOCL, or Shell outlets with proper receipts. Use fuel quality testing kits for random sampling. Maintain fuel purchase records with pump details for traceability. Adulterated fuel can void engine warranties and cause injector failures costing Rs 50,000-1,00,000 per vehicle.",
+      "tags": ["fuel adulteration", "kerosene", "detection", "prevention", "branded fuel", "engine damage"]
+    },
+    {
+      "id": "fuel-opt-006",
+      "title": "Fleet Fuel Card Management in India",
+      "content": "Fleet fuel cards from HPCL, BPCL, and IOCL streamline fuel procurement and provide better control. Cards offer centralized billing, eliminating cash handling and pilferage risks. Fleet cards typically provide 2-5% volume-based discounts and detailed transaction reports. Set per-transaction and daily limits to prevent misuse. Integrate fuel card data with fleet management software for real-time consumption tracking. Major oil companies offer fleet-specific programs with dedicated account managers. Cards work across their nationwide network—HPCL has 15,000+ outlets, BPCL and IOCL have similar coverage.",
+      "tags": ["fuel card", "HPCL", "BPCL", "IOCL", "fleet card", "fuel procurement", "volume discount"]
+    },
+    {
+      "id": "fuel-opt-007",
+      "title": "CNG and LNG Alternatives for Fleet Vehicles",
+      "content": "CNG and LNG are gaining traction as cleaner, cost-effective alternatives for Indian fleet vehicles. CNG works well for light commercial vehicles and city delivery fleets, with 30-40% lower fuel costs than diesel. LNG is suitable for long-haul trucks with ranges of 800-1000 km per fill. India's LNG infrastructure is expanding along major corridors. Conversion costs range from Rs 1.5-3 lakh for CNG and Rs 5-8 lakh for LNG kits. Government incentives and lower GST (5% vs 28% on diesel) make alternative fuels attractive. Consider CNG/LNG for routes with adequate refueling infrastructure.",
+      "tags": ["CNG", "LNG", "alternative fuel", "clean fuel", "conversion", "fuel cost savings"]
+    },
+    {
+      "id": "fuel-opt-008",
+      "title": "GPS-Based Fuel Tracking and Tank Sensors",
+      "content": "Modern fuel monitoring combines GPS telematics with tank-level sensors for comprehensive visibility. GPS systems track vehicle movement and can correlate fuel consumption with distance to detect anomalies. Ultrasonic or capacitive tank sensors provide real-time fuel level data, alerting to unexpected drops that may indicate theft or leakage. Integration with fuel card transactions enables reconciliation of purchased vs consumed fuel. Typical sensor accuracy is ±2-3% and costs Rs 15,000-30,000 per vehicle. Fleet management platforms aggregate this data for fleet-wide fuel efficiency dashboards and exception reporting.",
+      "tags": ["GPS", "fuel tracking", "tank sensors", "telematics", "fuel theft", "monitoring"]
+    },
+    {
+      "id": "fuel-opt-009",
+      "title": "Route Planning for Fuel Optimization",
+      "content": "Strategic route planning can reduce fuel consumption by 5-15%. Prefer highways over congested city routes—stop-start traffic increases fuel use by 20-30%. Plan routes to minimize left turns and U-turns that require idling. Consider elevation changes; hilly terrain can increase consumption by 15-25%. Use route optimization software that factors in road conditions, toll costs, and fuel station locations. Consolidate deliveries to reduce total distance. Avoid peak traffic hours when possible. Well-planned routes also reduce driver fatigue and improve delivery reliability.",
+      "tags": ["route planning", "fuel optimization", "highway", "traffic", "route optimization software"]
+    },
+    {
+      "id": "fuel-opt-010",
+      "title": "Seasonal Fuel Price Patterns in India",
+      "content": "Indian diesel prices follow predictable seasonal patterns that affect fleet budgeting. Prices typically rise during monsoon (July-September) due to supply chain disruptions and increased agricultural demand. Winter months (November-February) often see higher consumption for heating. Pre-harvest season (March-May) can spike prices with increased trucking activity. Budget 5-8% variance for seasonal fluctuations in annual fuel planning. Government policy changes and international crude prices also impact domestic rates. Monitor oil company price revision cycles—typically weekly—for bulk purchase timing.",
+      "tags": ["seasonal prices", "monsoon", "fuel budget", "price patterns", "India"]
+    },
+    {
+      "id": "fuel-opt-011",
+      "title": "Load Optimization and Fuel Efficiency",
+      "content": "Vehicle load directly impacts fuel consumption—every 10% overload increases fuel use by 5-8%. Ensure loads are properly distributed to avoid unnecessary strain. Avoid partial loads when possible; full truckload (FTL) operations are more fuel-efficient per tonne-km than multiple partial loads. Use aerodynamic load covers and avoid protruding loads that increase drag. Empty backhauls waste fuel—prioritize load board integration for return trip optimization. Lightweight trailers and modern materials can reduce tare weight, improving payload efficiency.",
+      "tags": ["load optimization", "overload", "FTL", "payload", "backhaul", "aerodynamics"]
+    },
+    {
+      "id": "fuel-opt-012",
+      "title": "Engine Maintenance and Fuel Economy",
+      "content": "Proper engine maintenance is critical for sustained fuel efficiency. Clogged air filters can reduce efficiency by 10-15%—replace every 20,000-30,000 km. Dirty fuel filters cause incomplete combustion and power loss. Regular oil changes with correct viscosity maintain engine efficiency. Faulty injectors can increase consumption by 20% or more. Turbocharger issues significantly impact performance. Follow OEM maintenance schedules strictly. A well-maintained truck can maintain fuel efficiency throughout its life, while neglected vehicles see 15-25% degradation within 2-3 years.",
+      "tags": ["engine maintenance", "air filter", "fuel filter", "injectors", "oil change", "fuel economy"]
+    }
+  ]
+}

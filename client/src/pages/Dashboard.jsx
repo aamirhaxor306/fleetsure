@@ -22,6 +22,102 @@ const PENALTY_ESTIMATES = {
 // ── Sort priority for action items ──────────────────────────────────────────
 const DOC_PRIORITY = { insurance: 0, PUC: 1, FC: 2, permit: 3 }
 
+// ── Welcome Modal (shown once for new users) ────────────────────────────────
+function WelcomeModal({ userName, onDismiss }) {
+  const [visible, setVisible] = useState(false)
+
+  useEffect(() => {
+    // Trigger entrance animation after mount
+    requestAnimationFrame(() => setVisible(true))
+  }, [])
+
+  const handleDismiss = () => {
+    setVisible(false)
+    setTimeout(onDismiss, 200) // wait for exit animation
+  }
+
+  return (
+    <div
+      className={`fixed inset-0 z-[9999] flex items-center justify-center px-4 transition-all duration-300 ${
+        visible ? 'bg-black/50 backdrop-blur-sm' : 'bg-black/0'
+      }`}
+      onClick={handleDismiss}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className={`bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden transition-all duration-300 ${
+          visible ? 'scale-100 opacity-100' : 'scale-95 opacity-0'
+        }`}
+      >
+        {/* Top accent bar */}
+        <div className="h-1.5 bg-gradient-to-r from-blue-600 via-blue-500 to-emerald-500" />
+
+        <div className="px-7 pt-7 pb-6">
+          {/* Logo */}
+          <div className="w-14 h-14 rounded-2xl bg-blue-600 flex items-center justify-center text-white font-bold text-2xl mb-5 shadow-lg shadow-blue-500/20">
+            F
+          </div>
+
+          {/* Headline */}
+          <h2 className="text-2xl font-bold text-slate-900 leading-tight">
+            Save Smart. Manage Smart.
+          </h2>
+          <p className="text-slate-500 text-sm mt-2 leading-relaxed">
+            Welcome aboard{userName ? `, ${userName}` : ''}! You're now on <span className="font-semibold text-slate-700">Fleetsure</span> — your fleet's compliance and management expert.
+          </p>
+
+          {/* Feature highlights */}
+          <div className="mt-6 space-y-4">
+            <div className="flex items-start gap-3">
+              <div className="w-9 h-9 rounded-lg bg-emerald-50 flex items-center justify-center flex-shrink-0 mt-0.5">
+                <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                </svg>
+              </div>
+              <div>
+                <div className="text-sm font-semibold text-slate-900">Compliance Tracking</div>
+                <div className="text-xs text-slate-500 mt-0.5">Never miss a renewal or document expiry. Stay penalty-free.</div>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3">
+              <div className="w-9 h-9 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0 mt-0.5">
+                <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                </svg>
+              </div>
+              <div>
+                <div className="text-sm font-semibold text-slate-900">Trip Profitability</div>
+                <div className="text-xs text-slate-500 mt-0.5">Know exactly what each trip earns. Track fuel, toll, and margins.</div>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3">
+              <div className="w-9 h-9 rounded-lg bg-violet-50 flex items-center justify-center flex-shrink-0 mt-0.5">
+                <svg className="w-5 h-5 text-violet-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                </svg>
+              </div>
+              <div>
+                <div className="text-sm font-semibold text-slate-900">AI Insights</div>
+                <div className="text-xs text-slate-500 mt-0.5">Get smart recommendations from your fleet data to cut costs.</div>
+              </div>
+            </div>
+          </div>
+
+          {/* CTA */}
+          <button
+            onClick={handleDismiss}
+            className="mt-7 w-full bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl py-3 transition-colors shadow-lg shadow-blue-500/20"
+          >
+            Let's Get Started
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function Dashboard() {
   const { user } = useAuth()
   const [health, setHealth] = useState(null)
@@ -34,6 +130,18 @@ export default function Dashboard() {
   const [recentTrips, setRecentTrips] = useState([])
   const [loading, setLoading] = useState(true)
   const [showAllActions, setShowAllActions] = useState(false)
+
+  // ── Welcome modal (show once per user) ──────────────────────────────────────
+  const welcomeKey = user?.id ? `fleetsure_welcome_seen_${user.id}` : null
+  const [showWelcome, setShowWelcome] = useState(() => {
+    if (!welcomeKey) return false
+    return !localStorage.getItem(welcomeKey)
+  })
+
+  const dismissWelcome = () => {
+    if (welcomeKey) localStorage.setItem(welcomeKey, '1')
+    setShowWelcome(false)
+  }
 
   useEffect(() => {
     Promise.allSettled([
@@ -181,6 +289,9 @@ export default function Dashboard() {
 
   return (
     <div>
+      {/* ── Welcome Modal ── */}
+      {showWelcome && <WelcomeModal userName={user?.name} onDismiss={dismissWelcome} />}
+
       {/* ═══════════════════════════════════════════════════════════════════════
           SECTION 1: Fleet Compliance Command Center
           ═══════════════════════════════════════════════════════════════════════ */}

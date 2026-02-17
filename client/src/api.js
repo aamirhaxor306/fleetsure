@@ -15,10 +15,12 @@ async function request(path, opts = {}) {
   return data
 }
 
-// ── Auth (Firebase Phone + Backend JWT) ──────────────────
+// ── Auth (Email OTP + Backend JWT) ───────────────────────
 export const auth = {
-  firebaseLogin: (firebaseIdToken) =>
-    request('/auth/firebase-login', { method: 'POST', body: JSON.stringify({ firebaseIdToken }) }),
+  requestOtp: (email) =>
+    request('/auth/request-otp', { method: 'POST', body: JSON.stringify({ email }) }),
+  verifyOtp: (email, otp) =>
+    request('/auth/verify-otp', { method: 'POST', body: JSON.stringify({ email, otp }) }),
   onboard: (fleetName, ownerName) =>
     request('/auth/onboard', { method: 'POST', body: JSON.stringify({ fleetName, ownerName }) }),
   me: () => request('/auth/me'),

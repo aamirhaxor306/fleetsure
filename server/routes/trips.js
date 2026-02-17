@@ -34,8 +34,8 @@ router.get('/:id', async (req, res, next) => {
     // Avoid matching "analytics" as an :id — let it pass through
     if (req.params.id === 'analytics') return next()
 
-    const trip = await prisma.trip.findUnique({
-      where: { id: req.params.id },
+    const trip = await prisma.trip.findFirst({
+      where: { id: req.params.id, tenantId: req.tenantId },
       include: {
         vehicle: { select: { id: true, vehicleNumber: true, vehicleType: true } },
         driver: { select: { id: true, name: true, phone: true, licenseNumber: true, licensePhotoUrl: true, vehicleId: true } },
@@ -55,6 +55,7 @@ router.get('/:id', async (req, res, next) => {
     // Also fetch similar trips on the same route for comparison
     const similarTrips = await prisma.trip.findMany({
       where: {
+        tenantId: req.tenantId,
         loadingLocation: trip.loadingLocation,
         destination: trip.destination,
         status: 'reconciled',
@@ -98,7 +99,7 @@ router.post('/', requireRole('owner', 'manager'), async (req, res) => {
 
     if (savedRouteId) {
       // ── Route-based mode: fill from saved route template ────────────
-      const route = await prisma.savedRoute.findUnique({ where: { id: savedRouteId } })
+      const route = await prisma.savedRoute.findFirst({ where: { id: savedRouteId, tenantId: req.tenantId } })
       if (!route) {
         return res.status(400).json({ error: 'Saved route not found' })
       }

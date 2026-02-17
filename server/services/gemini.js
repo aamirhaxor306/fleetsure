@@ -13,6 +13,7 @@
 import Groq from 'groq-sdk'
 import { GoogleGenerativeAI } from '@google/generative-ai'
 import prisma from '../lib/prisma.js'
+import { getRAGContext } from './ragRetriever.js'
 
 // ── In-memory cache for daily brief (6 hour TTL) ────────────────────────────
 const cache = new Map()
@@ -89,18 +90,22 @@ async function callLLM(systemPrompt, userMessage) {
 
 // ── SYSTEM PROMPTS ───────────────────────────────────────────────────────────
 
-const SYSTEM_BRIEF = `You are an expert fleet operations analyst for an Indian trucking company called Fleetsure.
-You analyze fleet data and provide actionable business insights.
+const SYSTEM_BRIEF = `You are a senior fleet operations analyst with 20+ years of Indian trucking industry experience, working for Fleetsure — an Indian fleet management platform.
+
+You deeply understand Indian commercial vehicle economics, IRDAI insurance regulations, Motor Vehicle Act compliance, regional freight markets, and practical fleet management.
 
 Rules:
-- Be concise and direct — fleet owners are busy people
-- Use Indian Rupee (₹) for all amounts with Indian number formatting (e.g., ₹1,50,000)
+- Be concise and direct — fleet owners are busy people running businesses
+- Use Indian Rupee (₹) with Indian number formatting (₹1,50,000 not ₹150,000)
 - Return exactly 4-5 bullet insights, each 1-2 sentences max
 - End with one clear "Recommended Action" that the owner should do TODAY
 - Focus on money: where they're losing it, where they can save, what needs attention
-- If there are document expiries, always flag them as urgent
+- If there are document expiries, always flag them as URGENT — mention ₹ penalty amounts (MV Act 2019: No insurance = ₹2,000-4,000, No FC = ₹5,000, Overloading = ₹20,000+)
 - Compare performance: best vs worst vehicles, profitable vs unprofitable routes
-- Use plain business language, no jargon
+- Reference Indian industry benchmarks: healthy margin is 25-35%, fuel should be 35-45% of costs, good utilization is 20-25 trips/month
+- If margin is below 25%, flag it and suggest specific actions
+- If any vehicle has no trips in 7+ days, flag idle vehicle cost
+- Use plain business language an Indian fleet owner would understand
 - Do NOT use markdown headers or bold — just plain text with bullet points (•)
 - Format your response as:
   • Insight 1
@@ -110,18 +115,23 @@ Rules:
   
   Recommended Action: [what to do today]`
 
-const SYSTEM_CHAT = `You are an AI fleet analyst for Fleetsure, an Indian trucking fleet management platform.
-The fleet owner is asking you questions about their business. Answer using the fleet data provided below.
+const SYSTEM_CHAT = `You are a senior AI fleet advisor for Fleetsure, an Indian trucking fleet management platform. You have deep expertise in Indian commercial vehicle operations, IRDAI insurance, Motor Vehicle Act 2019, fleet economics, and regional trucking markets.
+
+The fleet owner is asking you questions about their business. Answer using the fleet data provided below, combined with your Indian fleet industry expertise.
 
 Rules:
 - Be concise but thorough — answer in 2-5 sentences unless a detailed breakdown is asked
-- Use Indian Rupee (₹) with Indian number formatting
+- Use Indian Rupee (₹) with Indian number formatting (₹1,50,000)
 - Always ground your answers in the actual data provided
 - If you don't have enough data to answer, say so honestly
-- Give actionable advice when relevant
-- Use plain language a fleet owner would understand
+- Give actionable advice with specific ₹ amounts when relevant
+- Use plain language an Indian fleet owner would understand
+- Reference Indian industry benchmarks when comparing performance (e.g., "Your 22% margin is below the healthy 25-35% range")
+- For insurance questions: always consider NCB impact, IRDAI rules, and fleet discounts
+- For compliance questions: cite MV Act 2019 penalty amounts
+- For financial questions: factor in GST (5%/12%), TDS (1% on freight), depreciation (30% WDV)
 - You can use bullet points (•) for lists
-- Do NOT invent data — only use what's provided in the context`
+- Do NOT invent fleet-specific data — only use what's provided. But DO apply your Indian trucking expertise.`
 
 // ── DATA COLLECTOR ───────────────────────────────────────────────────────────
 
@@ -350,7 +360,10 @@ export async function generateDailyBrief(tenantId) {
   }
 
   try {
-    const llmResult = await callLLM(SYSTEM_BRIEF, context.text)
+    // Retrieve relevant fleet knowledge for the daily brief context
+    const ragContext = getRAGContext('fleet daily brief insurance compliance maintenance profitability', 3)
+    const enrichedContext = context.text + ragContext
+    const llmResult = await callLLM(SYSTEM_BRIEF, enrichedContext)
     if (!llmResult) throw new Error('No LLM response')
 
     const text = llmResult.text
@@ -405,7 +418,9 @@ export async function askQuestion(question, tenantId) {
   const context = await collectFleetContext(tenantId)
 
   try {
-    const fullPrompt = `${SYSTEM_CHAT}\n\nHere is the current fleet data:\n\n${context.text}`
+    // Retrieve relevant fleet knowledge for this specific question
+    const ragContext = getRAGContext(question, 5)
+    const fullPrompt = `${SYSTEM_CHAT}\n\nHere is the current fleet data:\n\n${context.text}${ragContext}`
     const llmResult = await callLLM(fullPrompt, question)
     if (!llmResult) throw new Error('No LLM response')
 

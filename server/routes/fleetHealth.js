@@ -33,9 +33,9 @@ router.get('/', async (req, res) => {
     const alertScore = allAlerts.length > 0 ? Math.round((resolvedAlerts.length / allAlerts.length) * 100) : 100
 
     // 3. Maintenance score: % of vehicles serviced in last 30 days
-    const allVehicles = await prisma.vehicle.findMany({ select: { id: true, status: true } })
+    const allVehicles = await prisma.vehicle.findMany({ where: { tenantId: req.tenantId }, select: { id: true, status: true } })
     const recentMaintenance = await prisma.maintenanceLog.findMany({
-      where: { maintenanceDate: { gte: thirtyDaysAgo } },
+      where: { tenantId: req.tenantId, maintenanceDate: { gte: thirtyDaysAgo } },
       select: { vehicleId: true },
       distinct: ['vehicleId'],
     })
@@ -43,7 +43,7 @@ router.get('/', async (req, res) => {
     const maintScore = allVehicles.length > 0 ? Math.round((maintainedVehicleIds.size / allVehicles.length) * 100) : 100
 
     // 4. Tyres score: % in good condition
-    const allTyres = await prisma.tyre.findMany({ select: { condition: true } })
+    const allTyres = await prisma.tyre.findMany({ where: { tenantId: req.tenantId }, select: { condition: true } })
     const goodTyres = allTyres.filter(t => t.condition === 'good')
     const tyreScore = allTyres.length > 0 ? Math.round((goodTyres.length / allTyres.length) * 100) : 100
 

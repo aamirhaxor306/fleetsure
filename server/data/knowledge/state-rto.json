@@ -1,0 +1,76 @@
+{
+  "chunks": [
+    {
+      "id": "rto-001",
+      "title": "National Permit - Fees and Validity",
+      "content": "National Permit allows commercial vehicles to operate across India. Fee: Rs 16,500 for 5 years validity. Coverage: Valid in all states and union territories EXCEPT Jammu & Kashmir, Mizoram, and Meghalaya - these require additional permits or have separate arrangements. Benefits: Single permit for pan-India operations; No need for multiple state permits; Essential for long-haul logistics and inter-state transport. Requirements: Valid fitness certificate; Valid insurance; Tax paid in home state; Vehicle must meet national permit category (goods/passenger). Application through Parivahan Sewa portal or state RTO. National permit is cost-effective for fleet operators with inter-state operations compared to obtaining multiple state permits.",
+      "tags": ["national permit", "Rs 16500", "5 years", "J&K", "Mizoram", "Meghalaya", "pan-India"]
+    },
+    {
+      "id": "rto-002",
+      "title": "State Permit vs National Permit Comparison",
+      "content": "State Permit: Valid only within issuing state boundaries; Lower fee (varies by state, typically Rs 2,000-5,000); Required for intra-state operations; Quick to obtain; Multiple state permits needed for multi-state operations. National Permit: Valid across India (except J&K, Mizoram, Meghalaya); Rs 16,500 for 5 years; Single permit for inter-state; Higher initial cost but economical for regular inter-state haulage; Additional tax payment (national permit tax) may apply in some states. Choice depends on: Operational scope (intra vs inter-state), route frequency, fleet size. Fleet operators doing occasional inter-state trips may use temporary permit; regular inter-state operators need national permit.",
+      "tags": ["state permit", "national permit", "comparison", "intra-state", "inter-state"]
+    },
+    {
+      "id": "rto-003",
+      "title": "Temporary Permit - Validity and Use",
+      "content": "Temporary permit is for occasional inter-state transport. Validity: 1 month (30 days). Use case: One-time or occasional interstate trips; When national permit not economically justified; Emergency or ad-hoc transport needs. Fee: Lower than national permit (varies by state). Limitations: Single trip or limited trips during validity; Not for regular inter-state operations. Application: Through RTO, often with trip-specific details. Some states offer temporary permit for 15 days or 3 months in specific cases. Fleet operators with irregular inter-state demand can use temporary permits to avoid national permit cost. For regular operations, national permit is more economical.",
+      "tags": ["temporary permit", "1 month", "occasional", "interstate", "validity"]
+    },
+    {
+      "id": "rto-004",
+      "title": "Special Permits - ODC and Hazardous Goods",
+      "content": "Special permits for specialized transport: ODC (Over Dimensional Cargo) Permit: For loads exceeding standard dimensions (width, height, length); Required when cargo protrudes beyond vehicle; Route-specific, may need police escort; Fee and validity vary by state; Advance application required. Hazardous Goods Permit: For transport of explosives, inflammable, toxic, corrosive substances; Mandatory under CMVR for hazardous material transport; Driver training and vehicle specifications required; Route restrictions may apply. Both require additional documentation, vehicle compliance, and often escort vehicles. Application through state transport department. Fleet operators in project logistics or chemical transport must obtain appropriate special permits.",
+      "tags": ["special permit", "ODC", "over dimensional cargo", "hazardous goods", "explosives"]
+    },
+    {
+      "id": "rto-005",
+      "title": "Road Tax by Major States - Maharashtra, Gujarat, Rajasthan",
+      "content": "Road tax (lifetime/one-time) rates for commercial vehicles: Maharashtra: 6% to 12% of vehicle cost depending on vehicle type and age; Life tax option available. Gujarat: 8% to 15% based on vehicle category; Higher for goods vehicles. Rajasthan: 8% to 12% of ex-showroom price; Varies by vehicle class. Tax can be paid annually or as one-time life tax in most states. Life tax is often 10-15 years equivalent. Interstate vehicles: Tax paid in home state; National permit holders may need to pay additional tax in some states. Tax rates revised periodically - verify current rates with state RTO. Fleet operators should factor road tax in total cost of ownership when comparing states for vehicle registration.",
+      "tags": ["road tax", "Maharashtra", "Gujarat", "Rajasthan", "6-12%", "8-15%", "8-12%"]
+    },
+    {
+      "id": "rto-006",
+      "title": "Road Tax by Major States - UP, MP, Karnataka, Tamil Nadu",
+      "content": "Road tax rates for commercial vehicles: Uttar Pradesh: 7% to 11% of vehicle cost; Life tax and annual options. Madhya Pradesh: 8% to 10%; Competitive rates for fleet registration. Karnataka: 7% to 13% depending on vehicle type; Bengaluru may have additional cess. Tamil Nadu: 6% to 11%; Life tax for 15 years common. Tax payment: At time of registration (first time) or renewal; Can be paid at RTO or online through state portals. Tax exemption: Some states offer concessions for electric vehicles, CNG vehicles. Fleet operators often register vehicles in states with lower tax - ensure operational presence or risk of tax demand from other states.",
+      "tags": ["road tax", "UP", "MP", "Karnataka", "Tamil Nadu", "7-11%", "8-10%", "7-13%", "6-11%"]
+    },
+    {
+      "id": "rto-007",
+      "title": "Green Tax - Vehicles Older Than 8 Years",
+      "content": "Green tax is levied on older vehicles to discourage pollution. Applicability: Vehicles older than 8 years (15 years for transport vehicles in some states). Amount: Rs 200 to Rs 500 per year depending on vehicle type and state; Commercial vehicles typically higher. Purpose: Encourage vehicle replacement; Fund environmental initiatives. Payment: At time of fitness renewal or annual tax payment. Exemptions: Electric vehicles, hybrid vehicles, vehicles in hill states (some states). Some states have differential green tax - higher for diesel, lower for petrol. Fleet operators with older fleet must budget for green tax. Consider vehicle age when planning replacement cycle - green tax adds to operating cost of old vehicles.",
+      "tags": ["green tax", "8 years", "Rs 200", "Rs 500", "older vehicles", "pollution"]
+    },
+    {
+      "id": "rto-008",
+      "title": "Border Check Post Procedures and E-Way Bill",
+      "content": "Inter-state border check posts: Commercial vehicles may be stopped at state borders for document verification. Documents checked: RC, insurance, FC, PUC, permit, driver license, e-way bill (for goods). E-Way Bill: Mandatory for inter-state goods movement above Rs 50,000 value; Generated on GST portal (ewaybillgst.gov.in); Contains vehicle number, consignor, consignee, goods description; Valid for specified distance/days. Check post procedures: Produce documents on demand; Weighbridge for overload check; May need to pay state entry tax in some states. Delays common at busy borders - factor in transit time. Digital/document verification reducing physical checks. Non-compliance with e-way bill attracts GST penalties.",
+      "tags": ["border check post", "e-way bill", "inter-state", "GST", "weighbridge"]
+    },
+    {
+      "id": "rto-009",
+      "title": "State-Wise Overloading Enforcement Differences",
+      "content": "Overloading enforcement varies by state: Strict enforcement states: Gujarat, Maharashtra, Punjab - regular weighbridge checks, heavy penalties. Moderate: Karnataka, Tamil Nadu, Rajasthan - check posts at borders, random checks. Variable: Some states have fewer weighbridges or less frequent checks. Penalties are as per MV Act (Rs 20,000 + Rs 2,000/tonne) but enforcement intensity differs. Weighbridge locations: National highways have weigh-in-motion (WIM) systems; State borders often have static weighbridges. Fleet operators should not assume leniency - enforcement is increasing nationwide. Best practice: Never overload regardless of state. Some states have implemented blacklisting of overloaded vehicles.",
+      "tags": ["overloading", "enforcement", "state-wise", "weighbridge", "check post"]
+    },
+    {
+      "id": "rto-010",
+      "title": "Online Services - Parivahan Portal, mParivahan, Vahan",
+      "content": "Government digital services for vehicle/driver management: Parivahan Sewa (parivahan.gov.in): DL application/renewal, RC application, permit services, duplicate documents, NOC; Integrated with state RTOs. mParivahan App: Digital RC and DL - valid as per MV Act; Can be shown to enforcement instead of physical documents; Requires registration with vehicle/driver details. Vahan Portal (vahan.parivahan.gov.in): Vehicle registration services; Tax payment; Fitness certificate status; Permit details. Services vary by state - not all states have full online integration. Fleet operators can use these for bulk document verification, renewal tracking. Digital documents (mParivahan) legally valid - reduce need for physical document handling.",
+      "tags": ["Parivahan", "mParivahan", "Vahan", "online services", "digital RC", "digital DL"]
+    },
+    {
+      "id": "rto-011",
+      "title": "Vehicle Registration Transfer Between States",
+      "content": "Transfer of vehicle registration from one state to another: When required: Relocation, purchase of used vehicle from another state, business transfer. Process: (1) Obtain NOC (No Objection Certificate) from original state RTO - confirms no dues, no theft; (2) Pay road tax in new state - full life tax or proportionate; (3) Apply for new registration at new state RTO with NOC, RC, insurance, address proof; (4) Surrender old number - new number allotted in new state; (5) Update insurance with new registration. Timeline: 2-4 weeks typically. Retaining old number: Not possible when transferring state - new state issues new number. Fleet operators acquiring vehicles from other states or relocating operations must complete transfer to avoid penalties for plying with wrong state registration.",
+      "tags": ["registration transfer", "NOC", "inter-state", "vehicle transfer", "RTO"]
+    },
+    {
+      "id": "rto-012",
+      "title": "RTO Jurisdiction and Registration Best Practices",
+      "content": "Vehicle registration jurisdiction: Vehicles must be registered in the state where they are 'normally kept' or where owner has place of business. Fleet operators with operations in multiple states: Can register in head office state; Or register in state of primary operation. Considerations: Road tax rates vary - lower tax states attractive but ensure genuine business presence; Enforcement may question out-of-state vehicles in local operations; National permit vehicles - home state registration sufficient for inter-state. Best practices: Maintain proper address proof in registration state; Keep all documents updated; Ensure tax payment in home state; For large fleets, consider distributed registration across states of operation. Wrong jurisdiction registration can lead to tax demands and penalties.",
+      "tags": ["RTO", "jurisdiction", "registration", "fleet", "best practices"]
+    }
+  ]
+}

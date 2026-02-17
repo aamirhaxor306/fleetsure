@@ -8,6 +8,10 @@
 import Groq from 'groq-sdk'
 import crypto from 'crypto'
 import { TOOL_MAP, TOOL_DEFINITIONS } from './agentTools.js'
+import { loadKnowledgeBase } from './ragRetriever.js'
+
+// Pre-load knowledge base on import (used by searchFleetKnowledge tool)
+loadKnowledgeBase()
 
 // ── Conversation Store (in-memory, 30-min TTL) ─────────────────────────────
 const conversations = new Map()
@@ -41,32 +45,21 @@ function createConversation(tenantId = null) {
   return conv
 }
 
-// ── System Prompt ───────────────────────────────────────────────────────────
-const SYSTEM_PROMPT = `You are the Fleetsure AI Fleet Agent — an expert fleet operations assistant for an Indian trucking fleet management platform.
+// ── System Prompt (Compact for tool-calling) ────────────────────────────────
+const AGENT_SYSTEM_PROMPT = `You are the Fleetsure AI Fleet Agent — an expert Indian fleet operations assistant.
 
-You have access to tools that can query and modify the entire CRM: vehicles, trips, drivers, documents, alerts, maintenance, insurance, routes, and more.
+You have tools to query and modify the fleet CRM: vehicles, trips, drivers, documents, alerts, maintenance, insurance, routes, and more.
 
-RULES:
-1. ALWAYS fetch real data using tools before answering. NEVER guess or make up data.
-2. For data questions, call the relevant read tool first, then summarize the results clearly.
-3. For actions (create, update, delete), explain what you will do, then call the write tool.
-4. Use Indian Rupee (₹) formatting for all amounts.
-5. Be concise and action-oriented. Fleet owners are busy.
-6. When listing items, use clear formatting with bullet points.
-7. If you need to chain multiple tools, call them one by one.
-8. If a tool returns an error, explain it to the user and suggest alternatives.
-9. When asked vague questions, fetch the most relevant data and provide a clear summary.
+IMPORTANT — TOOL CALLING RULES:
+1. ALWAYS use tools to fetch real data before answering. NEVER guess or make up IDs.
+2. To find a driver/vehicle by name, first call listDrivers or listVehicles to get the ID, then call getDriver or getVehicle with that ID.
+3. For actions (create/update/delete), explain what you will do, then call the write tool.
+4. Use Indian Rupee (₹) with Indian formatting (₹1,50,000).
+5. Be concise. Fleet owners are busy.
+6. If a tool returns an error, explain it and suggest alternatives.
+7. For industry knowledge (regulations, benchmarks, insurance rules), use the searchFleetKnowledge tool.
 
-You can help with:
-- Fleet overview, vehicle status, and health
-- Trip management and profitability analysis
-- Driver performance and management
-- Document compliance (insurance, FC, PUC, permits)
-- Maintenance tracking and cost analysis
-- Alert management
-- Insurance renewals and cost optimization
-- Route management
-- Financial reporting and reconciliation`
+You can help with: fleet overview, trips, profitability, drivers, documents, compliance, maintenance, alerts, insurance, renewals, routes, financial reporting.`
 
 // ── Agent Turn ──────────────────────────────────────────────────────────────
 const MAX_TOOL_CALLS = 10
@@ -97,9 +90,9 @@ export async function runAgentTurn(message, conversationId = null, tenantId = nu
   let toolCallCount = 0
 
   while (toolCallCount < MAX_TOOL_CALLS) {
-    // Build messages for Groq
+    // Build messages for Groq — compact prompt for reliable tool-calling
     const apiMessages = [
-      { role: 'system', content: SYSTEM_PROMPT },
+      { role: 'system', content: AGENT_SYSTEM_PROMPT },
       ...conv.messages,
     ]
 
@@ -209,7 +202,7 @@ export async function runAgentTurn(message, conversationId = null, tenantId = nu
 
   // Safety: max tool calls reached
   const finalMessages = [
-    { role: 'system', content: SYSTEM_PROMPT },
+    { role: 'system', content: AGENT_SYSTEM_PROMPT },
     ...conv.messages,
     { role: 'user', content: 'You have reached the maximum number of tool calls. Please summarize what you found so far.' },
   ]
@@ -295,7 +288,7 @@ async function runAgentContinue(conv) {
 
   while (toolCallCount < MAX_TOOL_CALLS) {
     const apiMessages = [
-      { role: 'system', content: SYSTEM_PROMPT },
+      { role: 'system', content: AGENT_SYSTEM_PROMPT },
       ...conv.messages,
     ]
 

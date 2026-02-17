@@ -1,0 +1,76 @@
+{
+  "chunks": [
+    {
+      "id": "benchmark-001",
+      "title": "Average Freight Rates by Major Corridors",
+      "content": "Freight rates vary significantly by corridor due to demand-supply dynamics. Delhi-Mumbai corridor commands Rs 3.2-3.8 per km for full truckload, being the busiest route. Mumbai-Chennai ranges Rs 3.0-3.5 per km with good industrial traffic. Delhi-Kolkata sees Rs 2.8-3.3 per km. Tier-2 corridors and shorter hauls typically get Rs 2.5-3.0 per km. Rates fluctuate 10-15% seasonally—peak during harvest and festival seasons. Backhaul routes often discount 15-25% from primary direction. Monitor competitor rates and load board postings for pricing decisions.",
+      "tags": ["freight rates", "Delhi-Mumbai", "Mumbai-Chennai", "corridor", "per km", "India"]
+    },
+    {
+      "id": "benchmark-002",
+      "title": "Vehicle Utilization Benchmarks",
+      "content": "Optimal utilization is critical for fleet profitability. Long-haul trucks should achieve 20-25 trips per month for healthy economics. Annual mileage of 1.5-2.0 lakh km per vehicle indicates good utilization. Below 1.2 lakh km annually suggests underutilization or operational inefficiency. Utilization drops during monsoon and festival periods—plan for 15-20% seasonal variance. Empty running (deadhead) should stay below 20% of total km. Track utilization by vehicle age—older vehicles may have lower utilization due to reliability issues. Benchmark against fleet size—smaller fleets often achieve higher per-vehicle utilization.",
+      "tags": ["utilization", "trips per month", "lakh km", "annual mileage", "benchmark"]
+    },
+    {
+      "id": "benchmark-003",
+      "title": "Vehicle Breakdown Frequency",
+      "content": "Indian commercial fleet experiences average 2-4 breakdowns per vehicle annually. Well-maintained fleets with newer vehicles stay at 1-2 breakdowns. Older vehicles (8+ years) may see 4-6 breakdowns. Common causes include tyre bursts, battery failure, brake issues, and engine overheating. Each breakdown costs Rs 15,000-50,000 in repairs and lost revenue. Preventive maintenance can reduce breakdowns by 30-40%. Track breakdown frequency by vehicle and component for targeted intervention. Roadside assistance membership reduces downtime and towing costs.",
+      "tags": ["breakdown", "frequency", "maintenance", "downtime", "reliability"]
+    },
+    {
+      "id": "benchmark-004",
+      "title": "Tyre Life Expectations by Brand and Usage",
+      "content": "Tyre life varies by brand, load, and road conditions. Premium brands (MRF, Apollo, CEAT) on highway use typically deliver 80,000-100,000 km. Economy brands may last 60,000-80,000 km. Overloading reduces tyre life by 30-50%. Mix of highway and city driving shortens life due to more braking and turning. Retreading extends life by 50-70% for truck tyres at 30-40% of new tyre cost. Proper inflation and rotation can extend life by 15-20%. Track tyre replacement by vehicle for cost analysis and brand comparison.",
+      "tags": ["tyre life", "MRF", "Apollo", "retreading", "tyre brand", "km life"]
+    },
+    {
+      "id": "benchmark-005",
+      "title": "Insurance Claim Ratios for Commercial Fleet",
+      "content": "Insurance claim experience of 15-25% is considered normal for commercial fleet operations. This means 15-25% of vehicles file claims in a typical year. Higher claim ratios lead to premium increases and possible policy non-renewal. Maintain claim records and root cause analysis for accident prevention. Minor repairs below deductible may be better self-funded to protect no-claim bonus. Fleet safety programs can reduce claim ratio by 20-30%. Compare your ratio with industry—consistently above 25% indicates need for driver training and maintenance improvement.",
+      "tags": ["insurance claims", "claim ratio", "15-25%", "fleet insurance", "premium"]
+    },
+    {
+      "id": "benchmark-006",
+      "title": "Fleet Size Distribution in India",
+      "content": "Indian road freight is dominated by small fleet operators. Approximately 75% of fleet owners operate fewer than 5 trucks, often as owner-operators. Mid-size fleets of 5-20 trucks comprise about 15% of the market. Large fleets with 20+ vehicles represent only 10% but handle significant volume. This fragmentation creates pricing volatility and operational inefficiency. Consolidation is gradually occurring through organized players and aggregators. Small fleet operators face challenges in technology adoption, financing, and compliance. Understanding this structure helps in competitive positioning and partnership strategies.",
+      "tags": ["fleet size", "distribution", "small fleet", "owner-operator", "India market"]
+    },
+    {
+      "id": "benchmark-007",
+      "title": "Indian Road Freight Market Size and Growth",
+      "content": "The Indian road freight market is valued at over Rs 10 lakh crore annually. The sector grows at 8-10% per year, driven by e-commerce, manufacturing growth, and infrastructure development. Road transport handles 65-70% of India's freight movement. Government initiatives like Bharatmala and dedicated freight corridors will reshape the landscape. The market is transitioning from unorganized to organized players. Technology adoption and GST have improved transparency. Long-term growth outlook remains strong with India's economic expansion and logistics infrastructure investment.",
+      "tags": ["market size", "Rs 10 lakh crore", "growth", "8-10%", "road freight", "India"]
+    },
+    {
+      "id": "benchmark-008",
+      "title": "Technology Adoption in Indian Fleet",
+      "content": "Technology penetration in Indian fleet is growing but uneven. GPS tracking adoption stands at approximately 60% of fleet vehicles, with higher penetration in organized and mid-large fleets. Fleet management software adoption is around 25%, with many still using spreadsheets. FASTag adoption is near-universal after government mandate. Telematics for fuel monitoring and driver behavior is adopted by 15-20% of fleets. Cost sensitivity and digital literacy limit adoption among small operators. Early adopters report 10-15% cost reduction and better control. Technology gap creates opportunity for solution providers.",
+      "tags": ["technology", "GPS", "fleet software", "adoption", "60%", "25%"]
+    },
+    {
+      "id": "benchmark-009",
+      "title": "Average Vehicle Age in Indian Commercial Fleet",
+      "content": "The average age of commercial vehicles in Indian fleet is 8-10 years. Many owner-operators run vehicles 12-15 years due to capital constraints. Older vehicles have 30-50% higher maintenance cost and 15-25% lower fuel efficiency. Regulatory pressure on emissions may accelerate replacement of pre-BS-IV vehicles. Optimal replacement cycle for cost efficiency is 7-8 years for heavy trucks. Extended use beyond 10 years increases breakdown risk and insurance costs. Fleet modernization improves reliability but requires financing capacity. Track vehicle age distribution for replacement planning.",
+      "tags": ["vehicle age", "8-10 years", "replacement", "fleet age", "commercial vehicle"]
+    },
+    {
+      "id": "benchmark-010",
+      "title": "Driver Shortage in India",
+      "content": "India faces a severe shortage of approximately 30 lakh commercial drivers. Growing freight demand outpaces driver availability. Younger generations show less interest in driving profession due to lifestyle and working conditions. The gap creates wage inflation and retention challenges. Driver training capacity is insufficient—IRTE and state programs train only a fraction of demand. Migration to better-paying gig economy and other sectors exacerbates shortage. Fleet operators must invest in retention, training, and better working conditions. Driver shortage will remain a structural constraint on fleet growth.",
+      "tags": ["driver shortage", "30 lakh", "recruitment", "retention", "India logistics"]
+    },
+    {
+      "id": "benchmark-011",
+      "title": "Fuel Cost as Percentage of Operating Cost",
+      "content": "Fuel constitutes 35-45% of total operating cost for Indian commercial vehicles. This is the single largest cost component, making fuel efficiency critical. Highway operations tend toward lower end (35-38%) due to better mileage. City and mixed operations reach 40-45% with stop-start traffic. Diesel price volatility directly impacts profitability—Rs 1/litre change affects margins by 1-2%. Fuel optimization through route planning, maintenance, and driver training can reduce this by 5-10%. Track fuel cost as percentage of revenue for trend analysis. Alternative fuels may alter this structure over time.",
+      "tags": ["fuel cost", "35-45%", "operating cost", "diesel", "cost structure"]
+    },
+    {
+      "id": "benchmark-012",
+      "title": "E-Commerce Impact on Fleet Demand",
+      "content": "E-commerce has significantly transformed fleet demand patterns in India. Last-mile delivery has created demand for smaller vehicles and flexible capacity. Same-day and next-day delivery expectations have increased trip frequency. Reverse logistics (returns) add 15-25% to delivery km. Peak seasons (Diwali, Big Billion Days) create 2-3x demand spikes requiring temporary capacity. E-commerce companies increasingly prefer organized fleet with technology over traditional transporters. This has driven adoption of fleet management software and GPS. E-commerce growth of 25-30% annually continues to shape fleet industry evolution.",
+      "tags": ["e-commerce", "last-mile", "delivery", "demand", "peak season", "logistics"]
+    }
+  ]
+}

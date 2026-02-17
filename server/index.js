@@ -30,6 +30,8 @@ import fleetHealthRoutes from './routes/fleetHealth.js'
 import trackingRoutes from './routes/tracking.js'
 import insuranceRoutes from './routes/insurance.js'
 import settingsRoutes from './routes/settings.js'
+import pdfRoutes from './routes/pdfDocuments.js'
+import leadRoutes from './routes/leads.js'
 import prisma from './lib/prisma.js'
 import { runAlertEngine } from './services/alertEngine.js'
 import { startDriverBot, sendMorningBrief, sendEveningSummary, sendWeeklyReport } from './services/driverBot.js'
@@ -54,7 +56,15 @@ app.use(cors({
 
 app.use('/uploads', express.static(join(__dirname, '..', 'uploads')))
 
-// ── Serve public/ for Telegram Mini App ─────────────────────────────────────
+// ── Health check (for Railway) ────────────────────────────────────────────────
+
+app.get('/api/health', (_req, res) => res.json({ status: 'ok', ts: Date.now() }))
+
+// ── Public API (no auth) ─────────────────────────────────────────────────────
+
+app.use('/api/leads', leadRoutes)
+
+// ── Serve public/ for Telegram Mini App & Landing Page ──────────────────────
 
 app.use(express.static(join(__dirname, '..', 'public')))
 
@@ -82,6 +92,7 @@ app.use('/api/fleet-health', fleetHealthRoutes)
 app.use('/api/tracking', trackingRoutes)
 app.use('/api/insurance', insuranceRoutes)
 app.use('/api/settings', settingsRoutes)
+app.use('/api/pdf', pdfRoutes)
 
 // ── Serve client build in production ───────────────────────────────────────
 

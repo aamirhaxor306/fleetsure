@@ -246,7 +246,7 @@ router.post('/:id/fetch-quotes', requireRole('owner', 'manager'), async (req, re
       const pType = partnerTypeMap[renewal.documentType] || 'rto_agent'
 
       const partners = await prisma.renewalPartner.findMany({
-        where: { partnerType: pType, active: true },
+        where: { tenantId: req.tenantId, partnerType: pType, active: true },
       })
 
       if (partners.length === 0) {

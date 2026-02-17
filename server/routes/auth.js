@@ -1,42 +1,29 @@
 /**
- * Fleetsure — Auth Routes (Firebase Phone Auth)
+ * Fleetsure — Auth Routes (Email OTP via Resend)
  * ──────────────────────────────────────────────
- * POST /api/auth/firebase-login  → verify Firebase ID token, issue JWT
- * POST /api/auth/onboard         → first-time user sets fleet name + owner name
- * GET  /api/auth/me              → current user + tenant info
- * POST /api/auth/logout          → clear cookie
+ * POST /api/auth/request-otp   → send 6-digit OTP to email
+ * POST /api/auth/verify-otp    → verify OTP, issue JWT
+ * POST /api/auth/onboard       → first-time user sets fleet name + owner name
+ * GET  /api/auth/me            → current user + tenant info
+ * POST /api/auth/logout        → clear cookie
  */
 import { Router } from 'express'
 import prisma from '../lib/prisma.js'
 import jwt from 'jsonwebtoken'
-import admin from 'firebase-admin'
+import { Resend } from 'resend'
 import { requireAuth } from '../middleware/auth.js'
 
 const router = Router()
 
-// ── Initialize Firebase Admin ───────────────────────────────────────────────
+// ── Initialize Resend (optional — falls back to console OTP if no key) ──────
 
-if (!admin.apps.length) {
-  // Use service account if provided, otherwise just project ID for token verification
-  if (process.env.FIREBASE_SERVICE_ACCOUNT) {
-    try {
-      const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT)
-      admin.initializeApp({
-        credential: admin.credential.cert(serviceAccount),
-      })
-    } catch {
-      admin.initializeApp({
-        projectId: 'fleetsure-70abb',
-      })
-    }
-  } else {
-    admin.initializeApp({
-      projectId: 'fleetsure-70abb',
-    })
-  }
+const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null
+
+// ── helpers ─────────────────────────────────────────────────────────────────
+
+function generateOtp() {
+  return Math.floor(100000 + Math.random() * 900000).toString()
 }
-
-// ── helpers ──────────────────────────────────────────────────────────────────
 
 function signToken(user) {
   return jwt.sign(
@@ -55,34 +42,100 @@ function setCookie(res, token) {
   })
 }
 
-// ── POST /api/auth/firebase-login ───────────────────────────────────────────
+// ── POST /api/auth/request-otp ──────────────────────────────────────────────
 
-router.post('/firebase-login', async (req, res) => {
+router.post('/request-otp', async (req, res) => {
   try {
-    const { firebaseIdToken } = req.body
-    if (!firebaseIdToken) {
-      return res.status(400).json({ error: 'Firebase ID token is required' })
+    const { email } = req.body
+    if (!email || !email.includes('@')) {
+      return res.status(400).json({ error: 'Valid email is required' })
     }
 
-    // Verify the Firebase ID token
-    const decoded = await admin.auth().verifyIdToken(firebaseIdToken)
-    const phoneNumber = decoded.phone_number // e.g. "+919876543210"
-
-    if (!phoneNumber) {
-      return res.status(400).json({ error: 'Phone number not found in token' })
-    }
-
-    // Extract last 10 digits (Indian phone)
-    const cleanPhone = phoneNumber.replace(/\D/g, '').slice(-10)
+    const cleanEmail = email.trim().toLowerCase()
+    const otp = generateOtp()
+    const otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000) // 10 mins
 
     // Find or create user
-    let user = await prisma.user.findUnique({ where: { phone: cleanPhone } })
+    let user = await prisma.user.findUnique({ where: { email: cleanEmail } })
 
     if (!user) {
       user = await prisma.user.create({
-        data: { phone: cleanPhone },
+        data: { email: cleanEmail, otpCode: otp, otpExpiresAt },
+      })
+    } else {
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { otpCode: otp, otpExpiresAt },
       })
     }
+
+    // Send OTP email via Resend
+    if (resend) {
+      try {
+        await resend.emails.send({
+          from: 'Fleetsure <onboarding@resend.dev>',
+          to: [cleanEmail],
+          subject: `${otp} — Your Fleetsure Login Code`,
+          html: `
+            <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 400px; margin: 0 auto; padding: 32px 24px;">
+              <div style="text-align: center; margin-bottom: 24px;">
+                <div style="display: inline-block; width: 48px; height: 48px; background: #2563eb; border-radius: 12px; line-height: 48px; color: white; font-weight: bold; font-size: 20px;">F</div>
+              </div>
+              <h2 style="margin: 0 0 8px; font-size: 20px; color: #0f172a; text-align: center;">Your Login Code</h2>
+              <p style="margin: 0 0 24px; color: #64748b; font-size: 14px; text-align: center;">Enter this code to sign in to Fleetsure</p>
+              <div style="background: #f1f5f9; border-radius: 12px; padding: 20px; text-align: center; margin-bottom: 24px;">
+                <span style="font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #0f172a;">${otp}</span>
+              </div>
+              <p style="margin: 0; color: #94a3b8; font-size: 12px; text-align: center;">Code expires in 10 minutes. If you didn't request this, ignore this email.</p>
+            </div>
+          `,
+        })
+      } catch (emailErr) {
+        console.error('Resend email error:', emailErr)
+        // Fall through — OTP is still in DB, log it for dev
+        console.log(`[DEV OTP] ${cleanEmail} → ${otp}`)
+      }
+    } else {
+      // No Resend key → log to console (dev mode)
+      console.log(`[DEV OTP] ${cleanEmail} → ${otp}`)
+    }
+
+    return res.json({ ok: true, message: 'OTP sent to your email' })
+  } catch (err) {
+    console.error('Request OTP error:', err)
+    return res.status(500).json({ error: 'Failed to send OTP' })
+  }
+})
+
+// ── POST /api/auth/verify-otp ───────────────────────────────────────────────
+
+router.post('/verify-otp', async (req, res) => {
+  try {
+    const { email, otp } = req.body
+    if (!email || !otp) {
+      return res.status(400).json({ error: 'Email and OTP are required' })
+    }
+
+    const cleanEmail = email.trim().toLowerCase()
+    const user = await prisma.user.findUnique({ where: { email: cleanEmail } })
+
+    if (!user || !user.otpCode) {
+      return res.status(400).json({ error: 'No OTP found. Please request a new one.' })
+    }
+
+    if (user.otpCode !== otp) {
+      return res.status(400).json({ error: 'Wrong OTP. Please check and try again.' })
+    }
+
+    if (user.otpExpiresAt && new Date() > user.otpExpiresAt) {
+      return res.status(400).json({ error: 'OTP expired. Please request a new one.' })
+    }
+
+    // Clear OTP
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { otpCode: null, otpExpiresAt: null },
+    })
 
     // If user doesn't have a tenant yet → needs onboarding
     if (!user.tenantId) {
@@ -106,6 +159,7 @@ router.post('/firebase-login', async (req, res) => {
       needsOnboarding: false,
       user: {
         id: user.id,
+        email: user.email,
         phone: user.phone,
         name: user.name,
         role: user.role,
@@ -114,11 +168,8 @@ router.post('/firebase-login', async (req, res) => {
       },
     })
   } catch (err) {
-    console.error('Firebase login error:', err)
-    if (err.code === 'auth/id-token-expired') {
-      return res.status(401).json({ error: 'Token expired. Please login again.' })
-    }
-    return res.status(401).json({ error: 'Invalid Firebase token' })
+    console.error('Verify OTP error:', err)
+    return res.status(500).json({ error: 'Server error' })
   }
 })
 
@@ -152,6 +203,7 @@ router.post('/onboard', requireAuth, async (req, res) => {
       ok: true,
       user: {
         id: user.id,
+        email: user.email,
         phone: user.phone,
         name: user.name,
         role: user.role,
@@ -171,7 +223,7 @@ router.get('/me', requireAuth, async (req, res) => {
   try {
     const user = await prisma.user.findUnique({
       where: { id: req.userId },
-      select: { id: true, phone: true, name: true, role: true, tenantId: true },
+      select: { id: true, email: true, phone: true, name: true, role: true, tenantId: true },
     })
     if (!user) return res.status(401).json({ error: 'Not found' })
 
@@ -183,6 +235,7 @@ router.get('/me', requireAuth, async (req, res) => {
 
     return res.json({
       id: user.id,
+      email: user.email,
       phone: user.phone,
       name: user.name,
       role: user.role,

@@ -1,7 +1,4 @@
 import fs from 'fs'
-import { createRequire } from 'module'
-const require = createRequire(import.meta.url)
-const pdf = require('pdf-parse')
 
 /**
  * Parse a monthly bill PDF from BPCL/IOCL/HPCL.
@@ -11,6 +8,11 @@ const pdf = require('pdf-parse')
  * @returns {Promise<Object>} parsed bill data
  */
 export async function parseBillPDF(filePath) {
+  // Lazy-load pdf-parse to avoid crashing on platforms where canvas polyfills fail
+  const { createRequire } = await import('module')
+  const require = createRequire(import.meta.url)
+  const pdf = require('pdf-parse')
+
   const dataBuffer = fs.readFileSync(filePath)
   const data = await pdf(dataBuffer)
   const text = data.text

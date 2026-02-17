@@ -1,0 +1,76 @@
+{
+  "chunks": [
+    {
+      "id": "driver-mgmt-001",
+      "title": "Driver Hiring Sources in India",
+      "content": "Indian fleet operators source drivers through multiple channels. Driver agencies provide pre-screened candidates with verified licenses and charge placement fees of Rs 5,000-15,000 per hire. Referrals from existing drivers remain popular and often yield reliable candidates with lower attrition. Online platforms like TruckDekho, Driver Mitra, and logistics job portals have gained traction for reaching wider talent pools. Local transport unions and dhaba networks along highways also serve as informal recruitment sources. Fleet operators should maintain relationships with 2-3 agencies and incentivize employee referrals for consistent hiring pipeline.",
+      "tags": ["driver hiring", "recruitment", "driver agencies", "TruckDekho", "referrals", "India fleet"]
+    },
+    {
+      "id": "driver-mgmt-002",
+      "title": "License Verification via Parivahan and Sarthi",
+      "content": "Verifying driver licenses is mandatory before onboarding. India has multiple DL categories: LMV (Light Motor Vehicle) for cars and small trucks, HMV (Heavy Motor Vehicle) for trucks above 12 tonnes, HGMV (Heavy Goods Motor Vehicle) for goods carriers, and HPMV (Heavy Passenger Motor Vehicle) for buses. Use the Parivahan Sewa portal (parivahan.gov.in) or Sarthi (sarthi.parivahan.gov.in) for online verification. Enter license number and date of birth to check validity, endorsements, and any suspensions. Reject candidates with expired, suspended, or mismatched licenses. Maintain verification records for compliance audits.",
+      "tags": ["license verification", "Parivahan", "Sarthi", "DL categories", "LMV", "HMV", "HGMV", "HPMV"]
+    },
+    {
+      "id": "driver-mgmt-003",
+      "title": "Driver Salary Benchmarks in India",
+      "content": "Driver compensation varies significantly by route type and experience. Long-haul drivers earn Rs 18,000-35,000 per month depending on route complexity and tenure. Local delivery drivers typically receive Rs 12,000-22,000 monthly with shorter working hours. Per-trip basis arrangements range from Rs 800-2,500 per trip for short hauls. Experienced drivers with 5+ years command 20-30% premium. Metro cities pay 15-25% more than tier-2 locations. Include provident fund, ESI, and bonus components in total cost calculations. Competitive salaries reduce turnover and improve retention.",
+      "tags": ["driver salary", "compensation", "long-haul", "local driver", "per-trip", "India benchmarks"]
+    },
+    {
+      "id": "driver-mgmt-004",
+      "title": "Driver Batta and Daily Allowance",
+      "content": "Batta (daily allowance) compensates drivers for outstation expenses and inconvenience. Standard batta ranges from Rs 500-1,000 per day for outstation trips depending on route and duration. This covers meals, accommodation at dhabas, and minor personal expenses. Some fleets use tiered batta: Rs 500 for single-day returns, Rs 700 for 2-3 day trips, Rs 1,000 for longer hauls. Document batta in trip sheets and pay alongside salary. Excessive batta without receipts may attract tax scrutiny. Clear batta policies prevent disputes and ensure consistent treatment across drivers.",
+      "tags": ["batta", "daily allowance", "outstation", "driver expenses", "trip allowance"]
+    },
+    {
+      "id": "driver-mgmt-005",
+      "title": "MV Act Driving Hours and Compliance",
+      "content": "The Motor Vehicles Act mandates strict driving hour limits for commercial vehicle drivers. Maximum continuous driving is 8 hours, after which a mandatory rest period is required. Total driving cannot exceed 48 hours per week. Drivers must maintain logbooks recording driving time, rest periods, and duty hours. Violations attract fines and can invalidate insurance claims in case of accidents. Fatigue-related accidents are a leading cause of fleet incidents. Implement trip planning that builds in adequate rest stops. Consider split shifts for long routes exceeding 400-500 km.",
+      "tags": ["MV Act", "driving hours", "8 hours", "48 hours", "logbook", "compliance", "fatigue"]
+    },
+    {
+      "id": "driver-mgmt-006",
+      "title": "Fatigue Management and Accident Prevention",
+      "content": "Driver fatigue causes a significant proportion of commercial vehicle accidents in India. Implement mandatory rest breaks every 4-5 hours of driving. Night driving between 2-6 AM is high-risk; avoid scheduling critical routes during this window. Provide adequate rest facilities at transit points. GPS systems can monitor driving patterns and alert on excessive continuous driving. Educate drivers on sleep hygiene and recognize fatigue symptoms. Well-rested drivers reduce accident risk by 40-50% and improve fuel efficiency. Consider fatigue management as part of safety KPIs.",
+      "tags": ["fatigue management", "accident prevention", "rest breaks", "night driving", "safety"]
+    },
+    {
+      "id": "driver-mgmt-007",
+      "title": "Driver Retention Strategies",
+      "content": "Retaining skilled drivers reduces hiring costs and improves fleet reliability. Timely salary payments are non-negotiable—delayed payments are the top cause of driver attrition. Implement fuel savings incentives: share 20-30% of savings achieved vs benchmark with drivers. Safety bonuses for accident-free months (Rs 1,000-3,000) motivate careful driving. Provide decent accommodation at depot locations. Recognize top performers publicly. Offer career progression to senior driver or trainer roles. Annual increments of 8-12% keep compensation competitive. Family health coverage and provident fund build long-term commitment.",
+      "tags": ["driver retention", "timely payment", "fuel incentives", "safety bonus", "attrition"]
+    },
+    {
+      "id": "driver-mgmt-008",
+      "title": "Driver Documentation Requirements",
+      "content": "Maintain complete driver documentation for compliance and operations. Essential documents include valid driving license with appropriate category endorsement, Aadhaar card for identity verification, and medical fitness certificate (Form 1A) valid for 5 years for commercial drivers. Keep photocopies in driver files and originals accessible during RTO checks. Medical certificates must be from government-approved centers. Update license renewals before expiry—track renewal dates in fleet management system. Missing or expired documents can result in challans, vehicle impoundment, and insurance claim rejection.",
+      "tags": ["driver documentation", "license", "Aadhaar", "medical fitness", "Form 1A", "compliance"]
+    },
+    {
+      "id": "driver-mgmt-009",
+      "title": "Driver Training Programs",
+      "content": "Investing in driver training improves safety and operational efficiency. Defensive driving courses teach hazard anticipation, safe following distances, and emergency maneuvers—reducing accidents by 20-30%. Fuel-efficient driving techniques (smooth acceleration, optimal speed maintenance, minimal idling) can cut fuel consumption by 10-15%. Include training on vehicle pre-trip checks, load securing, and basic first aid. Partner with IRTE (Indian Road Transport Education) or OEM training centers. Document training completion for insurance discounts. Refresher training annually keeps skills current.",
+      "tags": ["driver training", "defensive driving", "fuel-efficient driving", "IRTE", "safety training"]
+    },
+    {
+      "id": "driver-mgmt-010",
+      "title": "Common Driver Issues: Absenteeism",
+      "content": "Absenteeism disrupts fleet operations and causes missed deliveries. Common causes include health issues, family emergencies, festival season migration, and dissatisfaction. Implement clear attendance policies with consequences for unplanned absences. Maintain a pool of backup drivers (10-15% of fleet strength) for coverage. Use advance leave applications for planned absences. Track absenteeism patterns—repeated Monday/Friday absences may indicate discipline issues. Address root causes: provide sick leave, flexible festival leave, and grievance channels. Chronic absenteeism may warrant replacement.",
+      "tags": ["absenteeism", "attendance", "driver issues", "leave management", "backup drivers"]
+    },
+    {
+      "id": "driver-mgmt-011",
+      "title": "Unauthorized Route Deviation and Control",
+      "content": "Unauthorized route deviation wastes fuel, delays deliveries, and risks cargo. Drivers may deviate for personal stops, alternate routes, or unauthorized load pickups. GPS tracking with geofencing alerts managers to deviations in real-time. Define approved routes and waypoints in fleet management systems. Implement trip completion reports comparing planned vs actual route. Penalize deviations in driver scorecards. Some deviations are legitimate (road closures, accidents)—establish approval process for exceptions. Clear communication of expected routes and consequences deters violations.",
+      "tags": ["route deviation", "GPS", "geofencing", "unauthorized stops", "route compliance"]
+    },
+    {
+      "id": "driver-mgmt-012",
+      "title": "Fuel Theft Prevention and Detection",
+      "content": "Fuel theft by drivers is a significant hidden cost for Indian fleets. Common methods include siphoning, fake fuel purchases, and mileage manipulation. Install fuel tank locks and consider anti-siphoning devices. GPS with fuel level sensors detect unexpected drops. Reconcile fuel card transactions with actual distance—flag vehicles with km/L significantly below benchmark. Random fuel audits at trip completion. Pay batta separately from fuel handling to reduce temptation. Severe penalties and termination for proven theft. Culture of accountability and fair compensation reduces theft incidence.",
+      "tags": ["fuel theft", "fuel pilferage", "siphoning", "fuel reconciliation", "prevention"]
+    }
+  ]
+}

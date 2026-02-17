@@ -1,26 +1,23 @@
 import { useState, useRef, useEffect } from 'react'
 import { useAuth } from '../App'
-import { auth, RecaptchaVerifier, signInWithPhoneNumber } from '../lib/firebase'
 
-const STEP_PHONE = 'phone'
+const STEP_EMAIL = 'email'
 const STEP_OTP = 'otp'
 const STEP_ONBOARD = 'onboard'
 
 export default function Login() {
-  const { firebaseLogin, onboard } = useAuth()
+  const { requestOtp, verifyOtp, onboard } = useAuth()
 
-  const [step, setStep] = useState(STEP_PHONE)
-  const [phone, setPhone] = useState('')
+  const [step, setStep] = useState(STEP_EMAIL)
+  const [email, setEmail] = useState('')
   const [otp, setOtp] = useState(['', '', '', '', '', ''])
   const [fleetName, setFleetName] = useState('')
   const [ownerName, setOwnerName] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [countdown, setCountdown] = useState(0)
-  const [confirmationResult, setConfirmationResult] = useState(null)
 
   const otpRefs = useRef([])
-  const recaptchaRef = useRef(null)
 
   // ── Countdown timer ───────────────────────────────────────
   useEffect(() => {
@@ -29,78 +26,37 @@ export default function Login() {
     return () => clearTimeout(timer)
   }, [countdown])
 
-  // ── Setup invisible reCAPTCHA ─────────────────────────────
-  const setupRecaptcha = () => {
-    if (recaptchaRef.current) return // already set up
-
-    recaptchaRef.current = new RecaptchaVerifier(auth, 'recaptcha-container', {
-      size: 'invisible',
-      callback: () => {
-        // reCAPTCHA solved — will proceed with signInWithPhoneNumber
-      },
-      'expired-callback': () => {
-        setError('reCAPTCHA expired. Please try again.')
-        recaptchaRef.current = null
-      },
-    })
-  }
-
-  // ── STEP 1: Send OTP via Firebase ─────────────────────────
-  const handleSendOtp = async (e) => {
+  // ── STEP 1: Request OTP ─────────────────────────────────
+  const handleRequestOtp = async (e) => {
     e.preventDefault()
     setError('')
     setLoading(true)
 
     try {
-      setupRecaptcha()
-      const fullPhone = `+91${phone}`
-      const result = await signInWithPhoneNumber(auth, fullPhone, recaptchaRef.current)
-      setConfirmationResult(result)
+      await requestOtp(email)
       setStep(STEP_OTP)
-      setCountdown(30)
+      setCountdown(60)
     } catch (err) {
-      console.error('Firebase phone auth error:', err)
-      // Reset reCAPTCHA on error
-      recaptchaRef.current = null
-      if (err.code === 'auth/too-many-requests') {
-        setError('Too many attempts. Please wait and try again.')
-      } else if (err.code === 'auth/invalid-phone-number') {
-        setError('Invalid phone number. Please check and retry.')
-      } else {
-        setError(err.message || 'Failed to send OTP')
-      }
+      setError(err.message || 'Failed to send OTP')
     }
     setLoading(false)
   }
 
-  // ── STEP 2: Verify OTP via Firebase → send token to backend ─
+  // ── STEP 2: Verify OTP ──────────────────────────────────
   const handleVerifyOtp = async (e) => {
     e?.preventDefault()
     const code = otp.join('')
-    if (code.length !== 6 || !confirmationResult) return
+    if (code.length !== 6) return
     setError('')
     setLoading(true)
 
     try {
-      // Verify OTP with Firebase
-      const userCredential = await confirmationResult.confirm(code)
-      // Get the Firebase ID token
-      const idToken = await userCredential.user.getIdToken()
-      // Send to our backend
-      const res = await firebaseLogin(idToken)
+      const res = await verifyOtp(email, code)
       if (res.needsOnboarding) {
         setStep(STEP_ONBOARD)
       }
-      // If not needsOnboarding, firebaseLogin sets user in context → redirect
     } catch (err) {
-      console.error('OTP verify error:', err)
-      if (err.code === 'auth/invalid-verification-code') {
-        setError('Wrong OTP. Please check and try again.')
-      } else if (err.code === 'auth/code-expired') {
-        setError('OTP expired. Please request a new one.')
-      } else {
-        setError(err.message || 'Verification failed')
-      }
+      setError(err.message || 'Verification failed')
     }
     setLoading(false)
   }
@@ -151,13 +107,8 @@ export default function Login() {
     setError('')
     setLoading(true)
     try {
-      // Reset reCAPTCHA for resend
-      recaptchaRef.current = null
-      setupRecaptcha()
-      const fullPhone = `+91${phone}`
-      const result = await signInWithPhoneNumber(auth, fullPhone, recaptchaRef.current)
-      setConfirmationResult(result)
-      setCountdown(30)
+      await requestOtp(email)
+      setCountdown(60)
     } catch (err) {
       setError(err.message || 'Failed to resend OTP')
     }
@@ -166,9 +117,6 @@ export default function Login() {
 
   return (
     <div className="min-h-screen bg-slate-900 flex items-center justify-center px-4">
-      {/* Invisible reCAPTCHA container */}
-      <div id="recaptcha-container"></div>
-
       <div className="w-full max-w-sm">
         {/* Logo */}
         <div className="text-center mb-8">
@@ -187,34 +135,30 @@ export default function Login() {
             </div>
           )}
 
-          {/* ── PHONE STEP ── */}
-          {step === STEP_PHONE && (
+          {/* ── EMAIL STEP ── */}
+          {step === STEP_EMAIL && (
             <>
               <h2 className="text-lg font-bold text-slate-900 mb-1">Welcome</h2>
-              <p className="text-sm text-slate-500 mb-5">Enter your phone number to get started</p>
-              <form onSubmit={handleSendOtp}>
+              <p className="text-sm text-slate-500 mb-5">Enter your email to get started</p>
+              <form onSubmit={handleRequestOtp}>
                 <div className="mb-4">
-                  <label className="block text-xs font-medium text-slate-600 mb-1.5">Phone Number</label>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-slate-500 font-medium bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5">+91</span>
-                    <input
-                      type="tel"
-                      className="flex-1 border border-slate-200 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
-                      placeholder="98765 43210"
-                      maxLength={10}
-                      required
-                      autoFocus
-                    />
-                  </div>
+                  <label className="block text-xs font-medium text-slate-600 mb-1.5">Email Address</label>
+                  <input
+                    type="email"
+                    className="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="you@company.com"
+                    required
+                    autoFocus
+                  />
                 </div>
                 <button
                   type="submit"
-                  disabled={loading || phone.length < 10}
+                  disabled={loading || !email.includes('@')}
                   className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 text-white text-sm font-semibold rounded-lg py-2.5 transition"
                 >
-                  {loading ? 'Sending OTP...' : 'Get OTP'}
+                  {loading ? 'Sending...' : 'Get OTP'}
                 </button>
               </form>
             </>
@@ -223,9 +167,9 @@ export default function Login() {
           {/* ── OTP STEP ── */}
           {step === STEP_OTP && (
             <>
-              <h2 className="text-lg font-bold text-slate-900 mb-1">Verify OTP</h2>
+              <h2 className="text-lg font-bold text-slate-900 mb-1">Check your email</h2>
               <p className="text-sm text-slate-500 mb-5">
-                Enter the 6-digit code sent to <span className="font-medium text-slate-700">+91 {phone}</span>
+                Enter the 6-digit code sent to <span className="font-medium text-slate-700">{email}</span>
               </p>
               <form onSubmit={handleVerifyOtp}>
                 <div className="flex gap-2 mb-4 justify-center" onPaste={handleOtpPaste}>
@@ -254,10 +198,10 @@ export default function Login() {
               </form>
               <div className="flex items-center justify-between text-xs">
                 <button
-                  onClick={() => { setStep(STEP_PHONE); setOtp(['', '', '', '', '', '']); setError(''); setConfirmationResult(null) }}
+                  onClick={() => { setStep(STEP_EMAIL); setOtp(['', '', '', '', '', '']); setError('') }}
                   className="text-blue-600 hover:underline"
                 >
-                  Change number
+                  Change email
                 </button>
                 <button
                   onClick={resendOtp}

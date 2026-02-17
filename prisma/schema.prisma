@@ -13,6 +13,10 @@ model Tenant {
   id        String   @id @default(uuid())
   name      String                        // "Sharma Transport"
   plan      String   @default("free")     // free / pro
+  address   String?                       // Company address for invoices/letterheads
+  city      String?                       // City
+  gstin     String?                       // GST Identification Number
+  phone     String?                       // Company phone
   createdAt DateTime @default(now()) @map("created_at")
 
   users             User[]
@@ -42,7 +46,8 @@ model Tenant {
 model User {
   id           String    @id @default(uuid())
   tenantId     String?   @map("tenant_id")
-  phone        String    @unique
+  email        String    @unique
+  phone        String?   
   name         String?
   role         String    @default("owner")  // owner / manager / viewer
   otpCode      String?   @map("otp_code")
@@ -510,4 +515,17 @@ model Tyre {
 
   @@unique([tenantId, vehicleId, position])
   @@map("tyres")
+}
+
+// ─── Leads (landing page form submissions) ──────────────────────────────────
+
+model Lead {
+  id        String   @id @default(uuid())
+  name      String
+  fleetSize String   @map("fleet_size")
+  phone     String
+  city      String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("leads")
 }

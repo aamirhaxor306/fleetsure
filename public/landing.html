@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fleetsure — Fleet Compliance &amp; Maintenance Control OS</title>
+  <meta name="description" content="Never miss a fleet compliance renewal again. Manage insurance, PUC, fitness, permits, and maintenance for all your trucks in one dashboard." />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'] },
+          colors: {
+            navy: { 900: '#0f172a', 800: '#1e293b', 700: '#334155', 600: '#475569' },
+            brand: { 500: '#f59e0b', 600: '#d97706', 700: '#b45309' },
+          },
+        }
+      }
+    }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    html { scroll-behavior: smooth; }
+    body { font-family: 'Inter', system-ui, sans-serif; background: #ffffff; }
+    .hero-bg {
+      background: linear-gradient(105deg, rgba(15,23,42,0.92) 0%, rgba(15,23,42,0.80) 50%, rgba(15,23,42,0.65) 100%),
+                  url('https://images.unsplash.com/photo-1519003722824-194d4455a60c?w=1920&q=80') center/cover no-repeat;
+    }
+    .btn-orange { background: #f59e0b; color: #0f172a; font-weight: 700; transition: all 0.2s ease; box-shadow: 0 2px 12px rgba(245,158,11,0.3); }
+    .btn-orange:hover { background: #d97706; box-shadow: 0 4px 20px rgba(245,158,11,0.4); transform: translateY(-1px); }
+    .section-reveal { opacity: 0; transform: translateY(24px); transition: all 0.6s ease-out; }
+    .section-reveal.visible { opacity: 1; transform: translateY(0); }
+    .fleet-pill { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 9999px; font-size: 11px; font-weight: 500; background: rgba(255,255,255,0.12); color: rgba(255,255,255,0.8); border: 1px solid rgba(255,255,255,0.1); white-space: nowrap; }
+    /* ── Cinematic tagline animations ── */
+    @keyframes fadeSlideUp {
+      0%   { opacity: 0; transform: translateY(32px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes glowPulse {
+      0%, 100% { filter: drop-shadow(0 0 24px rgba(251,191,36,0.25)); }
+      50%      { filter: drop-shadow(0 0 48px rgba(251,191,36,0.45)); }
+    }
+    .tagline-gradient {
+      background: linear-gradient(135deg, #fbbf24 0%, #ffffff 80%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .tagline-line {
+      opacity: 0;
+      animation: fadeSlideUp 0.9s cubic-bezier(0.22,1,0.36,1) forwards;
+    }
+    .tagline-line-1 { animation-delay: 0.1s; }
+    .tagline-line-2 { animation-delay: 0.45s; }
+    .tagline-deva   { animation-delay: 0.8s; }
+    .tagline-sub    { animation-delay: 1.1s; }
+    .tagline-glow {
+      animation: glowPulse 3s ease-in-out infinite;
+      animation-delay: 1.5s;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .section-reveal { transition: none; opacity: 1; transform: none; }
+      .rotate-word { transition: none; }
+      .tagline-line { animation: none; opacity: 1; }
+      .tagline-glow { animation: none; }
+    }
+  </style>
+</head>
+<body class="antialiased">
+
+<!-- ── NAV ── -->
+<nav class="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-md border-b border-slate-100">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 flex items-center justify-between h-14">
+    <a href="#hero" class="flex items-center gap-2">
+      <div class="w-7 h-7 rounded-lg bg-amber-500 flex items-center justify-center text-navy-900 font-bold text-xs">F</div>
+      <span class="text-sm font-bold text-navy-900">Fleetsure</span>
+    </a>
+    <div class="hidden md:flex items-center gap-6">
+      <a href="#why" class="text-xs font-medium text-slate-500 hover:text-navy-900 transition">Why Fleetsure</a>
+      <a href="#news" class="text-xs font-medium text-slate-500 hover:text-navy-900 transition">Industry Updates</a>
+      <a href="#case-study" class="text-xs font-medium text-slate-500 hover:text-navy-900 transition">Case Study</a>
+      <a href="#hero" class="btn-orange text-xs px-4 py-1.5 rounded-lg">Book Free Audit</a>
+      <a href="/login" class="text-xs font-semibold text-navy-900 border border-slate-200 hover:border-amber-400 hover:text-amber-600 px-4 py-1.5 rounded-lg transition">Login</a>
+    </div>
+    <button id="menuBtn" class="md:hidden p-2 text-slate-500" aria-label="Menu">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+    </button>
+  </div>
+  <div id="mobileMenu" class="md:hidden hidden border-t border-slate-100 px-4 pb-3 bg-white">
+    <a href="#why" class="block py-2.5 text-sm text-slate-600 border-b border-slate-50">Why Fleetsure</a>
+    <a href="#news" class="block py-2.5 text-sm text-slate-600 border-b border-slate-50">Industry Updates</a>
+    <a href="#case-study" class="block py-2.5 text-sm text-slate-600 border-b border-slate-50">Case Study</a>
+    <a href="#hero" class="block mt-2 btn-orange text-sm text-center px-4 py-2 rounded-lg">Book Free Audit</a>
+    <a href="/login" class="block mt-2 text-sm text-center font-semibold text-navy-900 border border-slate-200 hover:border-amber-400 px-4 py-2 rounded-lg transition">Login</a>
+  </div>
+</nav>
+
+<!-- ══════════════════════════════════════════════════════════════════
+     HERO — Truck background + form on right
+     ══════════════════════════════════════════════════════════════════ -->
+<section id="hero" class="hero-bg pt-20 pb-12 md:pt-24 md:pb-16 min-h-[90vh] flex items-center">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 w-full">
+    <div class="grid md:grid-cols-2 gap-10 md:gap-14 items-center">
+
+      <!-- LEFT: Copy -->
+      <div>
+        <div class="inline-flex items-center gap-2 bg-amber-500/20 border border-amber-500/30 rounded-full px-3 py-1 mb-6">
+          <div class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></div>
+          <span class="text-[11px] font-semibold text-amber-300 uppercase tracking-wide">Fleet Compliance OS</span>
+        </div>
+
+        <!-- Cinematic Tagline -->
+        <div class="tagline-glow mb-6">
+          <div class="tagline-line tagline-line-1">
+            <span class="tagline-gradient text-5xl sm:text-6xl lg:text-7xl font-black leading-[1.05] tracking-tight block">Har Gaadi.</span>
+          </div>
+          <div class="tagline-line tagline-line-2 mt-1">
+            <span class="tagline-gradient text-5xl sm:text-6xl lg:text-7xl font-black leading-[1.05] tracking-tight block">Hamesha Tayyar.</span>
+          </div>
+          <div class="tagline-line tagline-deva mt-3">
+            <span class="text-sm sm:text-base text-white/40 font-medium tracking-wide">हर गाड़ी। हमेशा तैयार।</span>
+          </div>
+        </div>
+
+        <h2 class="tagline-line tagline-sub text-xl sm:text-2xl font-extrabold text-white/90 leading-snug tracking-tight">
+          Compliance Control for <span class="text-amber-400">Your Fleet</span>
+        </h2>
+
+        <p class="mt-4 text-base sm:text-lg text-white/90 font-semibold tagline-line" style="animation-delay:1.3s">
+          Rs 12,632 Cr in compliance fines since 2019.<br class="hidden sm:block" />
+          <span class="text-amber-300">Don't be next.</span>
+        </p>
+        <p class="mt-2 text-sm text-white/60 tagline-line" style="animation-delay:1.5s">
+          Insurance, PUC, fitness, permits, maintenance — tracked and on time.
+        </p>
+
+        <!-- Fleet type pills -->
+        <div class="mt-6 flex flex-wrap gap-1.5 tagline-line" style="animation-delay:1.7s">
+          <span class="fleet-pill">Logistics</span>
+          <span class="fleet-pill">Transport</span>
+          <span class="fleet-pill">LPG Tankers</span>
+          <span class="fleet-pill">Fuel Tankers</span>
+          <span class="fleet-pill">Construction</span>
+          <span class="fleet-pill">E-commerce</span>
+          <span class="fleet-pill">Cold Chain</span>
+          <span class="fleet-pill">FMCG</span>
+        </div>
+      </div>
+
+      <!-- RIGHT: Form card -->
+      <div>
+        <div class="bg-white rounded-2xl shadow-2xl shadow-black/20 p-6 sm:p-7">
+          <div class="text-center mb-5">
+            <h2 class="text-lg font-extrabold text-navy-900">Book Free Compliance Check</h2>
+            <p class="text-xs text-slate-500 mt-1">Our team will call you within 24 hours</p>
+          </div>
+          <form id="leadForm" class="space-y-3.5">
+            <div>
+              <input type="text" name="name" required placeholder="Your Name"
+                class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-2.5 text-sm text-navy-900 placeholder-slate-400 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition" />
+            </div>
+            <div>
+              <select name="fleetType" required
+                class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-2.5 text-sm text-navy-900 focus:ring-2 focus:ring-amber-500 outline-none transition appearance-none"
+                style="background-image: url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%2212%22 viewBox=%220 0 12 12%22%3E%3Cpath d=%22M3 5l3 3 3-3%22 stroke=%22%2394a3b8%22 fill=%22none%22 stroke-width=%221.5%22/%3E%3C/svg%3E'); background-repeat: no-repeat; background-position: right 12px center;">
+                <option value="" disabled selected>Fleet Type</option>
+                <option value="logistics">Logistics</option>
+                <option value="transport">Transport</option>
+                <option value="lpg-tankers">LPG Tankers</option>
+                <option value="fuel-tankers">Fuel Tankers</option>
+                <option value="construction">Construction</option>
+                <option value="ecommerce">E-commerce Delivery</option>
+                <option value="cold-chain">Cold Chain</option>
+                <option value="fmcg">FMCG Distribution</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+            <div>
+              <select name="fleetSize" required
+                class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-2.5 text-sm text-navy-900 focus:ring-2 focus:ring-amber-500 outline-none transition appearance-none"
+                style="background-image: url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%2212%22 viewBox=%220 0 12 12%22%3E%3Cpath d=%22M3 5l3 3 3-3%22 stroke=%22%2394a3b8%22 fill=%22none%22 stroke-width=%221.5%22/%3E%3C/svg%3E'); background-repeat: no-repeat; background-position: right 12px center;">
+                <option value="" disabled selected>Fleet Size</option>
+                <option value="1-5">1 - 5 vehicles</option>
+                <option value="5-15">5 - 15 vehicles</option>
+                <option value="15-30">15 - 30 vehicles</option>
+                <option value="30-50">30 - 50 vehicles</option>
+                <option value="50+">50+ vehicles</option>
+              </select>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="text-sm text-slate-400 font-medium bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-2.5 select-none">+91</span>
+              <input type="tel" name="phone" required placeholder="Phone Number" maxlength="10"
+                class="flex-1 bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-2.5 text-sm text-navy-900 placeholder-slate-400 focus:ring-2 focus:ring-amber-500 outline-none transition" />
+            </div>
+            <div>
+              <input type="text" name="city" required placeholder="City"
+                class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-2.5 text-sm text-navy-900 placeholder-slate-400 focus:ring-2 focus:ring-amber-500 outline-none transition" />
+            </div>
+            <div id="formMsg" class="hidden text-sm font-medium rounded-lg px-4 py-2.5"></div>
+            <button type="submit" id="formBtn" class="w-full btn-orange text-sm px-6 py-3 rounded-xl">
+              Book My Free Compliance Check
+            </button>
+          </form>
+          <div class="text-center mt-4">
+            <a href="https://wa.me/917249342758?text=Hi%2C%20I%20want%20a%20demo%20of%20Fleetsure" target="_blank" rel="noopener"
+               class="inline-flex items-center gap-1.5 text-emerald-600 text-xs font-semibold hover:text-emerald-700 transition">
+              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+              Or chat on WhatsApp
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════════════
+     PAIN vs GAIN
+     ══════════════════════════════════════════════════════════════════ -->
+<section id="why" class="py-14 md:py-20 bg-slate-50 section-reveal">
+  <div class="max-w-4xl mx-auto px-4 sm:px-6">
+    <div class="text-center mb-10">
+      <h2 class="text-2xl sm:text-3xl font-extrabold text-navy-900">Why Fleet Owners Choose Fleetsure</h2>
+    </div>
+    <div class="grid md:grid-cols-2 gap-5">
+      <!-- Pain -->
+      <div class="bg-white rounded-xl shadow-sm border-l-4 border-red-500 p-6">
+        <div class="flex items-center gap-2 mb-4">
+          <svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+          <span class="text-sm font-bold text-red-600">Without Fleetsure</span>
+        </div>
+        <div class="space-y-3.5">
+          <div>
+            <div class="text-sm font-semibold text-navy-900">Insurance expired</div>
+            <div class="text-xs text-slate-500 mt-0.5">Rs 2,000-4,000 fine + jail risk (MV Act Sec 196)</div>
+          </div>
+          <hr class="border-slate-100" />
+          <div>
+            <div class="text-sm font-semibold text-navy-900">PUC missed</div>
+            <div class="text-xs text-slate-500 mt-0.5">Up to Rs 10,000 fine (MV Act Sec 190)</div>
+          </div>
+          <hr class="border-slate-100" />
+          <div>
+            <div class="text-sm font-semibold text-navy-900">Permit lapsed</div>
+            <div class="text-xs text-slate-500 mt-0.5">Rs 10,000 + truck grounded (Sec 192A)</div>
+          </div>
+        </div>
+        <div class="mt-4 pt-3 border-t border-slate-100">
+          <p class="text-xs text-red-500 font-semibold">1 grounded truck = Rs 3,000-8,000 revenue lost per day</p>
+        </div>
+      </div>
+
+      <!-- Gain -->
+      <div class="bg-white rounded-xl shadow-sm border-l-4 border-emerald-500 p-6">
+        <div class="flex items-center gap-2 mb-4">
+          <svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+          <span class="text-sm font-bold text-emerald-600">With Fleetsure</span>
+        </div>
+        <div class="space-y-3.5">
+          <div>
+            <div class="text-sm font-semibold text-navy-900">Auto-alerts before expiry</div>
+            <div class="text-xs text-slate-500 mt-0.5">Insurance, PUC, fitness, permits — all tracked</div>
+          </div>
+          <hr class="border-slate-100" />
+          <div>
+            <div class="text-sm font-semibold text-navy-900">All documents in one vault</div>
+            <div class="text-xs text-slate-500 mt-0.5">Access anywhere. No scattered WhatsApp files</div>
+          </div>
+          <hr class="border-slate-100" />
+          <div>
+            <div class="text-sm font-semibold text-navy-900">Maintenance tracked</div>
+            <div class="text-xs text-slate-500 mt-0.5">No surprise breakdowns. Service history in one place</div>
+          </div>
+        </div>
+        <div class="mt-4 pt-3 border-t border-slate-100">
+          <p class="text-xs text-emerald-600 font-semibold">Plus: FASTag monitoring, fuel logging, fleet tracking</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════════════
+     INDUSTRY UPDATES — Latest Fleet & Compliance News
+     ══════════════════════════════════════════════════════════════════ -->
+<section id="news" class="py-14 md:py-20 bg-white section-reveal">
+  <div class="max-w-5xl mx-auto px-4 sm:px-6">
+    <div class="text-center mb-10">
+      <span class="inline-block text-[11px] font-semibold text-amber-600 uppercase tracking-wider bg-amber-50 border border-amber-200 rounded-full px-3 py-1 mb-3">Industry Updates</span>
+      <h2 class="text-2xl sm:text-3xl font-extrabold text-navy-900">What's Happening in Indian Fleet Compliance</h2>
+      <p class="text-sm text-slate-500 mt-2 max-w-xl mx-auto">Government crackdowns and new regulations are reshaping fleet operations. Stay ahead or pay the price.</p>
+    </div>
+
+    <div class="grid sm:grid-cols-2 gap-5">
+      <!-- Card 1: ANPR Cameras -->
+      <div class="bg-slate-50 rounded-xl p-5 border border-slate-100 hover:border-amber-200 hover:shadow-md transition-all group">
+        <div class="flex items-start gap-3">
+          <div class="w-9 h-9 rounded-lg bg-red-100 flex items-center justify-center flex-shrink-0 group-hover:bg-red-200 transition">
+            <svg class="w-4.5 h-4.5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+          </div>
+          <div>
+            <span class="inline-block text-[9px] font-bold text-red-600 uppercase tracking-wider mb-1">Enforcement</span>
+            <h3 class="text-sm font-bold text-navy-900 leading-snug">ANPR Cameras Going Live Across Highways</h3>
+            <p class="text-xs text-slate-500 mt-1.5 leading-relaxed">AI-powered cameras now auto-detect expired insurance, PUC & permits in real-time. No stopping needed — fines issued instantly via SMS. Already active in Delhi, Mumbai, and 12+ state highways.</p>
+            <div class="mt-2">
+              <span class="text-[10px] font-semibold text-amber-600">Impact: Instant Rs 2,000–10,000 e-challans</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 2: Scrappage Policy -->
+      <div class="bg-slate-50 rounded-xl p-5 border border-slate-100 hover:border-amber-200 hover:shadow-md transition-all group">
+        <div class="flex items-start gap-3">
+          <div class="w-9 h-9 rounded-lg bg-amber-100 flex items-center justify-center flex-shrink-0 group-hover:bg-amber-200 transition">
+            <svg class="w-4.5 h-4.5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+          </div>
+          <div>
+            <span class="inline-block text-[9px] font-bold text-amber-600 uppercase tracking-wider mb-1">Policy</span>
+            <h3 class="text-sm font-bold text-navy-900 leading-snug">Vehicle Scrappage Policy Now Active</h3>
+            <p class="text-xs text-slate-500 mt-1.5 leading-relaxed">Commercial vehicles older than 15 years must pass mandatory fitness tests at automated centres. Failing vehicles face deregistration. Fitness certificate tracking is now critical.</p>
+            <div class="mt-2">
+              <span class="text-[10px] font-semibold text-amber-600">Impact: ~10 lakh trucks at risk of deregistration</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 3: BS6 Stage II -->
+      <div class="bg-slate-50 rounded-xl p-5 border border-slate-100 hover:border-amber-200 hover:shadow-md transition-all group">
+        <div class="flex items-start gap-3">
+          <div class="w-9 h-9 rounded-lg bg-emerald-100 flex items-center justify-center flex-shrink-0 group-hover:bg-emerald-200 transition">
+            <svg class="w-4.5 h-4.5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+          </div>
+          <div>
+            <span class="inline-block text-[9px] font-bold text-emerald-600 uppercase tracking-wider mb-1">Emission</span>
+            <h3 class="text-sm font-bold text-navy-900 leading-snug">BS-VI Stage II Norms Now Mandatory</h3>
+            <p class="text-xs text-slate-500 mt-1.5 leading-relaxed">All new commercial vehicles must comply with BS-VI Phase 2 emission standards. Stricter OBD-II monitoring means PUC failures are more likely for older fleets — renewals need closer tracking.</p>
+            <div class="mt-2">
+              <span class="text-[10px] font-semibold text-amber-600">Impact: Higher PUC rejection rate for older trucks</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 4: Rs 11 Lakh Cr Infra Push -->
+      <div class="bg-slate-50 rounded-xl p-5 border border-slate-100 hover:border-amber-200 hover:shadow-md transition-all group">
+        <div class="flex items-start gap-3">
+          <div class="w-9 h-9 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0 group-hover:bg-blue-200 transition">
+            <svg class="w-4.5 h-4.5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+          </div>
+          <div>
+            <span class="inline-block text-[9px] font-bold text-blue-600 uppercase tracking-wider mb-1">Opportunity</span>
+            <h3 class="text-sm font-bold text-navy-900 leading-snug">Rs 11.11 Lakh Cr Budget for Infrastructure</h3>
+            <p class="text-xs text-slate-500 mt-1.5 leading-relaxed">Government's massive infra spending means more freight demand and more compliance pressure. Fleet operators expanding now need systems to manage compliance at scale — or risk falling behind.</p>
+            <div class="mt-2">
+              <span class="text-[10px] font-semibold text-amber-600">Opportunity: Fleet demand growing 8-10% annually</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="text-center mt-8">
+      <p class="text-[10px] text-slate-400">Sources: Ministry of Road Transport & Highways, Union Budget 2025-26, SIAM India</p>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════════════
+     CASE STUDY — Placeholder
+     ══════════════════════════════════════════════════════════════════ -->
+<section id="case-study" class="py-14 md:py-20 bg-slate-50 section-reveal">
+  <div class="max-w-4xl mx-auto px-4 sm:px-6 text-center">
+    <span class="inline-block text-[11px] font-semibold text-amber-600 uppercase tracking-wider bg-amber-50 border border-amber-200 rounded-full px-3 py-1 mb-3">Case Study</span>
+    <h2 class="text-2xl sm:text-3xl font-extrabold text-navy-900">Real Results from Real Fleet Owners</h2>
+    <p class="text-sm text-slate-500 mt-2 max-w-lg mx-auto mb-8">See how fleet operators are saving lakhs in fines and downtime with Fleetsure.</p>
+    <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-8 max-w-lg mx-auto">
+      <div class="text-4xl mb-4">🚛</div>
+      <p class="text-sm text-slate-500">Case study coming soon. We're documenting real fleet owner transformations.</p>
+      <a href="https://wa.me/917249342758?text=Hi%2C%20I%20want%20to%20know%20about%20Fleetsure%20case%20studies" target="_blank" rel="noopener"
+         class="inline-flex items-center gap-1.5 mt-4 text-amber-600 text-xs font-semibold hover:text-amber-700 transition">
+        Get early access to results →
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════════════
+     TRUST BAR + FOOTER
+     ══════════════════════════════════════════════════════════════════ -->
+<section class="py-10 bg-white border-t border-slate-100 section-reveal">
+  <div class="max-w-4xl mx-auto px-4 sm:px-6">
+    <div class="grid grid-cols-3 gap-4 sm:gap-8 text-center">
+      <div>
+        <div class="text-xl sm:text-2xl font-black text-amber-600">Rs 12,632 Cr</div>
+        <div class="text-[10px] sm:text-xs text-slate-500 mt-1">Fines since 2019 (31 states)</div>
+      </div>
+      <div class="border-l border-r border-slate-100">
+        <div class="text-xl sm:text-2xl font-black text-amber-600">85%</div>
+        <div class="text-[10px] sm:text-xs text-slate-500 mt-1">Fleet owners run 5-20 trucks</div>
+      </div>
+      <div>
+        <div class="text-xl sm:text-2xl font-black text-amber-600">2.7L</div>
+        <div class="text-[10px] sm:text-xs text-slate-500 mt-1">Vehicles fined in Delhi (2024)</div>
+      </div>
+    </div>
+    <div class="text-center mt-4">
+      <p class="text-[9px] text-slate-400">Sources: Government of India (Parliament data), Mordor Intelligence, India TV News</p>
+    </div>
+  </div>
+</section>
+
+<footer class="py-8 bg-navy-900">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 text-center">
+    <div class="flex items-center justify-center gap-2 mb-2">
+      <div class="w-6 h-6 rounded-md bg-amber-500 flex items-center justify-center text-navy-900 font-bold text-[10px]">F</div>
+      <span class="text-xs font-bold text-white">Fleetsure</span>
+    </div>
+    <p class="text-[10px] text-slate-400">Fleet Compliance &amp; Maintenance Control OS for India</p>
+    <p class="text-[10px] text-slate-500 mt-1">&copy; 2026 Fleetsure. All rights reserved.</p>
+  </div>
+</footer>
+
+<!-- ── FLOATING WHATSAPP ── -->
+<a href="https://wa.me/917249342758?text=Hi%2C%20I%20want%20a%20demo%20of%20Fleetsure" target="_blank" rel="noopener"
+   class="fixed bottom-5 right-5 z-50 w-12 h-12 bg-emerald-500 hover:bg-emerald-400 rounded-full flex items-center justify-center shadow-lg shadow-emerald-500/30 transition-transform hover:scale-110"
+   aria-label="Chat on WhatsApp">
+  <svg class="w-6 h-6 text-white" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+</a>
+
+<!-- ══════════════════════════════════════════════════════════════════
+     SCRIPTS
+     ══════════════════════════════════════════════════════════════════ -->
+<script>
+  // Mobile menu
+  document.getElementById('menuBtn').addEventListener('click', () => {
+    document.getElementById('mobileMenu').classList.toggle('hidden');
+  });
+  document.getElementById('mobileMenu').querySelectorAll('a').forEach(a => {
+    a.addEventListener('click', () => document.getElementById('mobileMenu').classList.add('hidden'));
+  });
+
+  // Section reveal
+  const obs = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+  }, { threshold: 0.1 });
+  document.querySelectorAll('.section-reveal').forEach(el => obs.observe(el));
+
+  // Lead form
+  const form = document.getElementById('leadForm');
+  const formMsg = document.getElementById('formMsg');
+  const formBtn = document.getElementById('formBtn');
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    formMsg.classList.add('hidden');
+    formBtn.disabled = true; formBtn.textContent = 'Submitting...';
+    const data = { name: form.name.value.trim(), fleetType: form.fleetType?.value || '', fleetSize: form.fleetSize.value, phone: form.phone.value.replace(/\D/g,''), city: form.city.value.trim() };
+    try {
+      const res = await fetch('/api/leads', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(data) });
+      const result = await res.json();
+      if (res.ok) {
+        formMsg.textContent = result.message || 'Thank you! We will contact you shortly.';
+        formMsg.className = 'text-sm font-medium rounded-lg px-4 py-2.5 bg-emerald-50 text-emerald-700 border border-emerald-200';
+        form.reset();
+      } else {
+        formMsg.textContent = result.error || 'Something went wrong.';
+        formMsg.className = 'text-sm font-medium rounded-lg px-4 py-2.5 bg-red-50 text-red-700 border border-red-200';
+      }
+    } catch {
+      formMsg.textContent = 'Network error. Please try again.';
+      formMsg.className = 'text-sm font-medium rounded-lg px-4 py-2.5 bg-red-50 text-red-700 border border-red-200';
+    }
+    formMsg.classList.remove('hidden');
+    formBtn.disabled = false; formBtn.textContent = 'Book My Free Compliance Check';
+  });
+</script>
+</body>
+</html>
