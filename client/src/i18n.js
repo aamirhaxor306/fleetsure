@@ -124,6 +124,7 @@ const translations = {
 
     // ── AI Insights ──────────────────────────────────────────
     navAIChat: 'AI Chat',
+    navFasTag: 'FASTag',
     navDocuments: 'Documents',
     navSettings: 'Settings',
     aiBriefTitle: 'AI Fleet Brief',
@@ -294,6 +295,7 @@ const translations = {
 
     // ── AI Insights ──────────────────────────────────────────
     navAIChat: 'AI चैट',
+    navFasTag: 'FASTag',
     navDocuments: 'दस्तावेज़',
     navSettings: 'सेटिंग्स',
     aiBriefTitle: 'AI फ्लीट ब्रीफ',

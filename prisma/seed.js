@@ -793,6 +793,111 @@ async function main() {
   }
   console.log(`  Seeded ${dScoreCount} additional driving scores`)
 
+  // ── Seed FASTag data ─────────────────────────────────────────────────────
+  const fastagVehicles = await prisma.vehicle.findMany({ where: { tenantId: T }, take: 10 })
+  const fastagProviders = [
+    { id: 'ICIC00000NATFT', name: 'ICICI Bank FASTag' },
+    { id: 'HDFC00000NATFT', name: 'HDFC Bank FASTag' },
+    { id: 'SBIN00000NATFT', name: 'SBI FASTag' },
+    { id: 'UTIB00000NATFT', name: 'Axis Bank FASTag' },
+    { id: 'KKBK00000NATFT', name: 'Kotak Bank FASTag' },
+    { id: 'IDFB00000NATFT', name: 'IDFC FIRST Bank FASTag' },
+    { id: 'PAYT00000NATFT', name: 'Paytm FASTag' },
+  ]
+  const fastagBalances = [1245, 87, 562, 2100, 148, 890, 320, 45, 1780, 410]
+  const fastagStatuses = ['Activated', 'Activated', 'Activated', 'Activated', 'Activated', 'Activated', 'Activated', 'Blocked', 'Activated', 'Activated']
+  const customerNames = ['DEMO FLEET TRANSPORT', 'DEMO FLEET TRANSPORT', 'SHARMA TRANSPORT', 'DEMO FLEET TRANSPORT', 'DEMO FLEET', 'DEMO FLEET TRANSPORT', 'SHARMA LOGISTICS', 'DEMO FLEET TRANSPORT', 'DEMO FLEET TRANSPORT', 'DEMO FLEET']
+
+  const createdFastags = []
+  for (let fi = 0; fi < Math.min(fastagVehicles.length, 8); fi++) {
+    const v = fastagVehicles[fi]
+    const prov = fastagProviders[fi % fastagProviders.length]
+    const checkedDaysAgo = [0, 1, 0, 2, 1, 3, 0, 5][fi]
+    const ft = await prisma.fasTag.create({
+      data: {
+        tenantId: T,
+        vehicleId: v.id,
+        fastagId: `34${String(Math.floor(1000000000 + Math.random() * 9000000000))}`,
+        provider: prov.id,
+        providerName: prov.name,
+        customerName: customerNames[fi],
+        balance: fastagBalances[fi],
+        rechargeLimit: 100000,
+        tagStatus: fastagStatuses[fi],
+        vehicleClass: 'VC20 - Multi Axle Truck',
+        lastCheckedAt: new Date(now.getTime() - checkedDaysAgo * 24 * 60 * 60 * 1000),
+      },
+    })
+    createdFastags.push({ ...ft, vehicleNumber: v.vehicleNumber })
+  }
+  console.log(`  Seeded ${createdFastags.length} FASTag links`)
+
+  // Seed low-balance alerts for vehicles with balance < 200
+  for (const ft of createdFastags) {
+    if (ft.balance < 200) {
+      await prisma.alert.create({
+        data: {
+          tenantId: T,
+          vehicleId: ft.vehicleId,
+          alertType: 'fastag_low_balance',
+          severity: 'high',
+          message: `FASTag low balance: ${ft.vehicleNumber} has only ₹${Math.round(ft.balance)}. Recharge immediately to avoid toll issues.`,
+          resolved: false,
+        },
+      })
+    }
+  }
+  const lowBalCount = createdFastags.filter(f => f.balance < 200).length
+  console.log(`  Created ${lowBalCount} low-balance FASTag alerts`)
+
+  // Seed FASTag transactions (mock recharge history)
+  const txnData = [
+    { fastagIdx: 0, amount: 2000, charge: 3, gst: 0.54, status: 'SUCCESS', daysAgo: 2 },
+    { fastagIdx: 0, amount: 1000, charge: 2, gst: 0.36, status: 'SUCCESS', daysAgo: 15 },
+    { fastagIdx: 1, amount: 500, charge: 2, gst: 0.36, status: 'SUCCESS', daysAgo: 20 },
+    { fastagIdx: 2, amount: 1000, charge: 2, gst: 0.36, status: 'SUCCESS', daysAgo: 5 },
+    { fastagIdx: 2, amount: 500, charge: 2, gst: 0.36, status: 'SUCCESS', daysAgo: 25 },
+    { fastagIdx: 3, amount: 5000, charge: 5, gst: 0.90, status: 'SUCCESS', daysAgo: 1 },
+    { fastagIdx: 3, amount: 2000, charge: 3, gst: 0.54, status: 'SUCCESS', daysAgo: 18 },
+    { fastagIdx: 4, amount: 500, charge: 2, gst: 0.36, status: 'FAILED', daysAgo: 3 },
+    { fastagIdx: 4, amount: 1000, charge: 2, gst: 0.36, status: 'SUCCESS', daysAgo: 12 },
+    { fastagIdx: 5, amount: 2000, charge: 3, gst: 0.54, status: 'SUCCESS', daysAgo: 4 },
+    { fastagIdx: 5, amount: 1000, charge: 2, gst: 0.36, status: 'SUCCESS', daysAgo: 22 },
+    { fastagIdx: 6, amount: 500, charge: 2, gst: 0.36, status: 'SUCCESS', daysAgo: 8 },
+    { fastagIdx: 6, amount: 200, charge: 2, gst: 0.36, status: 'SUCCESS', daysAgo: 30 },
+    { fastagIdx: 7, amount: 1000, charge: 2, gst: 0.36, status: 'PENDING', daysAgo: 0 },
+    { fastagIdx: 0, amount: 500, charge: 2, gst: 0.36, status: 'SUCCESS', daysAgo: 35 },
+    { fastagIdx: 3, amount: 1000, charge: 2, gst: 0.36, status: 'SUCCESS', daysAgo: 40 },
+  ]
+
+  let txnCount = 0
+  for (const tx of txnData) {
+    const ft = createdFastags[tx.fastagIdx]
+    if (!ft) continue
+    const txnDate = new Date(now.getTime() - tx.daysAgo * 24 * 60 * 60 * 1000)
+    await prisma.fasTagTransaction.create({
+      data: {
+        tenantId: T,
+        fastagId: ft.id,
+        type: 'recharge',
+        amount: tx.amount,
+        charge: tx.charge,
+        gst: tx.gst,
+        totalAmount: tx.amount + tx.charge + tx.gst,
+        reference: `FS-SEED-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        bulkpeTxnId: tx.status !== 'PENDING' ? `BBPS${String(Math.floor(10000 + Math.random() * 90000))}` : null,
+        npciRef: tx.status === 'SUCCESS' ? `NS0${String(Math.floor(10000000000 + Math.random() * 90000000000))}` : null,
+        status: tx.status,
+        billerName: ft.providerName,
+        vehicleNumber: ft.vehicleNumber,
+        message: tx.status === 'SUCCESS' ? 'Transaction is Successful' : tx.status === 'FAILED' ? 'Transaction Failed' : 'Transaction Pending',
+        createdAt: txnDate,
+      },
+    })
+    txnCount++
+  }
+  console.log(`  Seeded ${txnCount} FASTag transactions`)
+
   console.log('\nSeeding complete!')
   console.log(`\n  Login with email: demo@fleetsure.in`)
   console.log(`  OTP will be printed in server console\n`)

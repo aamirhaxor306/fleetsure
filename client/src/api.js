@@ -216,3 +216,29 @@ export const insurance = {
 export const tripStats = {
   monthly: () => request('/trips/monthly-stats'),
 }
+
+// ── FASTag ──────────────────────────────────────────────
+export const fastag = {
+  providers: () => request('/fastag/providers'),
+  vehicles: () => request('/fastag/vehicles'),
+  link: (data) =>
+    request('/fastag/link', { method: 'POST', body: JSON.stringify(data) }),
+  unlink: (id) =>
+    request(`/fastag/link/${id}`, { method: 'DELETE' }),
+  balance: (fastagId) =>
+    request('/fastag/balance', { method: 'POST', body: JSON.stringify({ fastagId }) }),
+  balanceAll: () =>
+    request('/fastag/balance/all', { method: 'POST' }),
+  recharge: (fastagId, amount) =>
+    request('/fastag/recharge', { method: 'POST', body: JSON.stringify({ fastagId, amount }) }),
+  transactions: (params = {}) => {
+    const qs = new URLSearchParams()
+    if (params.vehicleId) qs.set('vehicleId', params.vehicleId)
+    if (params.status) qs.set('status', params.status)
+    if (params.page) qs.set('page', params.page)
+    const q = qs.toString()
+    return request(`/fastag/transactions${q ? '?' + q : ''}`)
+  },
+  txnStatus: (txnId) =>
+    request(`/fastag/transactions/${txnId}/status`),
+}

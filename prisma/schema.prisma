@@ -37,6 +37,8 @@ model Tenant {
   drivingEvents     DrivingEvent[]
   drivingScores     DrivingScore[]
   tyres             Tyre[]
+  fastags           FasTag[]
+  fastagTransactions FasTagTransaction[]
 
   @@map("tenants")
 }
@@ -93,6 +95,7 @@ model Vehicle {
   renewalRequests  RenewalRequest[]
   tyres            Tyre[]
   drivers          Driver[]
+  fastag           FasTag?
 
   @@unique([tenantId, vehicleNumber])
   @@map("vehicles")
@@ -157,6 +160,7 @@ enum AlertType {
   repeated_issue
   document_expiry
   idle_vehicle
+  fastag_low_balance
 }
 
 enum Severity {
@@ -528,4 +532,52 @@ model Lead {
   createdAt DateTime @default(now()) @map("created_at")
 
   @@map("leads")
+}
+
+// ─── FASTag ─────────────────────────────────────────────────────────────────
+
+model FasTag {
+  id             String    @id @default(uuid())
+  tenantId       String    @map("tenant_id")
+  vehicleId      String    @unique @map("vehicle_id")
+  fastagId       String?   @map("fastag_id")
+  provider       String                              // BulkPe biller ID
+  providerName   String    @map("provider_name")     // e.g. "ICICI Bank FASTag"
+  customerName   String?   @map("customer_name")
+  balance        Float     @default(0)
+  rechargeLimit  Float?    @map("recharge_limit")
+  tagStatus      String    @default("unknown") @map("tag_status")  // Activated / Blocked / unknown
+  vehicleClass   String?   @map("vehicle_class")
+  lastCheckedAt  DateTime? @map("last_checked_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+
+  tenant       Tenant             @relation(fields: [tenantId], references: [id])
+  vehicle      Vehicle            @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  transactions FasTagTransaction[]
+
+  @@map("fastags")
+}
+
+model FasTagTransaction {
+  id            String   @id @default(uuid())
+  tenantId      String   @map("tenant_id")
+  fastagId      String   @map("fastag_id")
+  type          String   @default("recharge")       // recharge
+  amount        Float
+  charge        Float    @default(0)
+  gst           Float    @default(0)
+  totalAmount   Float    @map("total_amount")
+  reference     String   @unique                    // our unique ref sent to BulkPe
+  bulkpeTxnId   String?  @map("bulkpe_txn_id")
+  npciRef       String?  @map("npci_ref")
+  status        String   @default("PENDING")        // PENDING / SUCCESS / FAILED
+  billerName    String?  @map("biller_name")
+  vehicleNumber String?  @map("vehicle_number")
+  message       String?
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+  fastag FasTag @relation(fields: [fastagId], references: [id], onDelete: Cascade)
+
+  @@map("fastag_transactions")
 }

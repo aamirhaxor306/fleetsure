@@ -7,7 +7,7 @@ import {
   DashboardIcon, TruckIcon, RouteIcon, UserIcon, ShieldIcon,
   BellIcon, SparkleIcon, ClipboardIcon, HeartPulseIcon, MenuIcon,
   PlusIcon, LogOutIcon, ChevronLeftIcon, SearchIcon, SidebarCollapseIcon,
-  RefreshIcon, SettingsIcon, FileTextIcon,
+  RefreshIcon, SettingsIcon, FileTextIcon, FasTagIcon,
 } from './Icons'
 
 /* ── Navigation structure: outcome-grouped ────────────────── */
@@ -38,6 +38,7 @@ const NAV_GROUPS = [
     items: [
       { to: '/vehicles', icon: TruckIcon, key: 'navVehicles' },
       { to: '/drivers', icon: UserIcon, key: 'navDrivers' },
+      { to: '/fastag', icon: FasTagIcon, key: 'navFasTag' },
     ],
   },
   {

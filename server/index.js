@@ -31,6 +31,7 @@ import trackingRoutes from './routes/tracking.js'
 import insuranceRoutes from './routes/insurance.js'
 import settingsRoutes from './routes/settings.js'
 import pdfRoutes from './routes/pdfDocuments.js'
+import fastagRoutes from './routes/fastag.js'
 import leadRoutes from './routes/leads.js'
 import prisma from './lib/prisma.js'
 import { runAlertEngine } from './services/alertEngine.js'
@@ -93,6 +94,7 @@ app.use('/api/tracking', trackingRoutes)
 app.use('/api/insurance', insuranceRoutes)
 app.use('/api/settings', settingsRoutes)
 app.use('/api/pdf', pdfRoutes)
+app.use('/api/fastag', fastagRoutes)
 
 // ── Serve client build in production ───────────────────────────────────────
 
