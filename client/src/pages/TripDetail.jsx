@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts'
-import { trips as tripsApi } from '../api'
+import { trips as tripsApi, vehicles as vehiclesApi, drivers as driversApi } from '../api'
 import PageHeader from '../components/PageHeader'
 import KPICard from '../components/KPICard'
 import StatusDot from '../components/StatusDot'
@@ -11,10 +11,53 @@ export default function TripDetail() {
   const { id } = useParams()
   const [trip, setTrip] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [editing, setEditing] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [vehicleList, setVehicleList] = useState([])
+  const [driverList, setDriverList] = useState([])
+  const [form, setForm] = useState({})
 
   useEffect(() => {
     tripsApi.get(id).then(setTrip).catch(() => {}).finally(() => setLoading(false))
   }, [id])
+
+  const startEdit = async () => {
+    const [vList, dList] = await Promise.all([vehiclesApi.list(), driversApi.list()])
+    setVehicleList(vList || [])
+    setDriverList(dList || [])
+    setForm({
+      vehicleId: trip.vehicle?.id || trip.vehicleId || '',
+      driverId: trip.driver?.id || trip.driverId || '',
+      loadingLocation: trip.loadingLocation || '',
+      destination: trip.destination || '',
+      freightAmount: trip.freightAmount || '',
+      distance: trip.distance || 0,
+      fuelExpense: trip.fuelExpense || 0,
+      toll: trip.toll || 0,
+      cashExpense: trip.cashExpense || 0,
+      tripDate: trip.tripDate ? new Date(trip.tripDate).toISOString().slice(0, 10) : '',
+      loadingSlipNumber: trip.loadingSlipNumber || '',
+    })
+    setEditing(true)
+  }
+
+  const cancelEdit = () => { setEditing(false); setForm({}) }
+
+  const saveEdit = async () => {
+    setSaving(true)
+    try {
+      await tripsApi.update(id, form)
+      const updated = await tripsApi.get(id)
+      setTrip(updated)
+      setEditing(false)
+    } catch (err) {
+      console.error('Save failed:', err)
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const onField = (key, val) => setForm(prev => ({ ...prev, [key]: val }))
 
   if (loading) return <div className="animate-pulse"><div className="h-8 bg-slate-200 rounded w-48 mb-4" /><div className="h-64 bg-slate-200 rounded-lg" /></div>
   if (!trip) return <div className="text-center py-12 text-slate-500">Trip not found</div>
@@ -25,7 +68,6 @@ export default function TripDetail() {
   const inr = (n) => `₹${Number(n).toLocaleString('en-IN')}`
   const shortLoc = (s) => { const p = (s || '').split(' - '); return p.length > 1 ? p.slice(1).join(' - ').trim() : s || '-' }
 
-  // Cost waterfall data
   const waterfallData = [
     { name: 'Freight', value: trip.freightAmount || 0, fill: '#10b981' },
     { name: 'Fuel', value: -(trip.fuelExpense || 0), fill: '#ef4444' },
@@ -34,7 +76,6 @@ export default function TripDetail() {
     { name: 'Profit', value: profit, fill: profit >= 0 ? '#2563eb' : '#ef4444' },
   ]
 
-  // Similar trips comparison
   const similarTrips = trip.similarTrips || []
   const avgFreight = similarTrips.length > 0 ? Math.round(similarTrips.reduce((s, t) => s + (t.freightAmount || 0), 0) / similarTrips.length) : 0
   const avgCost = similarTrips.length > 0 ? Math.round(similarTrips.reduce((s, t) => s + (t.fuelExpense || 0) + (t.toll || 0) + (t.cashExpense || 0), 0) / similarTrips.length) : 0
@@ -44,7 +85,6 @@ export default function TripDetail() {
     { name: 'Route Avg', freight: avgFreight, cost: avgCost, profit: avgFreight - avgCost },
   ] : []
 
-  // Map check
   const hasMap = trip.locationLogs?.length > 1 || (trip.startLat && trip.endLat)
   const ds = trip.drivingScore
 
@@ -54,7 +94,16 @@ export default function TripDetail() {
         title={`${shortLoc(trip.loadingLocation)} → ${shortLoc(trip.destination)}`}
         subtitle={`${trip.distance || 0} km · ${trip.vehicle?.vehicleNumber || ''}`}
         breadcrumbs={[{ label: 'Trips', to: '/trips' }, { label: 'Trip Detail' }]}
-        actions={<StatusDot status={trip.status} label={trip.status === 'reconciled' ? 'Reconciled' : 'Pending'} />}
+        actions={
+          <div className="flex items-center gap-2">
+            {!editing && (
+              <button onClick={startEdit} className="px-3 py-1.5 text-xs font-semibold bg-white border border-slate-300 rounded-lg hover:bg-slate-50 text-slate-700 transition-colors">
+                Edit Trip
+              </button>
+            )}
+            <StatusDot status={trip.status} label={trip.freightAmount ? 'Completed' : 'Pending'} />
+          </div>
+        }
       />
 
       {/* KPIs */}
@@ -85,29 +134,90 @@ export default function TripDetail() {
           </div>
         )}
 
-        {/* Trip Info Card */}
-        <div className="card p-5 space-y-4">
-          <h3 className="text-sm font-semibold text-slate-700 mb-3">Trip Details</h3>
-
-          <InfoRow icon={TruckIcon} label="Vehicle" value={trip.vehicle?.vehicleNumber || '-'} sub={trip.vehicle?.vehicleType} />
-          {trip.driver && <InfoRow icon={UserIcon} label="Driver" value={trip.driver.name} sub={trip.driver.phone} />}
-          <InfoRow icon={MapPinIcon} label="From" value={shortLoc(trip.loadingLocation)} />
-          <InfoRow icon={MapPinIcon} label="To" value={shortLoc(trip.destination)} />
-          <InfoRow icon={CalendarIcon} label="Date" value={trip.tripDate ? new Date(trip.tripDate).toLocaleDateString() : '-'} />
-
-          {trip.loadingSlipNumber && (
-            <div className="pt-3 border-t border-slate-100">
-              <span className="text-xs text-slate-400">Slip #</span>
-              <span className="ml-2 font-mono text-sm">{trip.loadingSlipNumber}</span>
+        {/* Trip Info Card — read or edit mode */}
+        {editing ? (
+          <div className="card p-5">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-sm font-semibold text-slate-700">Edit Trip</h3>
+              <div className="flex gap-2">
+                <button onClick={cancelEdit} className="px-3 py-1.5 text-xs font-medium bg-slate-100 rounded-lg hover:bg-slate-200 text-slate-600 transition-colors">
+                  Cancel
+                </button>
+                <button onClick={saveEdit} disabled={saving}
+                  className="px-4 py-1.5 text-xs font-semibold bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors">
+                  {saving ? 'Saving...' : 'Save'}
+                </button>
+              </div>
             </div>
-          )}
-
-          {trip.loadingSlipImageUrl && (
-            <div className="pt-2">
-              <img src={trip.loadingSlipImageUrl} alt="Loading slip" className="rounded-lg border border-slate-200 max-h-40 object-contain" />
+            <div className="space-y-3">
+              <EditField label="Vehicle">
+                <select value={form.vehicleId} onChange={e => onField('vehicleId', e.target.value)} className="edit-input">
+                  <option value="">Select vehicle</option>
+                  {vehicleList.map(v => <option key={v.id} value={v.id}>{v.vehicleNumber}</option>)}
+                </select>
+              </EditField>
+              <EditField label="Driver">
+                <select value={form.driverId} onChange={e => onField('driverId', e.target.value)} className="edit-input">
+                  <option value="">No driver</option>
+                  {driverList.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+                </select>
+              </EditField>
+              <EditField label="From">
+                <input value={form.loadingLocation} onChange={e => onField('loadingLocation', e.target.value)} className="edit-input" />
+              </EditField>
+              <EditField label="To">
+                <input value={form.destination} onChange={e => onField('destination', e.target.value)} className="edit-input" />
+              </EditField>
+              <EditField label="Date">
+                <input type="date" value={form.tripDate} onChange={e => onField('tripDate', e.target.value)} className="edit-input" />
+              </EditField>
+              <EditField label="Distance (km)">
+                <input type="number" value={form.distance} onChange={e => onField('distance', e.target.value)} className="edit-input" />
+              </EditField>
+              <div className="border-t border-slate-100 pt-3 mt-1">
+                <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-2">Financials</div>
+              </div>
+              <EditField label="Freight (₹)">
+                <input type="number" value={form.freightAmount} onChange={e => onField('freightAmount', e.target.value)} className="edit-input" placeholder="0" />
+              </EditField>
+              <EditField label="Fuel (₹)">
+                <input type="number" value={form.fuelExpense} onChange={e => onField('fuelExpense', e.target.value)} className="edit-input" />
+              </EditField>
+              <EditField label="Toll (₹)">
+                <input type="number" value={form.toll} onChange={e => onField('toll', e.target.value)} className="edit-input" />
+              </EditField>
+              <EditField label="Cash Expense (₹)">
+                <input type="number" value={form.cashExpense} onChange={e => onField('cashExpense', e.target.value)} className="edit-input" />
+              </EditField>
+              <EditField label="Slip #">
+                <input value={form.loadingSlipNumber} onChange={e => onField('loadingSlipNumber', e.target.value)} className="edit-input" placeholder="Optional" />
+              </EditField>
             </div>
-          )}
-        </div>
+          </div>
+        ) : (
+          <div className="card p-5 space-y-4">
+            <h3 className="text-sm font-semibold text-slate-700 mb-3">Trip Details</h3>
+
+            <InfoRow icon={TruckIcon} label="Vehicle" value={trip.vehicle?.vehicleNumber || '-'} sub={trip.vehicle?.vehicleType} />
+            {trip.driver && <InfoRow icon={UserIcon} label="Driver" value={trip.driver.name} sub={trip.driver.phone} />}
+            <InfoRow icon={MapPinIcon} label="From" value={shortLoc(trip.loadingLocation)} />
+            <InfoRow icon={MapPinIcon} label="To" value={shortLoc(trip.destination)} />
+            <InfoRow icon={CalendarIcon} label="Date" value={trip.tripDate ? new Date(trip.tripDate).toLocaleDateString() : '-'} />
+
+            {trip.loadingSlipNumber && (
+              <div className="pt-3 border-t border-slate-100">
+                <span className="text-xs text-slate-400">Slip #</span>
+                <span className="ml-2 font-mono text-sm">{trip.loadingSlipNumber}</span>
+              </div>
+            )}
+
+            {trip.loadingSlipImageUrl && (
+              <div className="pt-2">
+                <img src={trip.loadingSlipImageUrl} alt="Loading slip" className="rounded-lg border border-slate-200 max-h-40 object-contain" />
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Driving Behavior Card */}
@@ -137,15 +247,15 @@ export default function TripDetail() {
               <StatBox label="Max Speed" value={`${Math.round(ds.maxSpeed)} km/h`} color={ds.maxSpeed > 70 ? 'red' : undefined} />
               <StatBox label="Distance" value={`${ds.totalDistanceKm.toFixed(1)} km`} />
               <StatBox label="Duration" value={`${Math.round(ds.totalDurationMin)} min`} />
-              <StatBox label="Overspeeding" value={`${ds.overspeedingPct}%`} color={ds.overspeedingPct > 10 ? 'red' : undefined} />
-              <StatBox label="Harsh Events" value={`${ds.harshBrakeCount + ds.harshAccelCount + ds.sharpTurnCount}`} color={(ds.harshBrakeCount + ds.harshAccelCount + ds.sharpTurnCount) > 3 ? 'amber' : undefined} />
+              <StatBox label="Over Speed" value={`${ds.overspeedingPct}%`} color={ds.overspeedingPct > 10 ? 'red' : undefined} />
+              <StatBox label="Hard Stops" value={`${ds.harshBrakeCount + ds.harshAccelCount + ds.sharpTurnCount}`} color={(ds.harshBrakeCount + ds.harshAccelCount + ds.sharpTurnCount) > 3 ? 'amber' : undefined} />
             </div>
           </div>
 
           {/* Event Timeline */}
           {trip.drivingEvents?.length > 0 && (
             <div className="mt-5 pt-4 border-t border-slate-100">
-              <h4 className="text-xs font-semibold text-slate-500 mb-3 uppercase tracking-wider">Harsh Events Timeline</h4>
+              <h4 className="text-xs font-semibold text-slate-500 mb-3 uppercase tracking-wider">Driving Events</h4>
               <div className="space-y-2">
                 {trip.drivingEvents.map((ev, i) => (
                   <div key={i} className="flex items-center gap-3 text-sm">
@@ -246,6 +356,15 @@ function StatBox({ label, value, color }) {
     <div className="bg-slate-50 rounded-lg p-2.5">
       <div className="text-[10px] text-slate-400 uppercase tracking-wider">{label}</div>
       <div className={`text-sm font-bold ${textColor}`}>{value}</div>
+    </div>
+  )
+}
+
+function EditField({ label, children }) {
+  return (
+    <div className="flex items-center gap-3">
+      <label className="text-xs text-slate-500 w-24 shrink-0">{label}</label>
+      <div className="flex-1">{children}</div>
     </div>
   )
 }

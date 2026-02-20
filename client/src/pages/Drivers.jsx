@@ -88,7 +88,7 @@ export default function Drivers() {
           <div className="text-2xl">📱</div>
           <div>
             <h4 className="text-sm font-semibold text-blue-900">Onboard via Telegram</h4>
-            <p className="text-xs text-blue-700 mt-0.5">Drivers can register by messaging <span className="font-mono font-semibold">@fleetsure_bot</span> and typing <span className="font-mono">/register</span></p>
+            <p className="text-xs text-blue-700 mt-0.5">Drivers can register by messaging <span className="font-mono font-semibold">@fleetsure_driver_bot</span> and typing <span className="font-mono">/start</span></p>
           </div>
         </div>
       </div>

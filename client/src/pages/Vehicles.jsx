@@ -63,7 +63,7 @@ export default function Vehicles() {
     { key: 'status', label: 'Status', width: '60px', render: (_, row) => <StatusDot status={row.status} /> },
     { key: 'vehicleNumber', label: 'Vehicle', render: (v) => <span className="font-mono font-semibold text-slate-900">{v}</span> },
     { key: 'vehicleType', label: 'Type', render: (v) => <span className="capitalize">{v}</span> },
-    { key: 'axleConfig', label: 'Axle' },
+    { key: 'axleConfig', label: 'Size', render: (v) => { const m = { '6W': '6-Wheeler', '10W': '10-Wheeler', '12W': '12-Wheeler', '14W': '14-Wheeler' }; return m[v] || v } },
     { key: 'purchaseYear', label: 'Year' },
     { key: 'approxKm', label: 'KM', render: (v) => `${(v || 0).toLocaleString('en-IN')} km` },
     { key: '_count', label: 'Issues', render: (c) => {
@@ -156,17 +156,17 @@ export default function Vehicles() {
               <input className="inp" type="number" value={form.purchaseYear} onChange={e => setForm({ ...form, purchaseYear: e.target.value })} required />
             </div>
             <div>
-              <label className="block text-xs font-medium text-slate-600 mb-1">Axle</label>
+              <label className="block text-xs font-medium text-slate-600 mb-1">Vehicle Size</label>
               <select className="inp" value={form.axleConfig} onChange={e => setForm({ ...form, axleConfig: e.target.value })}>
-                <option value="6W">6W</option>
-                <option value="10W">10W</option>
-                <option value="12W">12W</option>
-                <option value="14W">14W</option>
+                <option value="6W">6-Wheeler</option>
+                <option value="10W">10-Wheeler</option>
+                <option value="12W">12-Wheeler</option>
+                <option value="14W">14-Wheeler</option>
               </select>
             </div>
           </div>
           <div>
-            <label className="block text-xs font-medium text-slate-600 mb-1">Approx KM</label>
+            <label className="block text-xs font-medium text-slate-600 mb-1">Current KM Reading</label>
             <input className="inp" type="number" value={form.approxKm} onChange={e => setForm({ ...form, approxKm: e.target.value })} />
           </div>
           <button type="submit" disabled={saving} className="btn-primary w-full">{saving ? 'Adding...' : 'Add Vehicle'}</button>

@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { trips as tripsApi } from '../api'
-import { SearchIcon, PlusIcon, MapPinIcon, TruckIcon, CalendarIcon, RouteIcon, ClipboardIcon, ChevronRightIcon } from '../components/Icons'
+import { SearchIcon, PlusIcon, MapPinIcon, TruckIcon, CalendarIcon, RouteIcon, ChevronRightIcon } from '../components/Icons'
 
 // Approximate coordinates for known LPG plant locations (for map markers)
 const LOCATION_COORDS = {
@@ -69,12 +69,12 @@ export default function Trips() {
     }).catch(() => {})
   }, [])
 
-  const reconciled = trips.filter(t => t.status === 'reconciled' && t.freightAmount)
-  const pending = trips.filter(t => t.status === 'logged')
+  const completed = trips.filter(t => t.freightAmount)
+  const pending = trips.filter(t => !t.freightAmount)
 
   const filtered = trips.filter(t => {
-    if (statusFilter === 'logged' && t.status !== 'logged') return false
-    if (statusFilter === 'reconciled' && t.status !== 'reconciled') return false
+    if (statusFilter === 'pending' && t.freightAmount) return false
+    if (statusFilter === 'completed' && !t.freightAmount) return false
     if (search) {
       const q = search.toLowerCase()
       const vn = (t.vehicle?.vehicleNumber || '').toLowerCase()
@@ -93,17 +93,13 @@ export default function Trips() {
   }
 
   const handleTripClick = useCallback((trip) => {
-    setSelectedTripId(prev => prev === trip.id ? null : trip.id)
-  }, [])
-
-  const handleTripDoubleClick = useCallback((trip) => {
     navigate(`/trips/${trip.id}`)
   }, [navigate])
 
   const tabs = [
     { value: 'all', label: 'All', count: trips.length },
-    { value: 'logged', label: 'Pending', count: pending.length },
-    { value: 'reconciled', label: 'Reconciled', count: reconciled.length },
+    { value: 'completed', label: 'Completed', count: completed.length },
+    { value: 'pending', label: 'Pending', count: pending.length },
   ]
 
   if (loading) {
@@ -149,9 +145,6 @@ export default function Trips() {
           </div>
         </div>
         <div className="trips-topbar-right">
-          <Link to="/reconcile" className="btn-secondary text-xs flex items-center gap-1">
-            <ClipboardIcon className="w-3.5 h-3.5" /> Reconcile
-          </Link>
           <Link to="/quick-add" className="btn-primary flex items-center gap-1 text-xs">
             <PlusIcon className="w-3.5 h-3.5" /> Log Trip
           </Link>
@@ -188,11 +181,10 @@ export default function Trips() {
                     key={trip.id}
                     className={`trip-card ${isSelected ? 'selected' : ''}`}
                     onClick={() => handleTripClick(trip)}
-                    onDoubleClick={() => handleTripDoubleClick(trip)}
                   >
                     <div className="trip-card-top">
                       <div className="trip-card-status">
-                        <span className={`trip-status-dot ${trip.status === 'reconciled' ? 'green' : 'amber'}`} />
+                        <span className={`trip-status-dot ${trip.freightAmount ? 'green' : 'amber'}`} />
                         <span className="trip-card-vehicle">{trip.vehicle?.vehicleNumber || '-'}</span>
                       </div>
                       <div className="trip-card-actions">
@@ -360,7 +352,7 @@ function TripsMap({ leaflet, trips, selectedTrip, onTripSelect }) {
       {uniqueMarkers.map((m, i) => {
         const isSelected = selectedTrip?.id === m.tripId
         const isStart = m.type === 'start'
-        const baseColor = m.status === 'reconciled' ? '#10b981' : '#f59e0b'
+        const baseColor = m.status === 'reconciled' || m.freight ? '#10b981' : '#f59e0b'
         const color = isSelected ? '#2563eb' : baseColor
         const radius = isSelected ? 8 : 5
         const weight = isSelected ? 3 : 1.5

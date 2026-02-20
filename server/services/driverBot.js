@@ -20,11 +20,10 @@
 import TelegramBot from 'node-telegram-bot-api'
 import prisma from '../lib/prisma.js'
 import sharp from 'sharp'
-import { spawn } from 'child_process'
+import Tesseract from 'tesseract.js'
 import { fileURLToPath } from 'url'
 import { dirname, join } from 'path'
-import { mkdtemp, unlink, writeFile, mkdir } from 'fs/promises'
-import { tmpdir } from 'os'
+import { writeFile, mkdir } from 'fs/promises'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
@@ -46,12 +45,14 @@ function clearState(chatId) {
   chatState.set(chatId, { state: 'idle', data: {} })
 }
 
-/** Resolve tenantId for a driver by their Telegram chat ID. Returns null if driver unknown (e.g. during onboarding). */
+/** Resolve tenantId for a driver by their Telegram chat ID. Falls back to first tenant during onboarding. */
 async function getTenantIdForDriver(chatId) {
   const driver = await prisma.driver.findFirst({
     where: { telegramChatId: String(chatId) },
   })
-  return driver?.tenantId || null
+  if (driver?.tenantId) return driver.tenantId
+  const first = await prisma.tenant.findFirst({ orderBy: { createdAt: 'asc' } })
+  return first?.id ?? null
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -735,9 +736,10 @@ async function saveFuelExpense(chatId, litres, amount) {
   if (!tripId) return
 
   const rate = Math.round((amount / litres) * 100) / 100
+  const trip = await prisma.trip.findUnique({ where: { id: tripId }, select: { tenantId: true } })
 
   await prisma.tripExpense.create({
-    data: { tripId, type: 'fuel', amount, quantity: litres, rate },
+    data: { tripId, tenantId: trip.tenantId, type: 'fuel', amount, quantity: litres, rate },
   })
 
   // Update trip totals
@@ -763,8 +765,10 @@ async function saveTollExpense(chatId, amount) {
   const tripId = data.activeTripId
   if (!tripId) return
 
+  const trip = await prisma.trip.findUnique({ where: { id: tripId }, select: { tenantId: true } })
+
   await prisma.tripExpense.create({
-    data: { tripId, type: 'toll', amount },
+    data: { tripId, tenantId: trip.tenantId, type: 'toll', amount },
   })
 
   // Update trip total toll
@@ -787,9 +791,10 @@ async function saveCashExpense(chatId, type, amount) {
   if (!tripId) return
 
   const labels = { food: '🍽️ Khana', repair: '🔧 Repair', parking: '🅿️ Parking', room: '🏨 Room', other: '📝 Other' }
+  const trip = await prisma.trip.findUnique({ where: { id: tripId }, select: { tenantId: true } })
 
   await prisma.tripExpense.create({
-    data: { tripId, type, amount, description: labels[type] || type },
+    data: { tripId, tenantId: trip.tenantId, type, amount, description: labels[type] || type },
   })
 
   // Update trip cash total
@@ -1015,13 +1020,16 @@ async function sendVehicleSelection(chatId) {
 async function completeOnboarding(chatId, vehicleId) {
   const { data } = getState(chatId)
   try {
+    const tenantId = await getTenantIdForDriver(chatId)
+    const driverData = {
+      name: data.name,
+      phone: data.phone,
+      vehicleId: vehicleId || null,
+      telegramChatId: String(chatId),
+    }
+    if (tenantId) driverData.tenantId = tenantId
     const driver = await prisma.driver.create({
-      data: {
-        name: data.name,
-        phone: data.phone,
-        vehicleId: vehicleId || null,
-        telegramChatId: String(chatId),
-      },
+      data: driverData,
       include: { vehicle: { select: { vehicleNumber: true } } },
     })
 
@@ -1054,7 +1062,6 @@ async function completeOnboarding(chatId, vehicleId) {
 async function handleLoadingSlipOCR(chatId, msg, driver) {
   const processingMsg = await bot.sendMessage(chatId, '🔍 Loading slip padh rahe hain... ruko')
 
-  let tempDir = null, processedPath = null
   try {
     const photo = msg.photo[msg.photo.length - 1]
     const file = await bot.getFile(photo.file_id)
@@ -1071,16 +1078,16 @@ async function handleLoadingSlipOCR(chatId, msg, driver) {
     const slipImageUrl = `/uploads/loading-slips/${slipFilename}`
 
     // Preprocess for OCR
-    tempDir = await mkdtemp(join(tmpdir(), 'fleetsure-drv-'))
-    processedPath = join(tempDir, 'processed.jpg')
-    await sharp(imageBuffer).grayscale().normalize().sharpen({ sigma: 1.5 }).jpeg({ quality: 95 }).toFile(processedPath)
+    const processedBuffer = await sharp(imageBuffer)
+      .grayscale().normalize().sharpen({ sigma: 1.5 })
+      .resize({ width: 2000, withoutEnlargement: true })
+      .jpeg({ quality: 95 }).toBuffer()
 
-    const pythonScript = join(__dirname, '..', 'ocr', 'process_loading_slip.py')
-    const ocrResult = await runPythonOCR(pythonScript, processedPath)
-
-    if (ocrResult.error) {
-      return bot.editMessageText(`❌ OCR Error: ${ocrResult.error}`, { chat_id: chatId, message_id: processingMsg.message_id })
-    }
+    const { data: tessData } = await Tesseract.recognize(processedBuffer, 'eng', { logger: () => {} })
+    const rawLines = tessData.text.split('\n').map(l => l.trim()).filter(Boolean)
+    const fullText = rawLines.join('\n')
+    const ocrResult = extractOcrFields(rawLines, fullText)
+    ocrResult.rawLines = rawLines
 
     const tenantId = driver.tenantId || (await getTenantIdForDriver(chatId))
     // Find vehicle (scoped by tenant when known)
@@ -1148,11 +1155,6 @@ async function handleLoadingSlipOCR(chatId, msg, driver) {
     console.error('[DriverBot] OCR error:', err)
     try {
       await bot.editMessageText(`❌ Error: ${err.message}`, { chat_id: chatId, message_id: processingMsg.message_id })
-    } catch {}
-  } finally {
-    try {
-      if (processedPath) await unlink(processedPath).catch(() => {})
-      if (tempDir) { const { rmdir } = await import('fs/promises'); await rmdir(tempDir).catch(() => {}) }
     } catch {}
   }
 }
@@ -1348,29 +1350,80 @@ async function savePhotoFromTelegram(msg, type) {
   }
 }
 
-function runPythonOCR(scriptPath, imagePath) {
-  return new Promise((resolve, reject) => {
-    const proc = spawn('python3', [scriptPath, imagePath], {
-      env: { ...process.env, PADDLE_PDX_DISABLE_MODEL_SOURCE_CHECK: 'True' },
-      timeout: 60000,
-    })
-    let stdout = '', stderr = ''
-    proc.stdout.on('data', (d) => { stdout += d.toString() })
-    proc.stderr.on('data', (d) => { stderr += d.toString() })
-    proc.on('close', (code) => {
-      if (code !== 0) {
-        console.error('[DriverBot OCR] stderr:', stderr)
-        try { reject(new Error(JSON.parse(stdout).error || 'OCR failed')) }
-        catch { reject(new Error(`OCR exited with code ${code}`)) }
-        return
-      }
-      try {
-        const r = JSON.parse(stdout)
-        r.error ? reject(new Error(r.error)) : resolve(r)
-      } catch { reject(new Error('Failed to parse OCR output')) }
-    })
-    proc.on('error', (err) => reject(new Error(`Python: ${err.message}`)))
-  })
+function extractOcrFields(lines, fullText) {
+  const result = { vehicleNumber: null, loadingSlipNumber: null, tripDate: null, originPlant: null, destinationPlant: null, transporterName: null }
+
+  for (const line of lines) {
+    const m = line.match(/loading\s*slip\s*no[.\s:]*(.*)/i)
+    if (m) { let s = m[1].trim().replace(/[|\\]/g, '/').replace(/\s+/g, ''); if (s.length > 5) { result.loadingSlipNumber = s; break } }
+  }
+  if (!result.loadingSlipNumber) {
+    const m = fullText.match(/LPG[/|\\]?\d{3,4}[/|\\]?[A-Z]{2}[/|\\]?\d{5,6}[/|\\]?\d{3,4}/i)
+    if (m) result.loadingSlipNumber = m[0].replace(/[|\\]/g, '/').replace(/\s+/g, '')
+  }
+
+  for (const line of lines) {
+    const m = line.match(/^Date[:\s]+(\d{1,2}[/.\-]\d{1,2}[/.\-]\d{2,4})\s*$/i)
+    if (m) { const d = ocrParseDate(m[1]); if (d) { result.tripDate = d; break } }
+  }
+  if (!result.tripDate) {
+    for (const line of lines) {
+      if (/date\s*of\s*unloading|last\s*invoice|STO/i.test(line)) continue
+      const m = line.match(/(\d{1,2}[/.\-]\d{1,2}[/.\-]\d{2,4})/)
+      if (m) { const d = ocrParseDate(m[1]); if (d) { result.tripDate = d; break } }
+    }
+  }
+
+  for (const line of lines) {
+    const m = line.match(/(?:report\s*your\s*)?vehicle\s*no[.\s:]*\s*([A-Z0-9]{6,12})/i)
+    if (m) { const c = m[1].replace(/[\s\-.]/g, '').toUpperCase(); if (/^[A-Z]{2}\d{2}[A-Z]{1,3}\d{3,4}$/.test(c)) { result.vehicleNumber = c; break } }
+  }
+  if (!result.vehicleNumber) {
+    let found = false
+    for (const line of lines) {
+      if (/vehicle\s*no/i.test(line)) { found = true; continue }
+      if (found) { const c = line.trim().replace(/[\s\-.]/g, '').toUpperCase(); if (/^[A-Z]{2}\d{2}[A-Z]{1,3}\d{3,4}$/.test(c)) result.vehicleNumber = c; break }
+    }
+  }
+  if (!result.vehicleNumber) {
+    for (const line of lines) {
+      const matches = line.toUpperCase().match(/\b([A-Z]{2}\d{2}[A-Z]{1,3}\d{3,4})\b/g)
+      if (matches) { for (const m of matches) { if (!['LP', 'ST', 'DU', 'BP'].includes(m.slice(0, 2))) { result.vehicleNumber = m; break } } if (result.vehicleNumber) break }
+    }
+  }
+
+  for (let i = 0; i < lines.length; i++) {
+    const m = lines[i].match(/issuing\s*plant[:\s]*(.*)/i)
+    if (m) { const v = m[1].trim(); if (v.length > 2) { result.originPlant = ocrCleanPlant(v); break } if (i + 1 < lines.length) { result.originPlant = ocrCleanPlant(lines[i + 1].trim()); break } }
+  }
+
+  const labelCheck = (l) => ['vehicle no', 'next loading', 'issuing plant', 'name of transporter', 'date of unloading', 'loading slip', 'report your', 'driver', 'signature'].some(k => l.toLowerCase().includes(k))
+  for (let i = 0; i < lines.length; i++) {
+    if (/next\s*loading\s*location/i.test(lines[i])) {
+      const parts = []
+      if (i > 0 && !labelCheck(lines[i - 1]) && lines[i - 1].length > 2 && /LPG|DU|plant|terminal|depot/i.test(lines[i - 1])) parts.push(lines[i - 1])
+      for (let j = 1; j <= 6 && i + j < lines.length; j++) { const n = lines[i + j].trim(); if (labelCheck(n) || /^[A-Z]{2}\d{2}[A-Z]{1,3}\d{3,4}$/.test(n.replace(/[\s\-.]/g, '').toUpperCase())) break; if (n.length > 1) parts.push(n) }
+      if (parts.length) result.destinationPlant = ocrCleanPlant(parts.join(' '))
+      break
+    }
+  }
+
+  for (let i = 0; i < lines.length; i++) {
+    if (/name\s*of\s*transporter/i.test(lines[i])) {
+      const m = lines[i].match(/name\s*of\s*transporter[:\s]+(.{3,})/i)
+      if (m) { result.transporterName = m[1].replace(/\(\s*\d+\s*\)/g, '').trim(); break }
+      for (let k = 1; k <= 3 && i - k >= 0; k++) { const p = lines[i - k].trim(); if (['-', '–', '—', ''].includes(p) || labelCheck(p)) continue; if (p.length > 2) { result.transporterName = p.replace(/\(\s*\d+\s*\)/g, '').trim(); break } }
+      break
+    }
+  }
+
+  return result
+}
+function ocrCleanPlant(s) { return s.replace(/\(\s*\d+\s*\)/g, '').replace(/\b\d{6}\b/g, '').replace(/C\/[Oo]\s+/g, '').replace(/\s+/g, ' ').trim() }
+function ocrParseDate(s) {
+  const m = s.match(/(\d{1,2})[/.\-](\d{1,2})[/.\-](\d{2,4})/); if (!m) return null
+  let [, d, mo, y] = m.map(Number); if (y < 100) y += 2000
+  return (d >= 1 && d <= 31 && mo >= 1 && mo <= 12 && y >= 2020 && y <= 2030) ? `${y}-${String(mo).padStart(2, '0')}-${String(d).padStart(2, '0')}` : null
 }
 
 function haversine(lat1, lon1, lat2, lon2) {

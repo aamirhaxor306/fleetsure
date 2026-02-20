@@ -150,6 +150,58 @@ router.post('/', requireRole('owner', 'manager'), async (req, res) => {
   }
 })
 
+// ── PUT /api/trips/:id — Update a trip ──────────────────────────────────────
+
+router.put('/:id', requireRole('owner', 'manager'), async (req, res) => {
+  try {
+    const existing = await prisma.trip.findFirst({
+      where: { id: req.params.id, tenantId: req.tenantId },
+    })
+    if (!existing) return res.status(404).json({ error: 'Trip not found' })
+
+    const {
+      vehicleId, driverId, loadingLocation, destination,
+      freightAmount, distance, ratePerKm,
+      fuelLitres, dieselRate, fuelExpense, toll, cashExpense,
+      tripDate, loadingSlipNumber, status,
+    } = req.body
+
+    const data = {}
+    if (vehicleId !== undefined) data.vehicleId = vehicleId
+    if (driverId !== undefined) data.driverId = driverId || null
+    if (loadingLocation !== undefined) data.loadingLocation = loadingLocation
+    if (destination !== undefined) data.destination = destination
+    if (freightAmount !== undefined) data.freightAmount = freightAmount ? parseFloat(freightAmount) : null
+    if (distance !== undefined) data.distance = parseInt(distance) || 0
+    if (ratePerKm !== undefined) data.ratePerKm = parseFloat(ratePerKm) || 0
+    if (fuelLitres !== undefined) data.fuelLitres = parseFloat(fuelLitres) || 0
+    if (dieselRate !== undefined) data.dieselRate = parseFloat(dieselRate) || 0
+    if (fuelExpense !== undefined) data.fuelExpense = parseFloat(fuelExpense) || 0
+    if (toll !== undefined) data.toll = parseFloat(toll) || 0
+    if (cashExpense !== undefined) data.cashExpense = parseFloat(cashExpense) || 0
+    if (tripDate !== undefined) data.tripDate = tripDate ? new Date(tripDate) : null
+    if (loadingSlipNumber !== undefined) data.loadingSlipNumber = loadingSlipNumber || null
+    if (status !== undefined) data.status = status
+
+    if (data.freightAmount && !data.status) {
+      data.status = 'reconciled'
+    }
+
+    const trip = await prisma.trip.update({
+      where: { id: req.params.id },
+      data,
+      include: {
+        vehicle: { select: { id: true, vehicleNumber: true, vehicleType: true } },
+        driver: { select: { id: true, name: true, phone: true } },
+      },
+    })
+    return res.json(trip)
+  } catch (err) {
+    console.error('Update trip error:', err)
+    return res.status(500).json({ error: 'Server error' })
+  }
+})
+
 // ── GET /api/trips/analytics — Full analytics ───────────────────────────────
 
 router.get('/analytics', async (req, res) => {

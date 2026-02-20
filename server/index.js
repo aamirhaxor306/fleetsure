@@ -24,15 +24,17 @@ import revenueRoutes from './routes/revenue.js'
 import ocrRoutes from './routes/ocr.js'
 import tyreRoutes from './routes/tyres.js'
 import driverRoutes from './routes/drivers.js'
-import telegramRoutes from './routes/telegram.js'
+// whatsappRoutes kept in codebase but not mounted (switched to Telegram)
 import insightsRoutes from './routes/insights.js'
 import fleetHealthRoutes from './routes/fleetHealth.js'
 import trackingRoutes from './routes/tracking.js'
+import trackingPublicRoutes from './routes/trackingPublic.js'
 import insuranceRoutes from './routes/insurance.js'
 import settingsRoutes from './routes/settings.js'
 import pdfRoutes from './routes/pdfDocuments.js'
 import fastagRoutes from './routes/fastag.js'
 import leadRoutes from './routes/leads.js'
+import adminRoutes from './routes/admin.js'
 import prisma from './lib/prisma.js'
 import { runAlertEngine } from './services/alertEngine.js'
 import { startDriverBot, sendMorningBrief, sendEveningSummary, sendWeeklyReport } from './services/driverBot.js'
@@ -47,6 +49,7 @@ const __dirname = dirname(__filename)
 // ── Middleware ──────────────────────────────────────────────────────────────
 
 app.use(express.json())
+app.use(express.urlencoded({ extended: false }))
 app.use(cookieParser())
 app.use(cors({
   origin: process.env.NODE_ENV === 'production' ? false : 'http://localhost:5173',
@@ -65,7 +68,11 @@ app.get('/api/health', (_req, res) => res.json({ status: 'ok', ts: Date.now() })
 
 app.use('/api/leads', leadRoutes)
 
-// ── Serve public/ for Telegram Mini App & Landing Page ──────────────────────
+// ── Public tracking API (token-auth, no login needed) ───────────────────────
+
+app.use('/api/t', trackingPublicRoutes)
+
+// ── Serve public/ for Landing Page ──────────────────────────────────────────
 
 app.use(express.static(join(__dirname, '..', 'public')))
 
@@ -87,7 +94,6 @@ app.use('/api/revenue', revenueRoutes)
 app.use('/api/ocr', ocrRoutes)
 app.use('/api/tyres', tyreRoutes)
 app.use('/api/drivers', driverRoutes)
-app.use('/api/telegram', telegramRoutes)
 app.use('/api/insights', insightsRoutes)
 app.use('/api/fleet-health', fleetHealthRoutes)
 app.use('/api/tracking', trackingRoutes)
@@ -95,6 +101,7 @@ app.use('/api/insurance', insuranceRoutes)
 app.use('/api/settings', settingsRoutes)
 app.use('/api/pdf', pdfRoutes)
 app.use('/api/fastag', fastagRoutes)
+app.use('/api/admin', adminRoutes)
 
 // ── Serve client build in production ───────────────────────────────────────
 
@@ -129,7 +136,7 @@ cron.schedule('30 0 * * *', async () => {
   })
 })
 
-// ── Driver Bot: Morning brief (7 AM IST = 01:30 UTC) ───────────────────────
+// ── Telegram: Driver morning brief (7 AM IST = 01:30 UTC) ───────────────────
 
 cron.schedule('30 1 * * *', async () => {
   console.log('[CRON] Sending driver morning briefs...')
@@ -141,7 +148,7 @@ cron.schedule('30 1 * * *', async () => {
   }
 })
 
-// ── Driver Bot: Evening summary (8 PM IST = 14:30 UTC) ─────────────────────
+// ── Telegram: Driver evening summary (8 PM IST = 14:30 UTC) ─────────────────
 
 cron.schedule('30 14 * * *', async () => {
   console.log('[CRON] Sending driver evening summaries...')
@@ -153,7 +160,7 @@ cron.schedule('30 14 * * *', async () => {
   }
 })
 
-// ── Owner Bot: Daily fleet summary (9 PM IST = 15:30 UTC) ──────────────────
+// ── Telegram: Owner daily fleet summary (9 PM IST = 15:30 UTC) ──────────────
 
 cron.schedule('30 15 * * *', async () => {
   console.log('[CRON] Sending owner daily fleet summary...')
@@ -165,7 +172,7 @@ cron.schedule('30 15 * * *', async () => {
   }
 })
 
-// ── Driver Bot: Weekly report (Monday 9 AM IST = 03:30 UTC) ────────────────
+// ── Telegram: Driver weekly report (Monday 9 AM IST = 03:30 UTC) ────────────
 
 cron.schedule('30 3 * * 1', async () => {
   console.log('[CRON] Sending driver weekly reports...')
@@ -182,11 +189,7 @@ cron.schedule('30 3 * * 1', async () => {
 app.listen(PORT, async () => {
   console.log(`Fleetsure server running on http://localhost:${PORT}`)
 
-  // Start both Telegram bots (non-blocking)
-  startDriverBot().catch(err => {
-    console.error('[DriverBot] Startup failed:', err.message)
-  })
-  startOwnerBot().catch(err => {
-    console.error('[OwnerBot] Startup failed:', err.message)
-  })
+  // Start Telegram bots (driver + owner)
+  await startDriverBot()
+  await startOwnerBot()
 })

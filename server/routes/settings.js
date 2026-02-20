@@ -22,7 +22,7 @@ router.get('/profile', async (req, res) => {
   try {
     const user = await prisma.user.findUnique({
       where: { id: req.userId },
-      select: { id: true, email: true, phone: true, name: true, role: true, tenantId: true },
+      select: { id: true, email: true, phone: true, name: true, role: true, tenantId: true, whatsappPhone: true },
     })
     if (!user) return res.status(404).json({ error: 'User not found' })
 

@@ -484,10 +484,10 @@ const readTools = [
   // 21. getTelegramStatus
   {
     name: 'getTelegramStatus',
-    description: 'Get Telegram bot status: connected drivers, owner chat ID.',
+    description: 'Get WhatsApp connection status: connected drivers count.',
     parameters: { type: 'object', properties: {}, required: [] },
     async execute(_params, tenantId) {
-      const connectedDrivers = await prisma.driver.count({ where: { tenantId, telegramChatId: { not: null } } })
+      const connectedDrivers = await prisma.driver.count({ where: { tenantId, whatsappPhone: { not: null } } })
       const totalDrivers = await prisma.driver.count({ where: { tenantId, active: true } })
       return {
         driverBot: { connectedDrivers, totalDrivers },

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '../App'
 import { auth as authApi } from '../api'
 import PageHeader from '../components/PageHeader'
@@ -31,7 +31,7 @@ function Section({ title, subtitle, children }) {
 
 export default function Settings() {
   const { user, logout } = useAuth()
-  const [tab, setTab] = useState('profile')
+  const [tab, setTab] = useState('business')
   const [profile, setProfile] = useState({ name: '', email: '' })
   const [company, setCompany] = useState({ name: '', plan: '', address: '', city: '', gstin: '', phone: '' })
   const [team, setTeam] = useState([])
@@ -111,11 +111,9 @@ export default function Settings() {
   }
 
   const tabs = [
-    { id: 'profile', label: 'Profile' },
-    { id: 'company', label: 'Company' },
+    { id: 'business', label: 'My Business' },
     ...(user?.role === 'owner' ? [{ id: 'team', label: 'Team' }] : []),
-    { id: 'preferences', label: 'Preferences' },
-    { id: 'danger', label: 'Account' },
+    { id: 'connections', label: 'Connections' },
   ]
 
   return (
@@ -142,10 +140,10 @@ export default function Settings() {
       </div>
 
       <div className="space-y-5 max-w-2xl">
-        {/* ── Profile Tab ── */}
-        {tab === 'profile' && (
+        {/* ── My Business Tab (merged Profile + Company) ── */}
+        {tab === 'business' && (
           <>
-            <Section title="Personal Information" subtitle="Your name and contact details">
+            <Section title="Your Details" subtitle="Your name and login info">
               <div className="space-y-4">
                 <div>
                   <label className="block text-xs font-medium text-slate-600 mb-1">Full Name</label>
@@ -175,18 +173,13 @@ export default function Settings() {
                 </div>
                 <div className="pt-2">
                   <button onClick={handleSaveProfile} disabled={saving} className="bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 text-white text-sm font-medium rounded-lg px-5 py-2 transition">
-                    {saving ? 'Saving...' : 'Save Changes'}
+                    {saving ? 'Saving...' : 'Save Name'}
                   </button>
                 </div>
               </div>
             </Section>
-          </>
-        )}
 
-        {/* ── Company Tab ── */}
-        {tab === 'company' && (
-          <>
-            <Section title="Company Details" subtitle="Your fleet's business information">
+            <Section title="Company Details" subtitle="Your fleet business information (shown on invoices)">
               <div className="space-y-4">
                 <div>
                   <label className="block text-xs font-medium text-slate-600 mb-1">Company / Fleet Name</label>
@@ -198,7 +191,6 @@ export default function Settings() {
                     placeholder="Sharma Transport"
                     disabled={user?.role !== 'owner'}
                   />
-                  {user?.role !== 'owner' && <p className="text-[11px] text-slate-400 mt-1">Only the owner can change the company name</p>}
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-slate-600 mb-1">Address</label>
@@ -236,7 +228,7 @@ export default function Settings() {
                   </div>
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-slate-600 mb-1">GSTIN</label>
+                  <label className="block text-xs font-medium text-slate-600 mb-1">GSTIN <span className="text-slate-400 font-normal">(your GST number — shows on invoices)</span></label>
                   <input
                     type="text"
                     className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none font-mono"
@@ -246,7 +238,6 @@ export default function Settings() {
                     maxLength={15}
                     disabled={user?.role !== 'owner'}
                   />
-                  <p className="text-[11px] text-slate-400 mt-1">Your GST Identification Number (appears on invoices)</p>
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-slate-600 mb-1">Plan</label>
@@ -254,32 +245,23 @@ export default function Settings() {
                     <span className={`inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-bold ${company.plan === 'pro' ? 'bg-amber-50 text-amber-700 border border-amber-200' : 'bg-slate-50 text-slate-600 border border-slate-200'}`}>
                       {company.plan === 'pro' ? 'Pro Plan' : 'Free Plan'}
                     </span>
-                    {company.plan !== 'pro' && (
-                      <span className="text-xs text-slate-400">Upgrade for advanced features</span>
-                    )}
                   </div>
                 </div>
                 {user?.role === 'owner' && (
                   <div className="pt-2">
                     <button onClick={handleSaveCompany} disabled={saving} className="bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 text-white text-sm font-medium rounded-lg px-5 py-2 transition">
-                      {saving ? 'Saving...' : 'Save Changes'}
+                      {saving ? 'Saving...' : 'Save Company'}
                     </button>
                   </div>
                 )}
               </div>
             </Section>
 
-            <Section title="Quick Stats" subtitle="Overview of your fleet data">
-              <div className="grid grid-cols-2 gap-3">
-                <div className="bg-slate-50 rounded-lg px-3 py-2.5">
-                  <div className="text-[11px] text-slate-500 font-medium">Tenant ID</div>
-                  <div className="text-xs font-mono text-slate-700 mt-0.5 truncate">{user?.tenantId || '-'}</div>
-                </div>
-                <div className="bg-slate-50 rounded-lg px-3 py-2.5">
-                  <div className="text-[11px] text-slate-500 font-medium">User ID</div>
-                  <div className="text-xs font-mono text-slate-700 mt-0.5 truncate">{user?.id || '-'}</div>
-                </div>
-              </div>
+            {/* Sign Out at bottom of My Business */}
+            <Section title="Sign Out" subtitle="Sign out of your account on this device">
+              <button onClick={logout} className="bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-medium rounded-lg px-4 py-2 transition">
+                Sign Out
+              </button>
             </Section>
           </>
         )}
@@ -367,58 +349,84 @@ export default function Settings() {
           </>
         )}
 
-        {/* ── Preferences Tab ── */}
-        {tab === 'preferences' && (
-          <Section title="Preferences" subtitle="Customize your experience">
-            <div className="space-y-4">
-              <div className="flex items-center justify-between py-2">
-                <div>
-                  <div className="text-sm font-medium text-slate-900">Telegram Bots</div>
-                  <div className="text-xs text-slate-500 mt-0.5">Connect driver and owner bots for real-time updates</div>
-                </div>
-                <a href="https://t.me/fleetsure_manager_bot" target="_blank" rel="noopener" className="text-xs text-blue-600 hover:underline font-medium">
-                  Open Owner Bot
-                </a>
-              </div>
-              <div className="border-t border-slate-100" />
-              <div className="flex items-center justify-between py-2">
-                <div>
-                  <div className="text-sm font-medium text-slate-900">Fleet Invite Code</div>
-                  <div className="text-xs text-slate-500 mt-0.5">Share this code with your drivers to link them to your fleet</div>
-                </div>
-                <code className="bg-slate-100 px-3 py-1 rounded text-xs font-mono font-bold text-slate-700">FLEET-7X2K</code>
-              </div>
-              <div className="border-t border-slate-100" />
-              <div className="flex items-center justify-between py-2">
-                <div>
-                  <div className="text-sm font-medium text-slate-900">Driver Bot</div>
-                  <div className="text-xs text-slate-500 mt-0.5">Share with your drivers for trip logging and GPS tracking</div>
-                </div>
-                <a href="https://t.me/fleetsure_driver_bot" target="_blank" rel="noopener" className="text-xs text-blue-600 hover:underline font-medium">
-                  Open Driver Bot
-                </a>
-              </div>
-            </div>
-          </Section>
-        )}
-
-        {/* ── Account / Danger Zone Tab ── */}
-        {tab === 'danger' && (
-          <Section title="Account Actions" subtitle="Manage your session">
-            <div className="space-y-4">
-              <div className="flex items-center justify-between py-2">
-                <div>
-                  <div className="text-sm font-medium text-slate-900">Sign Out</div>
-                  <div className="text-xs text-slate-500 mt-0.5">Sign out of your account on this device</div>
-                </div>
-                <button onClick={logout} className="bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-medium rounded-lg px-4 py-2 transition">
-                  Sign Out
-                </button>
-              </div>
-            </div>
-          </Section>
+        {/* ── Connections Tab ── */}
+        {tab === 'connections' && (
+          <ConnectionsTab flash={flash} />
         )}
       </div>
     </div>
+  )
+}
+
+// ── Telegram Bot Connections Component ─────────────────────────────────────────
+function ConnectionsTab() {
+  const inviteCode = 'FLEET-7X2K'
+
+  return (
+    <>
+      <Section title="Telegram Owner Bot" subtitle="Get real-time fleet updates via Telegram">
+        <div className="space-y-4">
+          <div className="flex items-start gap-3 py-2">
+            <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 shrink-0 mt-0.5">
+              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.479.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg>
+            </div>
+            <div className="flex-1">
+              <div className="text-sm font-medium text-slate-900">Fleet Manager Bot</div>
+              <div className="text-xs text-slate-500 mt-0.5">
+                Get trip start/end alerts, fuel anomaly warnings, P&L reports, and daily fleet summary at 9 PM
+              </div>
+              <div className="mt-3">
+                <a
+                  href="https://t.me/fleetsure_manager_bot"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded-lg px-4 py-2 transition"
+                >
+                  Open @fleetsure_manager_bot
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+                </a>
+              </div>
+              <div className="mt-2 text-[11px] text-slate-400">
+                Open the bot in Telegram and press /start to connect
+              </div>
+            </div>
+          </div>
+        </div>
+      </Section>
+
+      <Section title="Driver Telegram Bot" subtitle="Share with drivers so they can log trips via Telegram">
+        <div className="space-y-4">
+          <div className="flex items-center justify-between py-2">
+            <div>
+              <div className="text-sm font-medium text-slate-900">Driver Bot</div>
+              <div className="text-xs text-slate-500 mt-0.5">
+                Drivers message @fleetsure_driver_bot to register, log trips, and track expenses
+              </div>
+            </div>
+            <code className="bg-blue-50 text-blue-700 px-3 py-1.5 rounded-lg text-xs font-mono font-bold border border-blue-200">
+              @fleetsure_driver_bot
+            </code>
+          </div>
+          <div className="border-t border-slate-100" />
+          <div className="flex items-center justify-between py-2">
+            <div>
+              <div className="text-sm font-medium text-slate-900">Fleet Invite Code</div>
+              <div className="text-xs text-slate-500 mt-0.5">Give this code to drivers so they can join your fleet</div>
+            </div>
+            <code className="bg-slate-100 px-3 py-1 rounded text-xs font-mono font-bold text-slate-700">{inviteCode}</code>
+          </div>
+          <div className="border-t border-slate-100" />
+          <div className="bg-slate-50 rounded-lg p-3">
+            <div className="text-xs font-medium text-slate-700 mb-1.5">Quick Setup for Drivers</div>
+            <ol className="text-[11px] text-slate-500 space-y-1 list-decimal list-inside">
+              <li>Share the bot link: <code className="font-mono font-bold">t.me/fleetsure_driver_bot</code></li>
+              <li>Driver opens the bot and presses /start</li>
+              <li>Driver enters their name, phone, and fleet code: <code className="font-mono font-bold">{inviteCode}</code></li>
+              <li>Done! Driver can log trips, fuel, toll, and expenses via buttons</li>
+            </ol>
+          </div>
+        </div>
+      </Section>
+    </>
   )
 }

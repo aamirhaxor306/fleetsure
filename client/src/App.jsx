@@ -1,16 +1,17 @@
 import { useState, useEffect, createContext, useContext } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
-import { auth as authApi } from './api'
+import { ClerkProvider, SignedIn, SignedOut, useUser, useAuth as useClerkAuth } from '@clerk/clerk-react'
+import { auth as authApi, setClerkGetToken } from './api'
 import { LanguageProvider } from './context/LanguageContext'
 import Layout from './components/Layout'
 import Login from './pages/Login'
+import Onboarding from './pages/Onboarding'
 import Dashboard from './pages/Dashboard'
 import Vehicles from './pages/Vehicles'
 import VehicleDetail from './pages/VehicleDetail'
 import Trips from './pages/Trips'
 import TripDetail from './pages/TripDetail'
 import QuickAddTrip from './pages/QuickAddTrip'
-import Reconcile from './pages/Reconcile'
 import FleetHealth from './pages/FleetHealth'
 import Renewals from './pages/Renewals'
 import RenewalDetail from './pages/RenewalDetail'
@@ -21,54 +22,47 @@ import InsuranceOptimizer from './pages/InsuranceOptimizer'
 import Settings from './pages/Settings'
 import DocumentGenerator from './pages/DocumentGenerator'
 import FASTag from './pages/FASTag'
+import PlatformStats from './pages/PlatformStats'
 import InstallPrompt from './components/InstallPrompt'
 
-// ── Auth context ────────────────────────────────────────────
+const CLERK_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY
+
 const AuthContext = createContext(null)
 export const useAuth = () => useContext(AuthContext)
 
-function App() {
-  const [user, setUser] = useState(undefined) // undefined = loading, null = not logged in
+function AuthenticatedApp() {
+  const { getToken, signOut } = useClerkAuth()
+  const { user: clerkUser } = useUser()
+  const [user, setUser] = useState(undefined)
 
   useEffect(() => {
-    authApi
-      .me()
-      .then((u) => {
-        // If user has a tenantId, they're fully onboarded
+    setClerkGetToken(() => getToken())
+  }, [getToken])
+
+  useEffect(() => {
+    if (!clerkUser) return
+    const sync = async () => {
+      try {
+        const u = await authApi.me()
         if (u.tenantId) {
           setUser(u)
         } else {
-          // Logged in but needs onboarding — treat as unauthenticated for routing
           setUser(null)
         }
-      })
-      .catch(() => setUser(null))
-  }, [])
-
-  const requestOtp = async (email) => {
-    return await authApi.requestOtp(email)
-  }
-
-  const verifyOtp = async (email, otp) => {
-    const res = await authApi.verifyOtp(email, otp)
-    if (!res.needsOnboarding && res.user) {
-      setUser(res.user)
+      } catch {
+        setUser(null)
+      }
     }
-    return res
-  }
-
-  const onboard = async (fleetName, ownerName) => {
-    const res = await authApi.onboard(fleetName, ownerName)
-    if (res.user) {
-      setUser(res.user)
-    }
-    return res
-  }
+    sync()
+  }, [clerkUser])
 
   const logout = async () => {
-    await authApi.logout()
+    try { await authApi.logout() } catch {}
+    await signOut()
     setUser(null)
   }
+
+  const handleOnboardComplete = (u) => setUser(u)
 
   if (user === undefined) {
     return (
@@ -78,37 +72,64 @@ function App() {
     )
   }
 
+  if (user === null) {
+    return <Onboarding onComplete={handleOnboardComplete} />
+  }
+
   return (
-    <LanguageProvider>
-      <AuthContext.Provider value={{ user, requestOtp, verifyOtp, onboard, logout }}>
-        <InstallPrompt />
-        <Routes>
-          <Route path="/login" element={user ? <Navigate to="/" /> : <Login />} />
-          <Route element={user ? <Layout /> : <Navigate to="/login" />}>
-            <Route index element={<Dashboard />} />
-            <Route path="trips" element={<Trips />} />
-            <Route path="trips/:id" element={<TripDetail />} />
-            <Route path="vehicles" element={<Vehicles />} />
-            <Route path="vehicles/:id" element={<VehicleDetail />} />
-            <Route path="drivers" element={<Drivers />} />
-            <Route path="fleet-health" element={<FleetHealth />} />
-            <Route path="renewals" element={<Renewals />} />
-            <Route path="renewals/:id" element={<RenewalDetail />} />
-            <Route path="reconcile" element={<Reconcile />} />
-            <Route path="quick-add" element={<QuickAddTrip />} />
-            <Route path="revenue" element={<Revenue />} />
-            <Route path="ai-chat" element={<AIChat />} />
-            <Route path="insurance" element={<InsuranceOptimizer />} />
-            <Route path="settings" element={<Settings />} />
-            <Route path="documents" element={<DocumentGenerator />} />
-            <Route path="fastag" element={<FASTag />} />
-            <Route path="alerts" element={<Navigate to="/fleet-health" replace />} />
-            <Route path="maintenance" element={<Navigate to="/fleet-health" replace />} />
-          </Route>
-          <Route path="*" element={<Navigate to="/" />} />
-        </Routes>
-      </AuthContext.Provider>
-    </LanguageProvider>
+    <AuthContext.Provider value={{ user, logout }}>
+      <InstallPrompt />
+      <Routes>
+        <Route element={<Layout />}>
+          <Route index element={<Dashboard />} />
+          <Route path="trips" element={<Trips />} />
+          <Route path="trips/:id" element={<TripDetail />} />
+          <Route path="vehicles" element={<Vehicles />} />
+          <Route path="vehicles/:id" element={<VehicleDetail />} />
+          <Route path="drivers" element={<Drivers />} />
+          <Route path="fleet-health" element={<FleetHealth />} />
+          <Route path="renewals" element={<Renewals />} />
+          <Route path="renewals/:id" element={<RenewalDetail />} />
+          <Route path="quick-add" element={<QuickAddTrip />} />
+          <Route path="revenue" element={<Revenue />} />
+          <Route path="ai-chat" element={<AIChat />} />
+          <Route path="insurance" element={<InsuranceOptimizer />} />
+          <Route path="settings" element={<Settings />} />
+          <Route path="documents" element={<DocumentGenerator />} />
+          <Route path="fastag" element={<FASTag />} />
+          <Route path="admin" element={<PlatformStats />} />
+          <Route path="alerts" element={<Navigate to="/fleet-health" replace />} />
+          <Route path="maintenance" element={<Navigate to="/fleet-health" replace />} />
+        </Route>
+        <Route path="*" element={<Navigate to="/" />} />
+      </Routes>
+    </AuthContext.Provider>
+  )
+}
+
+function App() {
+  if (!CLERK_KEY) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-900">
+        <div className="text-center text-white">
+          <p className="text-lg font-semibold mb-2">Clerk not configured</p>
+          <p className="text-sm text-slate-400">Set VITE_CLERK_PUBLISHABLE_KEY in your environment</p>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <ClerkProvider publishableKey={CLERK_KEY}>
+      <LanguageProvider>
+        <SignedOut>
+          <Login />
+        </SignedOut>
+        <SignedIn>
+          <AuthenticatedApp />
+        </SignedIn>
+      </LanguageProvider>
+    </ClerkProvider>
   )
 }
 

@@ -48,10 +48,12 @@ model Tenant {
 model User {
   id           String    @id @default(uuid())
   tenantId     String?   @map("tenant_id")
+  clerkId      String?   @unique @map("clerk_id")
   email        String    @unique
   phone        String?   
   name         String?
   role         String    @default("owner")  // owner / manager / viewer
+  whatsappPhone String?  @map("whatsapp_phone")
   otpCode      String?   @map("otp_code")
   otpExpiresAt DateTime? @map("otp_expires_at")
   createdAt    DateTime  @default(now()) @map("created_at")
@@ -412,6 +414,7 @@ model Driver {
   licensePhotoUrl String?   @map("license_photo_url")
   aadhaarNumber   String?   @map("aadhaar_number")
   aadhaarPhotoUrl String?   @map("aadhaar_photo_url")
+  whatsappPhone   String?   @unique @map("whatsapp_phone")
   telegramChatId  String?   @unique @map("telegram_chat_id")
   vehicleId       String?   @map("vehicle_id")
   active          Boolean   @default(true)

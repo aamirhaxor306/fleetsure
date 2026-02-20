@@ -136,16 +136,18 @@ export default function RenewalDetail() {
           <h3 className="text-sm font-semibold text-slate-700 mb-4">Get Quotes</h3>
           {isInsurance && (
             <div className="grid grid-cols-3 gap-3 mb-4">
-              <div><label className="block text-xs font-medium text-slate-600 mb-1">IDV (Rs)</label>
-                <input className="inp" type="number" value={quoteForm.idv} onChange={e => setQuoteForm({...quoteForm, idv: e.target.value})} placeholder="e.g. 500000" /></div>
+              <div><label className="block text-xs font-medium text-slate-600 mb-1">Vehicle Value (IDV) ₹</label>
+                <input className="inp" type="number" value={quoteForm.idv} onChange={e => setQuoteForm({...quoteForm, idv: e.target.value})} placeholder="e.g. 500000" />
+                <p className="text-[10px] text-slate-400 mt-0.5">How much your vehicle is insured for</p></div>
               <div><label className="block text-xs font-medium text-slate-600 mb-1">Policy Type</label>
                 <select className="inp" value={quoteForm.policyType} onChange={e => setQuoteForm({...quoteForm, policyType: e.target.value})}>
-                  <option value="comprehensive">Comprehensive</option><option value="third_party">Third Party</option><option value="own_damage">Own Damage</option>
+                  <option value="comprehensive">Full Cover (Comprehensive)</option><option value="third_party">Third Party Only</option><option value="own_damage">Own Damage Only</option>
                 </select></div>
-              <div><label className="block text-xs font-medium text-slate-600 mb-1">NCB %</label>
+              <div><label className="block text-xs font-medium text-slate-600 mb-1">No Claim Bonus %</label>
                 <select className="inp" value={quoteForm.ncbPercentage} onChange={e => setQuoteForm({...quoteForm, ncbPercentage: e.target.value})}>
                   {[0, 20, 25, 35, 45, 50].map(n => <option key={n} value={n}>{n}%</option>)}
-                </select></div>
+                </select>
+                <p className="text-[10px] text-slate-400 mt-0.5">Discount for not making claims — increases each year</p></div>
             </div>
           )}
           <button onClick={handleFetchQuotes} disabled={fetching} className="btn-primary">

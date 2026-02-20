@@ -132,7 +132,7 @@ export default function FleetHealth() {
 
   return (
     <div>
-      <PageHeader title="Fleet Health" subtitle="Documents, alerts, and maintenance in one view" />
+      <PageHeader title="Fleet Health" subtitle="See what needs attention — expired documents, alerts, and repairs" />
 
       {/* Health Score */}
       <div className="card p-6 mb-6">
@@ -147,11 +147,23 @@ export default function FleetHealth() {
               { label: 'Tyres', value: health?.tyres?.score || 0 },
             ]}
           />
-          <div className="flex-1 grid grid-cols-2 md:grid-cols-4 gap-3">
-            <KPICard label="Expired Docs" value={expiredDocs.length} color="red" />
-            <KPICard label="Expiring Soon" value={expiringSoon.length} color="amber" />
-            <KPICard label="Unresolved Alerts" value={unresolvedAlerts.length} color="red" />
-            <KPICard label="Maint. Spend" value={inr(totalMaintSpend)} color="blue" />
+          <div className="flex-1">
+            {/* Plain English explanation */}
+            <div className="bg-slate-50 rounded-xl px-4 py-3 mb-3">
+              <p className="text-sm text-slate-700">
+                {(health?.overall || 0) >= 80
+                  ? 'Your fleet is in good shape! Keep it up.'
+                  : (health?.overall || 0) >= 50
+                  ? `Your fleet needs some attention — ${expiredDocs.length > 0 ? `${expiredDocs.length} expired document${expiredDocs.length !== 1 ? 's' : ''}` : ''}${expiredDocs.length > 0 && unresolvedAlerts.length > 0 ? ' and ' : ''}${unresolvedAlerts.length > 0 ? `${unresolvedAlerts.length} unresolved alert${unresolvedAlerts.length !== 1 ? 's' : ''}` : ''}.`
+                  : `Your fleet needs urgent attention! Renew expired documents and resolve alerts to avoid fines.`}
+              </p>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <KPICard label="Expired Docs" value={expiredDocs.length} color="red" />
+              <KPICard label="Expiring Soon" value={expiringSoon.length} color="amber" />
+              <KPICard label="Open Alerts" value={unresolvedAlerts.length} color="red" />
+              <KPICard label="Repair Spend" value={inr(totalMaintSpend)} color="blue" />
+            </div>
           </div>
         </div>
       </div>

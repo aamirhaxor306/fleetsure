@@ -100,13 +100,11 @@ export default function VehicleDetail() {
       />
 
       {/* KPIs */}
-      <div className="grid grid-cols-2 md:grid-cols-6 gap-3 mb-6">
-        <KPICard label="Revenue" value={inr(totalRevenue)} color="blue" />
-        <KPICard label="Expenses" value={inr(totalExpenses)} color="red" />
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+        <KPICard label="Total Earnings" value={inr(totalRevenue)} color="blue" />
+        <KPICard label="Total Expenses" value={inr(totalExpenses)} color="red" />
         <KPICard label="Profit" value={inr(totalProfit)} color="emerald" />
-        <KPICard label="Trips" value={vehicleTrips.length} color="amber" />
-        <KPICard label="Cost/KM" value={`₹${costPerKm}`} color="violet" />
-        <KPICard label="Margin" value={`${margin}%`} color="cyan" />
+        <KPICard label="Total Trips" value={vehicleTrips.length} color="amber" />
       </div>
 
       {/* Trip Revenue Chart */}
@@ -296,7 +294,7 @@ export default function VehicleDetail() {
       <SlideOver open={showTyreForm} onClose={() => setShowTyreForm(false)} title="Add Tyre">
         <form onSubmit={handleAddTyre} className="space-y-4">
           <div><label className="block text-xs font-medium text-slate-600 mb-1">Position *</label>
-            <input className="inp" value={tyreForm.position} onChange={e => setTyreForm({...tyreForm, position: e.target.value})} required placeholder="e.g. FL, R1LO" /></div>
+            <input className="inp" value={tyreForm.position} onChange={e => setTyreForm({...tyreForm, position: e.target.value})} required placeholder="e.g. Front Left, Rear Right" /></div>
           <div><label className="block text-xs font-medium text-slate-600 mb-1">Brand</label>
             <input className="inp" value={tyreForm.brand} onChange={e => setTyreForm({...tyreForm, brand: e.target.value})} /></div>
           <div><label className="block text-xs font-medium text-slate-600 mb-1">Condition</label>
@@ -304,9 +302,9 @@ export default function VehicleDetail() {
               <option value="good">Good</option><option value="warn">Warn</option><option value="replace">Replace</option>
             </select></div>
           <div className="grid grid-cols-2 gap-3">
-            <div><label className="block text-xs font-medium text-slate-600 mb-1">Installed KM</label>
+            <div><label className="block text-xs font-medium text-slate-600 mb-1">KM When Installed</label>
               <input className="inp" type="number" value={tyreForm.installedKm} onChange={e => setTyreForm({...tyreForm, installedKm: e.target.value})} /></div>
-            <div><label className="block text-xs font-medium text-slate-600 mb-1">Expected Life KM</label>
+            <div><label className="block text-xs font-medium text-slate-600 mb-1">Expected Life (KM)</label>
               <input className="inp" type="number" value={tyreForm.expectedLifeKm} onChange={e => setTyreForm({...tyreForm, expectedLifeKm: e.target.value})} /></div>
           </div>
           <div><label className="block text-xs font-medium text-slate-600 mb-1">Install Date</label>

@@ -69,11 +69,15 @@ router.post('/request-otp', async (req, res) => {
       })
     }
 
+    // Always log OTP so admin can check Railway logs if email doesn't deliver
+    console.log(`[OTP] ${cleanEmail} → ${otp}`)
+
     // Send OTP email via Resend
     if (resend) {
       try {
+        const fromEmail = process.env.RESEND_FROM_EMAIL || 'Fleetsure <onboarding@resend.dev>'
         await resend.emails.send({
-          from: 'Fleetsure <onboarding@resend.dev>',
+          from: fromEmail,
           to: [cleanEmail],
           subject: `${otp} — Your Fleetsure Login Code`,
           html: `
@@ -92,12 +96,7 @@ router.post('/request-otp', async (req, res) => {
         })
       } catch (emailErr) {
         console.error('Resend email error:', emailErr)
-        // Fall through — OTP is still in DB, log it for dev
-        console.log(`[DEV OTP] ${cleanEmail} → ${otp}`)
       }
-    } else {
-      // No Resend key → log to console (dev mode)
-      console.log(`[DEV OTP] ${cleanEmail} → ${otp}`)
     }
 
     return res.json({ ok: true, message: 'OTP sent to your email' })

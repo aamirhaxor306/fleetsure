@@ -1,9 +1,21 @@
 const BASE = '/api'
 
+let _getToken = null
+export function setClerkGetToken(fn) { _getToken = fn }
+
 async function request(path, opts = {}) {
+  const headers = { 'Content-Type': 'application/json', ...opts.headers }
+
+  if (_getToken) {
+    try {
+      const token = await _getToken()
+      if (token) headers['Authorization'] = `Bearer ${token}`
+    } catch {}
+  }
+
   const res = await fetch(`${BASE}${path}`, {
     credentials: 'include',
-    headers: { 'Content-Type': 'application/json', ...opts.headers },
+    headers,
     ...opts,
   })
   if (res.status === 401 && !path.startsWith('/auth')) {
@@ -73,6 +85,8 @@ export const trips = {
   get: (id) => request(`/trips/${id}`),
   create: (data) =>
     request('/trips', { method: 'POST', body: JSON.stringify(data) }),
+  update: (id, data) =>
+    request(`/trips/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   analytics: () => request('/trips/analytics'),
 }
 
@@ -122,30 +136,6 @@ export const renewalPartners = {
   list: () => request('/renewal-partners'),
   create: (data) =>
     request('/renewal-partners', { method: 'POST', body: JSON.stringify(data) }),
-}
-
-// ── Monthly Bills ────────────────────────────────────────
-export const monthlyBills = {
-  list: () => request('/monthly-bills'),
-  get: (id) => request(`/monthly-bills/${id}`),
-  create: (data) =>
-    request('/monthly-bills', { method: 'POST', body: JSON.stringify(data) }),
-  parsePdf: async (file) => {
-    const formData = new FormData()
-    formData.append('file', file)
-    const res = await fetch('/api/monthly-bills/parse-pdf', {
-      method: 'POST',
-      credentials: 'include',
-      body: formData,
-    })
-    if (!res.ok) {
-      const data = await res.json()
-      throw new Error(data.error || 'Upload failed')
-    }
-    return res.json()
-  },
-  reconcile: (id, data) =>
-    request(`/monthly-bills/${id}/reconcile`, { method: 'PUT', body: JSON.stringify(data) }),
 }
 
 // ── Revenue ─────────────────────────────────────────────
