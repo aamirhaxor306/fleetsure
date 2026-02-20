@@ -2,13 +2,8 @@
  * Fleetsure — Auth Middleware (Clerk + legacy JWT fallback)
  */
 import jwt from 'jsonwebtoken'
-import { clerkClient } from '@clerk/express'
 import prisma from '../lib/prisma.js'
 
-/**
- * Verify Clerk session token from Authorization header,
- * fall back to legacy JWT cookie for backward compat.
- */
 export function requireAuth(req, res, next) {
   const authHeader = req.headers.authorization
   if (authHeader && authHeader.startsWith('Bearer ')) {
@@ -23,6 +18,18 @@ export function requireAuth(req, res, next) {
   return res.status(401).json({ error: 'Not authenticated' })
 }
 
+async function fetchClerkUser(clerkId) {
+  const secret = process.env.CLERK_SECRET_KEY
+  if (!secret) return null
+  try {
+    const r = await fetch(`https://api.clerk.com/v1/users/${clerkId}`, {
+      headers: { Authorization: `Bearer ${secret}` },
+    })
+    if (!r.ok) return null
+    return await r.json()
+  } catch { return null }
+}
+
 async function verifyClerkToken(req, res, next) {
   try {
     const token = req.headers.authorization.split(' ')[1]
@@ -35,15 +42,12 @@ async function verifyClerkToken(req, res, next) {
     let user = await prisma.user.findUnique({ where: { clerkId } })
 
     if (!user) {
-      let clerkUser
-      try {
-        clerkUser = await clerkClient.users.getUser(clerkId)
-      } catch { clerkUser = null }
+      const clerkUser = await fetchClerkUser(clerkId)
 
-      const email = clerkUser?.emailAddresses?.[0]?.emailAddress ||
+      const email = clerkUser?.email_addresses?.[0]?.email_address ||
                     payload.email || `clerk_${clerkId}@fleetsure.app`
-      const name = clerkUser ? `${clerkUser.firstName || ''} ${clerkUser.lastName || ''}`.trim() : null
-      const phone = clerkUser?.phoneNumbers?.[0]?.phoneNumber || null
+      const name = clerkUser ? `${clerkUser.first_name || ''} ${clerkUser.last_name || ''}`.trim() : null
+      const phone = clerkUser?.phone_numbers?.[0]?.phone_number || null
 
       const existing = await prisma.user.findUnique({ where: { email } })
       if (existing) {
