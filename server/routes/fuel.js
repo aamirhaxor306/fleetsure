@@ -1,9 +1,36 @@
 import { Router } from 'express'
 import prisma from '../lib/prisma.js'
 import { requireAuth, requireRole } from '../middleware/auth.js'
+import { parseFuelSms } from '../lib/fuelSmsParser.js'
 
 const router = Router()
 router.use(requireAuth)
+
+router.post('/parse-sms', async (req, res) => {
+  try {
+    const { smsText } = req.body
+    if (!smsText) return res.status(400).json({ error: 'smsText is required' })
+
+    const parsed = parseFuelSms(smsText)
+    if (!parsed) return res.json({ parsed: false, message: 'Could not parse this SMS format' })
+
+    if (parsed.vehicleNumber) {
+      const vehicle = await prisma.vehicle.findFirst({
+        where: {
+          tenantId: req.tenantId,
+          vehicleNumber: { contains: parsed.vehicleNumber, mode: 'insensitive' },
+        },
+        select: { id: true, vehicleNumber: true },
+      })
+      if (vehicle) parsed.vehicleId = vehicle.id
+    }
+
+    return res.json({ parsed: true, data: parsed })
+  } catch (err) {
+    console.error('Parse SMS error:', err)
+    return res.status(500).json({ error: 'Server error' })
+  }
+})
 
 router.get('/', async (req, res) => {
   try {

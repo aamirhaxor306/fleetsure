@@ -24,6 +24,7 @@ import Tesseract from 'tesseract.js'
 import { fileURLToPath } from 'url'
 import { dirname, join } from 'path'
 import { writeFile, mkdir } from 'fs/promises'
+import { parseFuelSms } from '../lib/fuelSmsParser.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
@@ -63,7 +64,7 @@ const HOME_KEYBOARD = {
   keyboard: [
     [{ text: '🚀 Naya Trip Shuru Karo' }],
     [{ text: '📊 Mera Status' }, { text: '👤 Meri Profile' }],
-    [{ text: '📞 Help' }],
+    [{ text: '⛽ Fuel SMS Bhejo' }, { text: '📞 Help' }],
   ],
   resize_keyboard: true,
 }
@@ -303,6 +304,19 @@ async function onCallbackQuery(query) {
         { reply_markup: ACTIVE_TRIP_KEYBOARD })
     }
 
+    // Fuel SMS vehicle selection
+    if (data.startsWith('fuel_sms_v:')) {
+      const vehicleId = data.split(':')[1]
+      const { state, data: stateData } = getState(chatId)
+      if (state !== 'fuel_sms_select_vehicle') {
+        return bot.answerCallbackQuery(query.id, { text: 'Expired.' })
+      }
+      await bot.answerCallbackQuery(query.id, { text: '✅' })
+      const driver = await findDriver(chatId)
+      await saveFuelFromSms(chatId, stateData.fuelSmsData, vehicleId, driver)
+      return
+    }
+
     // Skip receipt photo
     if (data === 'skip_receipt') {
       await bot.answerCallbackQuery(query.id, { text: '⏩' })
@@ -528,6 +542,14 @@ async function onMessage(msg) {
   if (text === '📞 Help') {
     return onHelp(msg)
   }
+  if (text === '⛽ Fuel SMS Bhejo') {
+    setState(chatId, 'awaiting_fuel_sms')
+    return bot.sendMessage(chatId,
+      `⛽ *Fuel SMS paste karo*\n\n` +
+      `HPCL / IOCL / BPCL fleet card ka SMS copy karke yahan paste karo.\n\n` +
+      `_Example: Your HPCL Fleet Card ending 1234 used for Rs.5340.00 at HP Sharma Fuels Pune for 59.55 Ltrs of HSD on 17-Feb-2026_`,
+      { parse_mode: 'Markdown', reply_markup: { remove_keyboard: true } })
+  }
 
   // ── ACTIVE TRIP BUTTONS ───────────────────────────────────────────
   if (text === '⛽ Diesel Bhara') {
@@ -602,6 +624,26 @@ async function onMessage(msg) {
     if (isNaN(amount) || amount <= 0) return bot.sendMessage(chatId, '❌ Sahi amount daalo (e.g. 250)')
     await saveCashExpense(chatId, data.cashType, amount)
     return
+  }
+
+  if (state === 'awaiting_fuel_sms') {
+    await handleFuelSmsParse(chatId, text, driver)
+    return
+  }
+
+  if (state === 'fuel_sms_confirm_vehicle') {
+    const vehicleId = data.fuelSmsVehicleId
+    if (text.toLowerCase() === 'haan' || text.toLowerCase() === 'yes' || text === '✅') {
+      await saveFuelFromSms(chatId, data.fuelSmsData, vehicleId, driver)
+    } else {
+      clearState(chatId)
+      return bot.sendMessage(chatId, '❌ Cancel. Dobara try karo.', { reply_markup: HOME_KEYBOARD })
+    }
+    return
+  }
+
+  if (state === 'fuel_sms_select_vehicle') {
+    return bot.sendMessage(chatId, '👆 Upar se gaadi chuno.', { reply_markup: { remove_keyboard: true } })
   }
 
   if (state === 'trip_custom_route') {
@@ -1314,6 +1356,137 @@ async function notifyOwner(event, payload) {
   } catch (err) {
     // Owner bot may not be running — that's fine
     console.error('[DriverBot] Owner notification failed:', err.message)
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// FUEL SMS PARSING
+// ═══════════════════════════════════════════════════════════════════════════
+
+async function handleFuelSmsParse(chatId, smsText, driver) {
+  const parsed = parseFuelSms(smsText)
+  if (!parsed) {
+    clearState(chatId)
+    return bot.sendMessage(chatId,
+      `❌ SMS samajh nahi aaya.\n\nHPCL, IOCL, ya BPCL fleet card ka SMS bhejo.\nYa manual entry karo: ⛽ button trip ke dauran.`,
+      { reply_markup: HOME_KEYBOARD })
+  }
+
+  const tenantId = driver.tenantId || (await getTenantIdForDriver(chatId))
+
+  // Try to match vehicle from SMS
+  let vehicle = null
+  if (parsed.vehicleNumber) {
+    vehicle = await prisma.vehicle.findFirst({
+      where: {
+        vehicleNumber: { contains: parsed.vehicleNumber, mode: 'insensitive' },
+        ...(tenantId && { tenantId }),
+      },
+    })
+  }
+
+  // If driver has assigned vehicle, use that
+  if (!vehicle && driver.vehicleId) {
+    vehicle = await prisma.vehicle.findFirst({
+      where: { id: driver.vehicleId, ...(tenantId && { tenantId }) },
+    })
+  }
+
+  if (vehicle) {
+    let text = `⛽ *Fuel SMS parsed!*\n\n`
+    text += `🚛 Vehicle: ${vehicle.vehicleNumber}\n`
+    text += `⛽ ${parsed.litres}L @ ₹${parsed.ratePerLitre}/L\n`
+    text += `💰 Total: ₹${parsed.totalCost.toLocaleString('en-IN')}\n`
+    if (parsed.vendorName) text += `🏪 ${parsed.vendorName}\n`
+    if (parsed.vendorLocation) text += `📍 ${parsed.vendorLocation}\n`
+    text += `📅 ${parsed.fuelDate}\n`
+    text += `\nSave karna hai?`
+
+    setState(chatId, 'fuel_sms_confirm_vehicle', { fuelSmsData: parsed, fuelSmsVehicleId: vehicle.id })
+    return bot.sendMessage(chatId, text, {
+      parse_mode: 'Markdown',
+      reply_markup: {
+        inline_keyboard: [[
+          { text: '✅ Haan, Save Karo', callback_data: `fuel_sms_v:${vehicle.id}` },
+          { text: '❌ Cancel', callback_data: 'skip_receipt' },
+        ]],
+      },
+    })
+  }
+
+  // No vehicle found, ask user to select
+  const vehicles = await prisma.vehicle.findMany({
+    where: { status: 'active', ...(tenantId && { tenantId }) },
+    take: 20,
+    orderBy: { vehicleNumber: 'asc' },
+  })
+
+  if (vehicles.length === 0) {
+    clearState(chatId)
+    return bot.sendMessage(chatId, '❌ Koi vehicle nahi mila. Fleet owner se contact karo.', { reply_markup: HOME_KEYBOARD })
+  }
+
+  let text = `⛽ *Fuel SMS parsed!*\n\n`
+  text += `⛽ ${parsed.litres}L @ ₹${parsed.ratePerLitre}/L = ₹${parsed.totalCost.toLocaleString('en-IN')}\n`
+  if (parsed.vendorName) text += `🏪 ${parsed.vendorName}\n`
+  text += `\n🚛 Vehicle select karo:`
+
+  const keyboard = []
+  for (let i = 0; i < vehicles.length; i += 2) {
+    const row = [{ text: vehicles[i].vehicleNumber, callback_data: `fuel_sms_v:${vehicles[i].id}` }]
+    if (vehicles[i + 1]) {
+      row.push({ text: vehicles[i + 1].vehicleNumber, callback_data: `fuel_sms_v:${vehicles[i + 1].id}` })
+    }
+    keyboard.push(row)
+  }
+
+  setState(chatId, 'fuel_sms_select_vehicle', { fuelSmsData: parsed })
+  return bot.sendMessage(chatId, text, {
+    parse_mode: 'Markdown',
+    reply_markup: { inline_keyboard: keyboard },
+  })
+}
+
+async function saveFuelFromSms(chatId, parsed, vehicleId, driver) {
+  try {
+    const tenantId = driver.tenantId || (await getTenantIdForDriver(chatId))
+
+    await prisma.fuelLog.create({
+      data: {
+        tenantId,
+        vehicleId,
+        litres: parsed.litres,
+        ratePerLitre: parsed.ratePerLitre,
+        totalCost: parsed.totalCost,
+        vendorName: parsed.vendorName || null,
+        vendorLocation: parsed.vendorLocation || null,
+        fuelType: parsed.fuelType || 'diesel',
+        paymentMode: 'Fleet Card',
+        billNumber: parsed.billNumber || null,
+        notes: `Auto-logged from ${parsed.provider || 'SMS'} via Telegram`,
+        fuelDate: new Date(parsed.fuelDate),
+      },
+    })
+
+    const vehicle = await prisma.vehicle.findFirst({ where: { id: vehicleId } })
+    clearState(chatId)
+
+    let text = `✅ *Fuel log saved!*\n\n`
+    text += `🚛 ${vehicle?.vehicleNumber || 'Vehicle'}\n`
+    text += `⛽ ${parsed.litres}L — ₹${parsed.totalCost.toLocaleString('en-IN')}\n`
+    if (parsed.vendorName) text += `🏪 ${parsed.vendorName}\n`
+    text += `\nOwner ko bhi notify ho gaya!`
+
+    await notifyOwner('fuel_logged', {
+      driver, vehicle, litres: parsed.litres, amount: parsed.totalCost,
+      vendor: parsed.vendorName, source: 'sms',
+    })
+
+    return bot.sendMessage(chatId, text, { parse_mode: 'Markdown', reply_markup: HOME_KEYBOARD })
+  } catch (err) {
+    console.error('[DriverBot] Save fuel SMS error:', err)
+    clearState(chatId)
+    return bot.sendMessage(chatId, '❌ Save nahi ho paya. Dobara try karo.', { reply_markup: HOME_KEYBOARD })
   }
 }
 

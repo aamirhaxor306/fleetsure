@@ -13,6 +13,13 @@ const FUEL_TYPES = [
 
 const PAY_MODES = ['Cash', 'UPI', 'Card', 'Credit', 'Fleet Card']
 
+const EMPTY_FORM = {
+  vehicleId: '', litres: '', ratePerLitre: '', odometerKm: '',
+  vendorName: '', vendorLocation: '', fuelType: 'diesel',
+  paymentMode: 'Cash', billNumber: '', notes: '',
+  fuelDate: new Date().toISOString().slice(0, 10),
+}
+
 export default function FuelManager() {
   const [logs, setLogs] = useState([])
   const [stats, setStats] = useState(null)
@@ -23,12 +30,12 @@ export default function FuelManager() {
   const [saving, setSaving] = useState(false)
   const [filterVehicle, setFilterVehicle] = useState('all')
 
-  const [form, setForm] = useState({
-    vehicleId: '', litres: '', ratePerLitre: '', odometerKm: '',
-    vendorName: '', vendorLocation: '', fuelType: 'diesel',
-    paymentMode: 'Cash', billNumber: '', notes: '',
-    fuelDate: new Date().toISOString().slice(0, 10),
-  })
+  const [showSms, setShowSms] = useState(false)
+  const [smsText, setSmsText] = useState('')
+  const [smsParsing, setSmsParsing] = useState(false)
+  const [smsResult, setSmsResult] = useState(null)
+
+  const [form, setForm] = useState({ ...EMPTY_FORM })
 
   useEffect(() => {
     Promise.allSettled([api.list(), api.stats(), vehiclesApi.list()])
@@ -44,6 +51,39 @@ export default function FuelManager() {
 
   const cost = form.litres && form.ratePerLitre ? (parseFloat(form.litres) * parseFloat(form.ratePerLitre)).toFixed(2) : ''
 
+  const handleParseSms = async () => {
+    if (!smsText.trim()) return
+    setSmsParsing(true)
+    setSmsResult(null)
+    try {
+      const res = await api.parseSms(smsText)
+      if (res.parsed) {
+        const d = res.data
+        setForm({
+          vehicleId: d.vehicleId || '',
+          litres: d.litres ? String(d.litres) : '',
+          ratePerLitre: d.ratePerLitre ? String(d.ratePerLitre) : '',
+          odometerKm: '',
+          vendorName: d.vendorName || '',
+          vendorLocation: d.vendorLocation || '',
+          fuelType: d.fuelType || 'diesel',
+          paymentMode: 'Fleet Card',
+          billNumber: d.billNumber || '',
+          notes: `Auto-parsed from ${d.provider || 'SMS'}`,
+          fuelDate: d.fuelDate || new Date().toISOString().slice(0, 10),
+        })
+        setSmsResult({ success: true, provider: d.provider })
+        setShowSms(false)
+        setShowAdd(true)
+      } else {
+        setSmsResult({ success: false, message: res.message || 'Could not parse SMS' })
+      }
+    } catch (err) {
+      setSmsResult({ success: false, message: err.message })
+    }
+    setSmsParsing(false)
+  }
+
   const handleAdd = async (e) => {
     e.preventDefault()
     setSaving(true)
@@ -51,7 +91,7 @@ export default function FuelManager() {
       const log = await api.create(form)
       setLogs(prev => [log, ...prev])
       setShowAdd(false)
-      setForm({ vehicleId: '', litres: '', ratePerLitre: '', odometerKm: '', vendorName: '', vendorLocation: '', fuelType: 'diesel', paymentMode: 'Cash', billNumber: '', notes: '', fuelDate: new Date().toISOString().slice(0, 10) })
+      setForm({ ...EMPTY_FORM })
       const newStats = await api.stats()
       setStats(newStats)
     } catch (err) { alert(err.message) }
@@ -73,7 +113,14 @@ export default function FuelManager() {
       <PageHeader
         title="Fuel Management"
         subtitle={`${logs.length} fill-ups tracked`}
-        action={<button onClick={() => setShowAdd(true)} className="btn-primary">+ Log Fuel</button>}
+        action={
+          <div className="flex gap-2">
+            <button onClick={() => { setShowSms(true); setSmsText(''); setSmsResult(null) }} className="btn-secondary text-xs">
+              📱 Paste SMS
+            </button>
+            <button onClick={() => { setForm({ ...EMPTY_FORM }); setShowAdd(true) }} className="btn-primary">+ Log Fuel</button>
+          </div>
+        }
       />
 
       {/* Stats overview */}
@@ -110,7 +157,7 @@ export default function FuelManager() {
               <div className="py-16 text-center">
                 <div className="text-3xl mb-2">⛽</div>
                 <div className="text-sm font-semibold text-slate-700">No fuel records</div>
-                <p className="text-xs text-slate-400 mt-1">Log your first fill-up</p>
+                <p className="text-xs text-slate-400 mt-1">Log your first fill-up or paste a fuel SMS</p>
               </div>
             ) : (
               <div className="divide-y divide-slate-100">
@@ -186,13 +233,69 @@ export default function FuelManager() {
         </div>
       )}
 
+      {/* SMS Parse Modal */}
+      {showSms && (
+        <>
+          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50" onClick={() => setShowSms(false)} />
+          <div className="fixed inset-x-4 top-[15%] md:inset-x-auto md:left-1/2 md:-translate-x-1/2 md:w-full md:max-w-lg bg-white rounded-2xl shadow-2xl z-50">
+            <div className="p-6">
+              <h3 className="text-lg font-bold text-slate-900 mb-1">Paste Fuel SMS</h3>
+              <p className="text-xs text-slate-500 mb-4">
+                Paste your HPCL / IOCL / BPCL fleet card SMS and we'll auto-fill the fuel form.
+              </p>
+
+              <textarea
+                className="inp min-h-[120px] text-sm"
+                placeholder={"Paste your fuel SMS here...\n\nExample: Your HPCL Fleet Card ending 1234 used for Rs.5340.00 at HP Sharma Fuels Pune for 59.55 Ltrs of HSD on 17-Feb-2026"}
+                value={smsText}
+                onChange={e => { setSmsText(e.target.value); setSmsResult(null) }}
+                autoFocus
+              />
+
+              {smsResult && !smsResult.success && (
+                <div className="mt-3 p-3 rounded-xl bg-red-50 border border-red-200">
+                  <div className="text-xs font-semibold text-red-700">{smsResult.message}</div>
+                  <div className="text-[11px] text-red-500 mt-1">Try a different SMS format or log manually.</div>
+                </div>
+              )}
+
+              <div className="flex gap-3 mt-4">
+                <button type="button" onClick={() => setShowSms(false)} className="btn-secondary flex-1">Cancel</button>
+                <button
+                  type="button"
+                  onClick={handleParseSms}
+                  disabled={smsParsing || !smsText.trim()}
+                  className="btn-primary flex-1"
+                >
+                  {smsParsing ? 'Parsing...' : 'Parse & Fill Form'}
+                </button>
+              </div>
+
+              <div className="mt-4 pt-4 border-t border-slate-100">
+                <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-2">Supported formats</div>
+                <div className="flex flex-wrap gap-1.5">
+                  {['HPCL Fleet Card', 'IndianOil Fleet Card', 'BPCL SmartFleet', 'Generic fuel SMS'].map(f => (
+                    <span key={f} className="px-2 py-1 rounded-lg bg-slate-50 text-[11px] font-medium text-slate-500">{f}</span>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
       {/* Add Fuel Modal */}
       {showAdd && (
         <>
           <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50" onClick={() => setShowAdd(false)} />
           <div className="fixed inset-x-4 top-[5%] md:inset-x-auto md:left-1/2 md:-translate-x-1/2 md:w-full md:max-w-lg bg-white rounded-2xl shadow-2xl z-50 max-h-[90vh] overflow-y-auto">
             <div className="p-6">
-              <h3 className="text-lg font-bold text-slate-900 mb-5">Log Fuel Fill-up</h3>
+              <div className="flex items-center justify-between mb-5">
+                <h3 className="text-lg font-bold text-slate-900">Log Fuel Fill-up</h3>
+                {form.notes?.includes('Auto-parsed') && (
+                  <span className="px-2 py-1 rounded-lg bg-green-50 text-[11px] font-bold text-green-600">SMS Auto-filled</span>
+                )}
+              </div>
               <form onSubmit={handleAdd} className="space-y-4">
                 <div>
                   <label className="block text-xs font-medium text-slate-600 mb-1">Vehicle *</label>

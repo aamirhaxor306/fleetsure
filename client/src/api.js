@@ -70,6 +70,8 @@ export const fuel = {
     request('/fuel', { method: 'POST', body: JSON.stringify(data) }),
   remove: (id) =>
     request(`/fuel/${id}`, { method: 'DELETE' }),
+  parseSms: (smsText) =>
+    request('/fuel/parse-sms', { method: 'POST', body: JSON.stringify({ smsText }) }),
 }
 
 // ── Documents ────────────────────────────────────────────
