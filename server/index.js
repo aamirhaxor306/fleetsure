@@ -33,6 +33,7 @@ import insuranceRoutes from './routes/insurance.js'
 import settingsRoutes from './routes/settings.js'
 import pdfRoutes from './routes/pdfDocuments.js'
 import fastagRoutes from './routes/fastag.js'
+import fuelRoutes from './routes/fuel.js'
 import leadRoutes from './routes/leads.js'
 import adminRoutes from './routes/admin.js'
 import prisma from './lib/prisma.js'
@@ -101,12 +102,20 @@ app.use('/api/insurance', insuranceRoutes)
 app.use('/api/settings', settingsRoutes)
 app.use('/api/pdf', pdfRoutes)
 app.use('/api/fastag', fastagRoutes)
+app.use('/api/fuel', fuelRoutes)
 app.use('/api/admin', adminRoutes)
 
 // ── Serve client build in production ───────────────────────────────────────
 
 if (process.env.NODE_ENV === 'production') {
   const clientDist = join(__dirname, '..', 'client', 'dist')
+  const publicDir = join(__dirname, '..', 'public')
+
+  // Landing page at root for visitors
+  app.get('/', (_req, res) => {
+    res.sendFile(join(publicDir, 'landing.html'))
+  })
+
   app.use(express.static(clientDist))
   app.get('*', (req, res) => {
     res.sendFile(join(clientDist, 'index.html'))

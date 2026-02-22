@@ -55,8 +55,21 @@ export const vehicles = {
 export const maintenance = {
   list: (vehicleId) =>
     request(`/maintenance${vehicleId ? `?vehicleId=${vehicleId}` : ''}`),
+  stats: () => request('/maintenance/stats'),
   create: (data) =>
     request('/maintenance', { method: 'POST', body: JSON.stringify(data) }),
+  remove: (id) =>
+    request(`/maintenance/${id}`, { method: 'DELETE' }),
+}
+
+export const fuel = {
+  list: (vehicleId) =>
+    request(`/fuel${vehicleId ? `?vehicleId=${vehicleId}` : ''}`),
+  stats: () => request('/fuel/stats'),
+  create: (data) =>
+    request('/fuel', { method: 'POST', body: JSON.stringify(data) }),
+  remove: (id) =>
+    request(`/fuel/${id}`, { method: 'DELETE' }),
 }
 
 // ── Documents ────────────────────────────────────────────

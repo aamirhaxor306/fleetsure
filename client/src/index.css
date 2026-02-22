@@ -5,12 +5,12 @@
 /* ── Enterprise Design System ───────────────────────── */
 
 :root {
-  --brand-600: 37 99 235;
-  --brand-700: 29 78 216;
+  --brand-600: 13 148 136;
+  --brand-700: 15 118 110;
   --surface: 255 255 255;
-  --surface-dim: 248 250 252;
+  --surface-dim: 240 244 248;
   --sidebar-w: 240px;
-  --sidebar-collapsed-w: 64px;
+  --sidebar-collapsed-w: 68px;
 }
 
 /* ── Base ───────────────────────────────────────────── */
@@ -18,7 +18,7 @@
 body {
   @apply text-slate-800 antialiased text-sm;
   font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
-  background: #f8fafc;
+  background: #f0f4f8;
 }
 
 /* ── Scrollbar ──────────────────────────────────────── */
@@ -117,8 +117,8 @@ body {
 /* ── Input field ───────────────────────────────────── */
 
 .inp {
-  @apply w-full px-3 py-2 rounded-lg border border-slate-200 text-sm
-         focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400
+  @apply w-full px-3 py-2 rounded-xl border border-slate-200 text-sm
+         focus:ring-2 focus:ring-teal-500/20 focus:border-teal-400
          outline-none bg-white transition-all placeholder:text-slate-400;
 }
 
@@ -131,13 +131,13 @@ body {
 /* ── Button styles ─────────────────────────────────── */
 
 .btn-primary {
-  @apply px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg
-         hover:bg-blue-700 active:bg-blue-800 transition-all
+  @apply px-4 py-2 bg-teal-600 text-white text-sm font-semibold rounded-xl
+         hover:bg-teal-700 active:bg-teal-800 transition-all
          shadow-sm hover:shadow-md;
 }
 
 .btn-secondary {
-  @apply px-4 py-2 bg-white text-slate-700 text-sm font-semibold rounded-lg
+  @apply px-4 py-2 bg-white text-slate-700 text-sm font-semibold rounded-xl
          border border-slate-200 hover:bg-slate-50 active:bg-slate-100 transition-all;
 }
 

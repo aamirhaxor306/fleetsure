@@ -15,120 +15,63 @@ import {
   RefreshIcon, SparkleIcon, AlertTriangleIcon,
 } from '../components/Icons'
 
-// ── Welcome Modal ────────────────────────────────────────────────────────────
-
-function WelcomeModal({ userName, onDismiss }) {
-  const [visible, setVisible] = useState(false)
-
-  useEffect(() => {
-    requestAnimationFrame(() => setVisible(true))
-  }, [])
-
-  const handleDismiss = () => {
-    setVisible(false)
-    setTimeout(onDismiss, 200)
-  }
+function DonutChart({ value, max, size = 120, strokeWidth = 10, color = '#0d9488', label, sublabel }) {
+  const radius = (size - strokeWidth) / 2
+  const circumference = 2 * Math.PI * radius
+  const pct = max > 0 ? value / max : 0
+  const offset = circumference * (1 - pct)
 
   return (
-    <div
-      className={`fixed inset-0 z-[9999] flex items-center justify-center px-4 transition-all duration-300 ${
-        visible ? 'bg-black/50 backdrop-blur-sm' : 'bg-black/0'
-      }`}
-      onClick={handleDismiss}
-    >
-      <div
-        onClick={(e) => e.stopPropagation()}
-        className={`bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden transition-all duration-300 ${
-          visible ? 'scale-100 opacity-100' : 'scale-95 opacity-0'
-        }`}
-      >
-        <div className="h-1.5 bg-gradient-to-r from-blue-600 via-blue-500 to-emerald-500" />
-        <div className="px-7 pt-7 pb-6">
-          <div className="w-14 h-14 rounded-2xl bg-blue-600 flex items-center justify-center text-white font-bold text-2xl mb-5 shadow-lg shadow-blue-500/20">
-            F
-          </div>
-          <h2 className="text-2xl font-bold text-slate-900 leading-tight">
-            Save Smart. Manage Smart.
-          </h2>
-          <p className="text-slate-500 text-sm mt-2 leading-relaxed">
-            Welcome aboard{userName ? `, ${userName}` : ''}! You're now on <span className="font-semibold text-slate-700">Fleetsure</span> — your fleet's compliance and management expert.
-          </p>
-          <div className="mt-6 space-y-4">
-            {[
-              { icon: '🛡️', title: 'Compliance Tracking', desc: 'Never miss a renewal or document expiry.' },
-              { icon: '📊', title: 'Trip Profitability', desc: 'Know what each trip earns. Track margins.' },
-              { icon: '🤖', title: 'AI Insights', desc: 'Smart recommendations to cut costs.' },
-            ].map((f) => (
-              <div key={f.title} className="flex items-start gap-3">
-                <div className="w-9 h-9 rounded-lg bg-slate-50 flex items-center justify-center flex-shrink-0 text-lg">{f.icon}</div>
-                <div>
-                  <div className="text-sm font-semibold text-slate-900">{f.title}</div>
-                  <div className="text-xs text-slate-500 mt-0.5">{f.desc}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-          <button
-            onClick={handleDismiss}
-            className="mt-7 w-full bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl py-3 transition-colors shadow-lg shadow-blue-500/20"
-          >
-            Let's Get Started
-          </button>
-        </div>
+    <div className="flex flex-col items-center">
+      <svg width={size} height={size} className="-rotate-90">
+        <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="#e2e8f0" strokeWidth={strokeWidth} />
+        <circle
+          cx={size / 2} cy={size / 2} r={radius} fill="none"
+          stroke={color} strokeWidth={strokeWidth}
+          strokeDasharray={circumference} strokeDashoffset={offset}
+          strokeLinecap="round" className="transition-all duration-700"
+        />
+      </svg>
+      <div className="absolute flex flex-col items-center justify-center" style={{ width: size, height: size }}>
+        <span className="text-xl font-bold text-slate-800">{value}</span>
+        <span className="text-[10px] text-slate-400 font-medium">{label}</span>
       </div>
+      {sublabel && <div className="text-[10px] text-slate-500 mt-1 font-medium">{sublabel}</div>}
     </div>
   )
 }
 
-// ── Tile Card (compact on mobile, expanded on desktop) ──────────────────────
-
-function TileCard({ to, icon: Icon, title, stat, statusColor, statusLabel }) {
+function MiniDonut({ value, max, size = 48, strokeWidth = 5, color = '#0d9488' }) {
+  const radius = (size - strokeWidth) / 2
+  const circ = 2 * Math.PI * radius
+  const pct = max > 0 ? value / max : 0
+  const offset = circ * (1 - pct)
   return (
-    <Link
-      to={to}
-      className="group block bg-white rounded-xl border border-slate-200 overflow-hidden transition-all duration-200 hover:shadow-md hover:shadow-slate-200/50 hover:border-slate-300 active:scale-[0.98]"
-    >
-      <div className="p-3 sm:p-5">
-        {/* Mobile: compact horizontal layout */}
-        <div className="flex items-center gap-3 sm:block">
-          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-slate-50 flex items-center justify-center shrink-0 sm:mb-3">
-            <Icon className="w-[18px] h-[18px] sm:w-5 sm:h-5 text-slate-500 group-hover:text-slate-800 transition-colors" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center justify-between sm:block">
-              <div>
-                <h3 className="text-[13px] sm:text-sm font-bold text-slate-900 leading-tight">{title}</h3>
-                <div className="text-base sm:text-xl font-black text-slate-800 tracking-tight">{stat}</div>
-              </div>
-              {/* Status badge — only shown when meaningful */}
-              {statusLabel && (
-                <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold sm:mt-2 ${
-                  statusColor === 'red' ? 'bg-red-50 text-red-600' :
-                  statusColor === 'amber' ? 'bg-amber-50 text-amber-600' :
-                  statusColor === 'green' ? 'bg-emerald-50 text-emerald-600' :
-                  'bg-slate-50 text-slate-500'
-                }`}>
-                  {statusColor === 'red' && <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />}
-                  {statusColor === 'amber' && <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />}
-                  {statusColor === 'green' && <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />}
-                  {statusLabel}
-                </span>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-    </Link>
+    <svg width={size} height={size} className="-rotate-90">
+      <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="#e2e8f0" strokeWidth={strokeWidth} />
+      <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke={color} strokeWidth={strokeWidth}
+        strokeDasharray={circ} strokeDashoffset={offset} strokeLinecap="round" className="transition-all duration-500" />
+    </svg>
   )
 }
 
-// ── Helpers ─────────────────────────────────────────────────────────────────
+function StatDot({ color, label, value, to }) {
+  const Tag = to ? Link : 'div'
+  return (
+    <Tag to={to} className="flex items-center justify-between py-2 group hover:bg-slate-50 -mx-2 px-2 rounded-lg transition-colors">
+      <div className="flex items-center gap-2.5">
+        <span className={`w-2.5 h-2.5 rounded-full ${color}`} />
+        <span className="text-sm text-slate-600">{label}</span>
+      </div>
+      <div className="flex items-center gap-1.5">
+        <span className="text-sm font-bold text-slate-800">{value}</span>
+        {to && <span className="text-slate-400 group-hover:text-teal-600 text-xs transition-colors">&rsaquo;</span>}
+      </div>
+    </Tag>
+  )
+}
 
 const inr = (n) => n != null ? `₹${Number(n).toLocaleString('en-IN')}` : '—'
-
-// ═══════════════════════════════════════════════════════════════════════════
-// DASHBOARD
-// ═══════════════════════════════════════════════════════════════════════════
 
 export default function Dashboard() {
   const { user } = useAuth()
@@ -140,17 +83,6 @@ export default function Dashboard() {
   const [docList, setDocList] = useState([])
   const [insuranceData, setInsuranceData] = useState(null)
   const [driverList, setDriverList] = useState([])
-
-  // Welcome modal
-  const welcomeKey = user?.id ? `fleetsure_welcome_seen_${user.id}` : null
-  const [showWelcome, setShowWelcome] = useState(() => {
-    if (!welcomeKey) return false
-    return !localStorage.getItem(welcomeKey)
-  })
-  const dismissWelcome = () => {
-    if (welcomeKey) localStorage.setItem(welcomeKey, '1')
-    setShowWelcome(false)
-  }
 
   useEffect(() => {
     Promise.allSettled([
@@ -176,20 +108,18 @@ export default function Dashboard() {
     })
   }, [])
 
-  // ── Derived stats ────────────────────────────────────────────────────────
-
   const complianceScore = health?.overall || 0
-
   const fleetPnL = analytics?.fleetPnL || {}
   const tripCount = fleetPnL.tripCount || 0
   const revenue = fleetPnL.revenue || 0
   const margin = fleetPnL.margin || 0
 
   const vehicleCount = vehicleList.length
+  const activeVehicles = vehicleList.filter(v => v.status === 'active').length
+  const idleVehicles = vehicleList.filter(v => v.status === 'idle').length
   const driverCount = driverList.length
 
   const coverageGaps = insuranceData?.kpis?.coverageGapCount || 0
-
   const now = new Date()
   const expiredDocs = docList.filter(d => new Date(d.expiryDate) <= now)
   const expiringDocs = docList.filter(d => {
@@ -198,152 +128,183 @@ export default function Dashboard() {
   })
   const criticalAlerts = alertList.filter(a => a.severity === 'high')
   const criticalCount = expiredDocs.length + criticalAlerts.length
-  const renewalCount = expiringDocs.length + expiredDocs.length
 
-  // ── Loading skeleton ─────────────────────────────────────────────────────
+  const goodVehicles = Math.max(0, vehicleCount - coverageGaps)
 
   if (loading) {
     return (
       <div className="animate-pulse space-y-4">
         <div className="h-7 bg-slate-200 rounded w-56" />
-        <div className="h-10 bg-slate-100 rounded-xl" />
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-          {[...Array(6)].map((_, i) => (
-            <div key={i} className="h-24 sm:h-36 bg-slate-200 rounded-xl" />
-          ))}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="h-52 bg-slate-200 rounded-2xl" />
+          <div className="h-52 bg-slate-200 rounded-2xl" />
+          <div className="h-52 bg-slate-200 rounded-2xl" />
         </div>
       </div>
     )
   }
 
-  // ═══════════════════════════════════════════════════════════════════════════
-
   return (
-    <div>
-      {showWelcome && <WelcomeModal userName={user?.name} onDismiss={dismissWelcome} />}
-
-      {/* ── Greeting ────────────────────────────────────────────────────── */}
-      <div className="mb-4">
-        <h1 className="text-lg sm:text-xl font-bold text-slate-900">
-          {user?.name ? `Welcome, ${user.name}` : 'Dashboard'}
+    <div className="space-y-5">
+      {/* Greeting */}
+      <div>
+        <h1 className="text-xl font-bold text-slate-900">
+          {user?.name ? `Hi, ${user.name.split(' ')[0]}` : 'Dashboard'}
         </h1>
-        <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
-          {user?.tenantName && <span className="font-medium text-slate-700">{user.tenantName}</span>}
-          {user?.tenantName && <span className="mx-1.5 text-slate-300">|</span>}
-          Your fleet at a glance
+        <p className="text-sm text-slate-500 mt-0.5">
+          {user?.tenantName && <span className="font-medium text-slate-600">{user.tenantName}</span>}
+          {user?.tenantName && ' — '}
+          Here's your fleet overview
         </p>
       </div>
 
-      {/* ── Critical Alert Banner ───────────────────────────────────────── */}
+      {/* Critical Alert */}
       {criticalCount > 0 && (
-        <Link to="/fleet-health" className="mb-4 flex items-center gap-3 bg-red-50 border border-red-200 rounded-xl px-3 sm:px-4 py-2.5 sm:py-3 block">
-          <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-red-100 flex items-center justify-center flex-shrink-0">
-            <AlertTriangleIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-red-600" />
+        <Link to="/fleet-health" className="flex items-center gap-3 bg-red-50 border border-red-200 rounded-2xl px-4 py-3 block hover:shadow-sm transition-shadow">
+          <div className="w-9 h-9 rounded-xl bg-red-100 flex items-center justify-center shrink-0">
+            <AlertTriangleIcon className="w-4 h-4 text-red-600" />
           </div>
           <div className="flex-1 min-w-0">
-            <span className="text-xs sm:text-sm font-bold text-red-800">
-              {criticalCount} issue{criticalCount !== 1 ? 's' : ''} need attention
-            </span>
+            <span className="text-sm font-bold text-red-800">{criticalCount} issue{criticalCount !== 1 ? 's' : ''} need attention</span>
             <span className="hidden sm:inline text-xs text-red-500 ml-2">
-              {expiredDocs.length > 0 && `${expiredDocs.length} expired doc${expiredDocs.length !== 1 ? 's' : ''}`}
+              {expiredDocs.length > 0 && `${expiredDocs.length} expired`}
               {expiredDocs.length > 0 && criticalAlerts.length > 0 && ' · '}
-              {criticalAlerts.length > 0 && `${criticalAlerts.length} high alert${criticalAlerts.length !== 1 ? 's' : ''}`}
+              {criticalAlerts.length > 0 && `${criticalAlerts.length} critical`}
             </span>
           </div>
-          <span className="text-xs font-bold text-red-600 whitespace-nowrap">
-            Fix →
-          </span>
+          <span className="text-xs font-bold text-red-600">View &rsaquo;</span>
         </Link>
       )}
 
-      {/* ── Tile Grid — 2 cols on mobile, 3 on desktop ───────────────── */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-4">
+      {/* Row 1: Total Vehicles | Trips | Vehicle Condition */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
 
-        {/* 1. Fleet Health */}
-        <TileCard
-          to="/fleet-health"
-          icon={HeartPulseIcon}
-          title="Fleet Health"
-          stat={`${complianceScore}/100`}
-          statusColor={complianceScore >= 80 ? 'green' : complianceScore >= 50 ? 'amber' : 'red'}
-          statusLabel={complianceScore >= 80 ? 'Good' : complianceScore >= 50 ? 'At Risk' : 'Critical'}
-        />
+        {/* Total Vehicles - Donut */}
+        <div className="bg-white rounded-2xl border border-slate-200 p-5">
+          <h3 className="text-sm font-bold text-slate-700 mb-4">Total Vehicles</h3>
+          <div className="flex items-center gap-5">
+            <div className="relative">
+              <DonutChart value={vehicleCount} max={vehicleCount || 1} size={110} strokeWidth={12} color="#0d9488" label="Vehicles" />
+            </div>
+            <div className="space-y-2 flex-1">
+              <div className="flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-teal-500" />
+                <span className="text-xs text-slate-500">Active</span>
+                <span className="ml-auto text-sm font-bold text-slate-700">{activeVehicles}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-amber-400" />
+                <span className="text-xs text-slate-500">Idle</span>
+                <span className="ml-auto text-sm font-bold text-slate-700">{idleVehicles}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-slate-300" />
+                <span className="text-xs text-slate-500">Drivers</span>
+                <span className="ml-auto text-sm font-bold text-slate-700">{driverCount}</span>
+              </div>
+            </div>
+          </div>
+        </div>
 
-        {/* 2. Trips */}
-        <TileCard
-          to="/trips"
-          icon={RouteIcon}
-          title="Trips"
-          stat={`${tripCount}`}
-          statusColor={margin > 20 ? 'green' : margin > 0 ? null : null}
-          statusLabel={margin > 0 ? `${margin}% profit` : null}
-        />
+        {/* Trips */}
+        <div className="bg-white rounded-2xl border border-slate-200 p-5">
+          <h3 className="text-sm font-bold text-slate-700 mb-3">Trips</h3>
+          <div className="space-y-0.5">
+            <StatDot color="bg-emerald-500" label="Total Trips" value={tripCount} to="/trips" />
+            <StatDot color="bg-teal-500" label="Revenue" value={inr(revenue)} to="/trips" />
+            <StatDot color="bg-blue-500" label="Profit Margin" value={`${margin}%`} />
+            <StatDot color="bg-amber-500" label="Profit" value={inr(fleetPnL.profit)} />
+          </div>
+        </div>
 
-        {/* 3. Vehicles */}
-        <TileCard
-          to="/vehicles"
-          icon={TruckIcon}
-          title="Vehicles"
-          stat={`${vehicleCount}`}
-        />
-
-        {/* 4. Drivers */}
-        <TileCard
-          to="/drivers"
-          icon={UserIcon}
-          title="Drivers"
-          stat={`${driverCount}`}
-        />
-
-        {/* 5. Renewals */}
-        <TileCard
-          to="/renewals"
-          icon={RefreshIcon}
-          title="Renewals"
-          stat={`${renewalCount} pending`}
-          statusColor={expiredDocs.length > 0 ? 'red' : expiringDocs.length > 0 ? 'amber' : 'green'}
-          statusLabel={expiredDocs.length > 0 ? `${expiredDocs.length} expired` : expiringDocs.length > 0 ? `${expiringDocs.length} expiring` : 'All good'}
-        />
-
-        {/* 6. Insurance */}
-        <TileCard
-          to="/insurance"
-          icon={ShieldIcon}
-          title="Insurance"
-          stat={coverageGaps > 0 ? `${coverageGaps} gap${coverageGaps !== 1 ? 's' : ''}` : 'Covered'}
-          statusColor={coverageGaps > 0 ? 'amber' : 'green'}
-          statusLabel={coverageGaps > 0 ? 'Needs attention' : 'All good'}
-        />
+        {/* Vehicle Condition / Fleet Health */}
+        <div className="bg-white rounded-2xl border border-slate-200 p-5">
+          <h3 className="text-sm font-bold text-slate-700 mb-4">Fleet Health</h3>
+          <div className="flex items-center justify-around">
+            <div className="text-center relative">
+              <MiniDonut value={complianceScore} max={100} size={56} strokeWidth={6} color={complianceScore >= 70 ? '#0d9488' : complianceScore >= 40 ? '#f59e0b' : '#ef4444'} />
+              <div className="absolute inset-0 flex items-center justify-center" style={{ width: 56, height: 56 }}>
+                <span className="text-xs font-bold text-slate-700">{complianceScore}</span>
+              </div>
+              <div className="text-[10px] text-slate-500 mt-1.5 font-medium">Score</div>
+            </div>
+            <div className="text-center relative">
+              <MiniDonut value={goodVehicles} max={vehicleCount || 1} size={56} strokeWidth={6} color="#10b981" />
+              <div className="absolute inset-0 flex items-center justify-center" style={{ width: 56, height: 56 }}>
+                <span className="text-xs font-bold text-slate-700">{goodVehicles}</span>
+              </div>
+              <div className="text-[10px] text-slate-500 mt-1.5 font-medium">Good</div>
+            </div>
+            <div className="text-center relative">
+              <MiniDonut value={coverageGaps} max={vehicleCount || 1} size={56} strokeWidth={6} color="#f59e0b" />
+              <div className="absolute inset-0 flex items-center justify-center" style={{ width: 56, height: 56 }}>
+                <span className="text-xs font-bold text-slate-700">{coverageGaps}</span>
+              </div>
+              <div className="text-[10px] text-slate-500 mt-1.5 font-medium">At Risk</div>
+            </div>
+          </div>
+          <Link to="/fleet-health" className="mt-4 block text-center text-xs font-semibold text-teal-600 hover:text-teal-700 transition-colors">
+            View Details &rsaquo;
+          </Link>
+        </div>
       </div>
 
-      {/* ── AI Chat — slim bar, not a full card ──────────────────────── */}
-      <Link
-        to="/ai-chat"
-        className="mt-3 sm:mt-4 flex items-center gap-3 bg-white border border-slate-200 rounded-xl px-4 py-3 hover:border-slate-300 hover:shadow-sm transition-all group"
-      >
-        <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center">
-          <SparkleIcon className="w-4 h-4 text-slate-400 group-hover:text-slate-600 transition-colors" />
-        </div>
-        <div className="flex-1">
-          <span className="text-sm font-semibold text-slate-700 group-hover:text-slate-900">AI Chat</span>
-          <span className="text-xs text-slate-400 ml-2 hidden sm:inline">Ask anything about your fleet</span>
-        </div>
-        <span className="text-xs text-slate-400 group-hover:text-blue-600 font-medium transition-colors">Ask →</span>
-      </Link>
+      {/* Row 2: Renewals + Insurance | Quick Actions */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
-      {/* ── Quick Stats ──────────────────────────────────────────────── */}
-      <div className="mt-4 sm:mt-5 grid grid-cols-4 gap-2 sm:gap-3">
-        {[
-          { label: 'Revenue', value: inr(revenue) },
-          { label: 'Profit', value: inr(fleetPnL.profit) },
-          { label: 'Profit %', value: `${margin}%` },
-          { label: 'Alerts', value: String(alertList.length) },
-        ].map((s) => (
-          <div key={s.label} className="bg-slate-50 rounded-lg sm:rounded-xl px-2.5 sm:px-4 py-2 sm:py-3 text-center sm:text-left">
-            <div className="text-xs sm:text-base font-bold text-slate-700 truncate">{s.value}</div>
-            <div className="text-[9px] sm:text-[10px] font-medium text-slate-400 uppercase tracking-wider">{s.label}</div>
+        {/* Renewals & Insurance */}
+        <div className="bg-white rounded-2xl border border-slate-200 p-5">
+          <h3 className="text-sm font-bold text-slate-700 mb-3">Renewals & Insurance</h3>
+          <div className="space-y-0.5">
+            <StatDot color="bg-red-500" label="Expired Documents" value={expiredDocs.length} to="/renewals" />
+            <StatDot color="bg-amber-500" label="Expiring Soon (30d)" value={expiringDocs.length} to="/renewals" />
+            <StatDot color="bg-blue-500" label="Coverage Gaps" value={coverageGaps} to="/insurance" />
+            <StatDot color="bg-emerald-500" label="Alerts" value={alertList.length} to="/fleet-health" />
           </div>
-        ))}
+        </div>
+
+        {/* Quick Actions */}
+        <div className="bg-white rounded-2xl border border-slate-200 p-5">
+          <h3 className="text-sm font-bold text-slate-700 mb-3">Quick Actions</h3>
+          <div className="grid grid-cols-2 gap-2.5">
+            {[
+              { to: '/quick-add', icon: RouteIcon, label: 'Log Trip', color: 'bg-teal-50 text-teal-600 border-teal-100' },
+              { to: '/vehicles', icon: TruckIcon, label: 'Add Vehicle', color: 'bg-blue-50 text-blue-600 border-blue-100' },
+              { to: '/drivers', icon: UserIcon, label: 'Add Driver', color: 'bg-violet-50 text-violet-600 border-violet-100' },
+              { to: '/ai-chat', icon: SparkleIcon, label: 'AI Chat', color: 'bg-amber-50 text-amber-600 border-amber-100' },
+              { to: '/documents', icon: RefreshIcon, label: 'Documents', color: 'bg-rose-50 text-rose-600 border-rose-100' },
+              { to: '/insurance', icon: ShieldIcon, label: 'Insurance', color: 'bg-emerald-50 text-emerald-600 border-emerald-100' },
+            ].map(a => (
+              <Link
+                key={a.to}
+                to={a.to}
+                className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl border text-[13px] font-medium transition-all hover:shadow-sm active:scale-[0.98] ${a.color}`}
+              >
+                <a.icon className="w-4 h-4 shrink-0" />
+                <span>{a.label}</span>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Revenue bar */}
+      <div className="bg-white rounded-2xl border border-slate-200 p-5">
+        <h3 className="text-sm font-bold text-slate-700 mb-4">Revenue Overview</h3>
+        <div className="grid grid-cols-4 gap-3">
+          {[
+            { label: 'Revenue', value: inr(revenue), color: 'bg-teal-500' },
+            { label: 'Expenses', value: inr(fleetPnL.expenses), color: 'bg-amber-500' },
+            { label: 'Profit', value: inr(fleetPnL.profit), color: 'bg-emerald-500' },
+            { label: 'Margin', value: `${margin}%`, color: 'bg-blue-500' },
+          ].map(s => (
+            <div key={s.label} className="text-center">
+              <div className={`h-1.5 ${s.color} rounded-full mb-3 mx-auto`} style={{ width: '60%' }} />
+              <div className="text-sm sm:text-base font-bold text-slate-800">{s.value}</div>
+              <div className="text-[10px] font-medium text-slate-400 uppercase tracking-wider mt-0.5">{s.label}</div>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   )

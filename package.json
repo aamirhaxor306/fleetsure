@@ -16,6 +16,7 @@
     "db:setup": "npx prisma db push && node prisma/seed.js"
   },
   "dependencies": {
+    "@clerk/clerk-react": "^5.61.1",
     "@google/generative-ai": "^0.24.1",
     "@prisma/client": "^5.22.0",
     "@types/leaflet": "^1.9.21",
@@ -37,7 +38,8 @@
     "recharts": "^3.7.0",
     "resend": "^6.9.2",
     "sharp": "^0.34.5",
-    "tesseract.js": "^7.0.0"
+    "tesseract.js": "^7.0.0",
+    "twilio": "^5.12.2"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.3.1",

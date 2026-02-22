@@ -153,3 +153,11 @@ export function SidebarCollapseIcon(p) {
 export function FasTagIcon(p) {
   return <svg {...d} {...p}><rect x="2" y="5" width="20" height="14" rx="2" strokeLinecap="round" strokeLinejoin="round" /><path strokeLinecap="round" strokeLinejoin="round" d="M2 10h20" /><circle cx="17" cy="15" r="1.5" /><path strokeLinecap="round" strokeLinejoin="round" d="M6 15h5" /></svg>
 }
+
+export function FuelIcon(p) {
+  return <svg {...d} {...p}><path strokeLinecap="round" strokeLinejoin="round" d="M3.75 21h6.5V7.5a2 2 0 00-2-2h-2.5a2 2 0 00-2 2V21zm6.5-6h3a2 2 0 002-2V9l2.5-2.5M17.25 9v4a2 2 0 01-2 2h-5M6 2.5v3" /></svg>
+}
+
+export function ServiceIcon(p) {
+  return <svg {...d} {...p}><path strokeLinecap="round" strokeLinejoin="round" d="M11.42 15.17l-5.63 5.63a2.121 2.121 0 11-3-3l5.63-5.63m6.58-6.58a4.5 4.5 0 016.36 6.36l-1.59 1.59a2.121 2.121 0 01-3 0L13.17 9.17a2.121 2.121 0 010-3l1.59-1.59z" /><path strokeLinecap="round" strokeLinejoin="round" d="M14.5 17.5L21 11" /></svg>
+}

@@ -22,6 +22,8 @@ import InsuranceOptimizer from './pages/InsuranceOptimizer'
 import Settings from './pages/Settings'
 import DocumentGenerator from './pages/DocumentGenerator'
 import FASTag from './pages/FASTag'
+import ServiceManager from './pages/ServiceManager'
+import FuelManager from './pages/FuelManager'
 import PlatformStats from './pages/PlatformStats'
 import InstallPrompt from './components/InstallPrompt'
 
@@ -97,6 +99,8 @@ function AuthenticatedApp() {
           <Route path="settings" element={<Settings />} />
           <Route path="documents" element={<DocumentGenerator />} />
           <Route path="fastag" element={<FASTag />} />
+          <Route path="services" element={<ServiceManager />} />
+          <Route path="fuel" element={<FuelManager />} />
           <Route path="admin" element={<PlatformStats />} />
           <Route path="alerts" element={<Navigate to="/fleet-health" replace />} />
           <Route path="maintenance" element={<Navigate to="/fleet-health" replace />} />
