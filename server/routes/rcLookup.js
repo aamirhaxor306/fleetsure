@@ -1,11 +1,22 @@
 import { Router } from 'express'
 import prisma from '../lib/prisma.js'
 import { requireAuth, requireRole } from '../middleware/auth.js'
-import { fetchRCDetails } from '../services/surepass.js'
+import { fetchRCDetails, isSurepassConfigured } from '../services/surepass.js'
 
 const router = Router()
 
 router.use(requireAuth)
+
+router.get('/fetch-rc/status', requireRole('owner', 'manager'), async (_req, res) => {
+  return res.json({
+    provider: 'surepass',
+    available: isSurepassConfigured(),
+    message: isSurepassConfigured()
+      ? 'Auto-fetch is available'
+      : 'Auto-fetch is not configured. You can continue with manual entry.',
+    supported: ['RC', 'insurance', 'FC', 'PUC', 'permit'],
+  })
+})
 
 /**
  * POST /api/vehicles/fetch-rc
@@ -16,6 +27,15 @@ router.use(requireAuth)
  */
 router.post('/fetch-rc', requireRole('owner', 'manager'), async (req, res) => {
   try {
+    if (!isSurepassConfigured()) {
+      return res.status(200).json({
+        provider: 'surepass',
+        available: false,
+        message: 'Auto-fetch is not configured. You can continue with manual entry.',
+        supported: ['RC', 'insurance', 'FC', 'PUC', 'permit'],
+      })
+    }
+
     const { vehicleNumber } = req.body
     if (!vehicleNumber) {
       return res.status(400).json({ error: 'vehicleNumber is required' })
@@ -112,7 +132,15 @@ router.post('/fetch-rc', requireRole('owner', 'manager'), async (req, res) => {
     })
   } catch (err) {
     console.error('RC lookup error:', err)
-    const status = err.message.includes('not configured') ? 503 : 400
+    const status = err.message.includes('not configured') ? 200 : 400
+    if (status === 200) {
+      return res.status(200).json({
+        provider: 'surepass',
+        available: false,
+        message: 'Auto-fetch is not configured. You can continue with manual entry.',
+        supported: ['RC', 'insurance', 'FC', 'PUC', 'permit'],
+      })
+    }
     return res.status(status).json({ error: err.message })
   }
 })

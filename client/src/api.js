@@ -47,8 +47,11 @@ export const vehicles = {
     request('/vehicles', { method: 'POST', body: JSON.stringify(data) }),
   update: (id, data) =>
     request(`/vehicles/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  remove: (id) =>
+    request(`/vehicles/${id}`, { method: 'DELETE' }),
   fetchRC: (vehicleNumber) =>
     request('/vehicles/fetch-rc', { method: 'POST', body: JSON.stringify({ vehicleNumber }) }),
+  fetchRCStatus: () => request('/vehicles/fetch-rc/status'),
 }
 
 // ── Maintenance ──────────────────────────────────────────
@@ -100,6 +103,8 @@ export const trips = {
   get: (id) => request(`/trips/${id}`),
   create: (data) =>
     request('/trips', { method: 'POST', body: JSON.stringify(data) }),
+  autoEstimate: (data) =>
+    request('/trips/auto-estimate', { method: 'POST', body: JSON.stringify(data) }),
   update: (id, data) =>
     request(`/trips/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   analytics: () => request('/trips/analytics'),
@@ -138,6 +143,8 @@ export const renewals = {
     request('/renewals', { method: 'POST', body: JSON.stringify(data) }),
   fetchQuotes: (id, data = {}) =>
     request(`/renewals/${id}/fetch-quotes`, { method: 'POST', body: JSON.stringify(data) }),
+  addQuote: (id, data) =>
+    request(`/renewals/${id}/add-quote`, { method: 'POST', body: JSON.stringify(data) }),
   selectQuote: (id, quoteId) =>
     request(`/renewals/${id}/select/${quoteId}`, { method: 'PUT' }),
   confirm: (id) =>
@@ -204,6 +211,27 @@ export const insights = {
     request('/insights/agent', { method: 'POST', body: JSON.stringify({ message, conversationId }) }),
   agentConfirm: (conversationId, confirmed) =>
     request('/insights/agent/confirm', { method: 'POST', body: JSON.stringify({ conversationId, confirmed }) }),
+}
+
+// ── Settings ────────────────────────────────────────────
+export const settings = {
+  getProfile: () => request('/settings/profile'),
+  updateProfile: (data) =>
+    request('/settings/profile', { method: 'PUT', body: JSON.stringify(data) }),
+  updateCompany: (data) =>
+    request('/settings/company', { method: 'PUT', body: JSON.stringify(data) }),
+  getTeam: () => request('/settings/team'),
+  inviteUser: (data) =>
+    request('/settings/team/invite', { method: 'POST', body: JSON.stringify(data) }),
+  removeUser: (id) =>
+    request(`/settings/team/${id}`, { method: 'DELETE' }),
+  updateUserRole: (id, role) =>
+    request(`/settings/team/${id}/role`, { method: 'PUT', body: JSON.stringify({ role }) }),
+}
+
+// ── Money Lost ──────────────────────────────────────────
+export const moneyLost = {
+  get: () => request('/money-lost'),
 }
 
 // ── Fleet Health ────────────────────────────────────────

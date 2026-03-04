@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useParams, Link } from 'react-router-dom'
+import { useParams, Link, useNavigate } from 'react-router-dom'
 import { ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
 import { vehicles as vehiclesApi, trips as tripsApi, maintenance as maintenanceApi, documents as documentsApi, tyres as tyresApi } from '../api'
 import { useLang } from '../context/LanguageContext'
@@ -14,6 +14,7 @@ const COLORS = ['#2563eb', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6']
 
 export default function VehicleDetail() {
   const { id } = useParams()
+  const navigate = useNavigate()
   const { t } = useLang()
   const [vehicle, setVehicle] = useState(null)
   const [vehicleTrips, setVehicleTrips] = useState([])
@@ -96,7 +97,23 @@ export default function VehicleDetail() {
         title={vehicle.vehicleNumber}
         subtitle={`${vehicle.vehicleType} · ${vehicle.axleConfig} · ${vehicle.purchaseYear} · ${vehicle.approxKm.toLocaleString()} km`}
         breadcrumbs={[{ label: 'Vehicles', to: '/vehicles' }, { label: vehicle.vehicleNumber }]}
-        actions={<StatusDot status={vehicle.status} label={vehicle.status.charAt(0).toUpperCase() + vehicle.status.slice(1)} />}
+        actions={
+          <div className="flex items-center gap-2">
+            <StatusDot status={vehicle.status} label={vehicle.status.charAt(0).toUpperCase() + vehicle.status.slice(1)} />
+            <button
+              onClick={async () => {
+                if (!confirm(`Delete ${vehicle.vehicleNumber}? This will also remove all trips, documents, and maintenance logs for this vehicle.`)) return
+                try {
+                  await vehiclesApi.remove(id)
+                  navigate('/vehicles')
+                } catch (err) { alert(err.message) }
+              }}
+              className="text-xs text-red-500 hover:text-red-700 hover:bg-red-50 px-2 py-1 rounded-lg transition-colors"
+            >
+              Delete
+            </button>
+          </div>
+        }
       />
 
       {/* KPIs */}

@@ -40,6 +40,7 @@ export default function Onboarding({ onComplete }) {
 
           <h2 className="text-lg font-bold text-slate-900 mb-1">Setup Your Fleet</h2>
           <p className="text-sm text-slate-500 mb-5">Tell us about your fleet to get started</p>
+          <p className="text-xs text-slate-400 mb-5 -mt-3">Next, you will add your vehicles and start tracking trips.</p>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>

@@ -131,6 +131,7 @@ export default function ServiceManager() {
             <div className="text-3xl mb-2">🔧</div>
             <div className="text-sm font-semibold text-slate-700">No service records yet</div>
             <p className="text-xs text-slate-400 mt-1">Add your first service entry</p>
+            <button onClick={() => setShowAdd(true)} className="btn-primary text-xs mt-4">Add First Service</button>
           </div>
         ) : (
           <div className="divide-y divide-slate-100">

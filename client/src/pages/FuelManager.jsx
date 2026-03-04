@@ -158,6 +158,10 @@ export default function FuelManager() {
                 <div className="text-3xl mb-2">⛽</div>
                 <div className="text-sm font-semibold text-slate-700">No fuel records</div>
                 <p className="text-xs text-slate-400 mt-1">Log your first fill-up or paste a fuel SMS</p>
+                <div className="mt-4 flex items-center justify-center gap-2">
+                  <button onClick={() => setShowSms(true)} className="btn-secondary text-xs">Paste SMS</button>
+                  <button onClick={() => setShowAdd(true)} className="btn-primary text-xs">Log First Fill-up</button>
+                </div>
               </div>
             ) : (
               <div className="divide-y divide-slate-100">

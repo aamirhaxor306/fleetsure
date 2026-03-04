@@ -1,20 +1,9 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '../App'
-import { auth as authApi } from '../api'
+import { auth as authApi, settings as settingsApi } from '../api'
 import PageHeader from '../components/PageHeader'
 
 const ROLES = { owner: 'Owner', manager: 'Manager', viewer: 'Viewer' }
-
-// ── Settings API ────────────────────────────────────────────
-const settingsApi = {
-  getProfile: () => fetch('/api/settings/profile', { credentials: 'include' }).then(r => r.json()),
-  updateProfile: (data) => fetch('/api/settings/profile', { method: 'PUT', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }).then(r => r.json()),
-  updateCompany: (data) => fetch('/api/settings/company', { method: 'PUT', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }).then(r => r.json()),
-  getTeam: () => fetch('/api/settings/team', { credentials: 'include' }).then(r => r.json()),
-  inviteUser: (data) => fetch('/api/settings/team/invite', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }).then(r => r.json()),
-  removeUser: (id) => fetch(`/api/settings/team/${id}`, { method: 'DELETE', credentials: 'include' }).then(r => r.json()),
-  updateUserRole: (id, role) => fetch(`/api/settings/team/${id}/role`, { method: 'PUT', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ role }) }).then(r => r.json()),
-}
 
 // ── Section Card ────────────────────────────────────────────
 function Section({ title, subtitle, children }) {
@@ -86,7 +75,11 @@ export default function Settings() {
     try {
       const res = await settingsApi.inviteUser({ email: inviteEmail, role: inviteRole })
       if (res.error) throw new Error(res.error)
-      flash('User invited')
+      if (res.emailSent) {
+        flash(`Invitation email sent to ${inviteEmail}`)
+      } else {
+        flash(res.emailNote || 'User added. Share the login link manually.')
+      }
       setInviteEmail('')
       loadData()
     } catch (e) { flash(e.message, true) }
@@ -277,11 +270,14 @@ export default function Settings() {
                   {team.map(m => (
                     <div key={m.id} className="flex items-center justify-between py-3 first:pt-0 last:pb-0">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 text-xs font-bold">
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${m.name ? 'bg-slate-100 text-slate-600' : 'bg-amber-50 text-amber-600 border border-amber-200'}`}>
                           {m.name?.[0]?.toUpperCase() || m.email?.[0]?.toUpperCase()}
                         </div>
                         <div>
-                          <div className="text-sm font-medium text-slate-900">{m.name || 'Unnamed'}</div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-medium text-slate-900">{m.name || m.email.split('@')[0]}</span>
+                            {!m.name && <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-600 border border-amber-200">Invited</span>}
+                          </div>
                           <div className="text-xs text-slate-500">{m.email}</div>
                         </div>
                       </div>
@@ -344,7 +340,9 @@ export default function Settings() {
                   Invite
                 </button>
               </form>
-              <p className="text-[11px] text-slate-400 mt-2">The invited user will see your fleet data when they log in with this email.</p>
+              <p className="text-[11px] text-slate-400 mt-2">
+                An invitation email will be sent via Clerk. The user can sign in with Google or phone number too.
+              </p>
             </Section>
           </>
         )}

@@ -136,7 +136,12 @@ export default function Drivers() {
         {filtered.length > 0 ? (
           <DataTable columns={columns} data={filtered} />
         ) : (
-          <EmptyState icon={UserIcon} title="No drivers found" subtitle="Add drivers manually or via Telegram bot" />
+          <div className="py-10">
+            <EmptyState icon={UserIcon} title="No drivers found" subtitle="Add your first driver manually or onboard via Telegram" />
+            <div className="mt-3 text-center">
+              <button onClick={() => setShowAdd(true)} className="btn-primary text-xs">Add Your First Driver</button>
+            </div>
+          </div>
         )}
       </div>
 

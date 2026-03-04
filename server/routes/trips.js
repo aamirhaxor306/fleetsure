@@ -1,9 +1,72 @@
 import { Router } from 'express'
 import prisma from '../lib/prisma.js'
 import { requireAuth, requireRole } from '../middleware/auth.js'
+import { estimateTrip, fetchExternalDieselRate } from '../services/tripEstimate.js'
 
 const router = Router()
 router.use(requireAuth)
+
+// ── POST /api/trips/auto-estimate — Distance + diesel rate suggestions ──────
+router.post('/auto-estimate', requireRole('owner', 'manager'), async (req, res) => {
+  try {
+    const { from, to, vehicleId } = req.body
+    if (!from || !to) return res.status(400).json({ error: 'from and to are required' })
+
+    const tripEstimate = await estimateTrip({ from, to })
+
+    const externalRate = await fetchExternalDieselRate({ from, to })
+    let dieselRate = externalRate?.dieselRate || null
+    let dieselRateSource = externalRate ? 'external' : null
+    let dieselRateNote = externalRate?.note || null
+
+    if (!dieselRate) {
+      const latestFuel = await prisma.fuelLog.findFirst({
+        where: {
+          tenantId: req.tenantId,
+          ...(vehicleId ? { vehicleId } : {}),
+          fuelType: 'diesel',
+        },
+        orderBy: [{ fuelDate: 'desc' }, { createdAt: 'desc' }],
+        select: { ratePerLitre: true },
+      })
+
+      if (latestFuel?.ratePerLitre) {
+        dieselRate = latestFuel.ratePerLitre
+        dieselRateSource = vehicleId ? 'internal_vehicle' : 'internal_recent'
+        dieselRateNote = vehicleId ? 'From latest fuel log for selected vehicle' : 'From latest fleet fuel log'
+      }
+    }
+
+    if (!dieselRate) {
+      const latestTrip = await prisma.trip.findFirst({
+        where: {
+          tenantId: req.tenantId,
+          dieselRate: { gt: 0 },
+          ...(vehicleId ? { vehicleId } : {}),
+        },
+        orderBy: { createdAt: 'desc' },
+        select: { dieselRate: true },
+      })
+
+      if (latestTrip?.dieselRate) {
+        dieselRate = latestTrip.dieselRate
+        dieselRateSource = vehicleId ? 'internal_vehicle_trip' : 'internal_trip_recent'
+        dieselRateNote = vehicleId ? 'From latest trip for selected vehicle' : 'From latest fleet trip'
+      }
+    }
+
+    return res.json({
+      distanceKm: tripEstimate.distanceKm,
+      distanceSource: tripEstimate.distanceSource,
+      dieselRate,
+      dieselRateSource,
+      dieselRateNote,
+    })
+  } catch (err) {
+    console.error('Auto-estimate error:', err)
+    return res.status(400).json({ error: err.message || 'Could not estimate route' })
+  }
+})
 
 // ── GET /api/trips — List all trips ─────────────────────────────────────────
 

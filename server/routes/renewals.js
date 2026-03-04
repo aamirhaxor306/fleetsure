@@ -316,6 +316,85 @@ router.post('/:id/fetch-quotes', requireRole('owner', 'manager'), async (req, re
   }
 })
 
+// ── POST /api/renewals/:id/add-quote — Add a manual quote ────────────────────
+
+router.post('/:id/add-quote', requireRole('owner', 'manager'), async (req, res) => {
+  try {
+    const renewal = await prisma.renewalRequest.findFirst({
+      where: { id: req.params.id, tenantId: req.tenantId },
+    })
+    if (!renewal) return res.status(404).json({ error: 'Renewal request not found' })
+
+    const { partnerName, amount, addOns, notes } = req.body
+    if (!partnerName || !amount) {
+      return res.status(400).json({ error: 'partnerName and amount are required' })
+    }
+
+    let partner = await prisma.renewalPartner.findFirst({
+      where: { tenantId: req.tenantId, name: partnerName },
+    })
+    if (!partner) {
+      partner = await prisma.renewalPartner.create({
+        data: {
+          tenantId: req.tenantId,
+          name: partnerName,
+          partnerType: renewal.documentType === 'insurance' ? 'insurance_broker' : 'rto_agent',
+          commissionPct: 0,
+          active: true,
+        },
+      })
+    }
+
+    const validUntil = new Date()
+    validUntil.setDate(validUntil.getDate() + 14)
+
+    const addOnsList = addOns
+      ? addOns.split(',').map(s => s.trim()).filter(Boolean)
+      : []
+
+    await prisma.renewalQuote.create({
+      data: {
+        tenantId: req.tenantId,
+        requestId: renewal.id,
+        partnerId: partner.id,
+        partnerName,
+        amount: parseFloat(amount),
+        coverageDetails: {
+          addOns: addOnsList,
+          notes: notes || null,
+          source: 'manual_entry',
+        },
+        validUntil,
+        source: 'manual',
+      },
+    })
+
+    if (renewal.status === 'pending') {
+      await prisma.renewalRequest.update({
+        where: { id: renewal.id },
+        data: { status: 'quotes_received' },
+      })
+    }
+
+    const updated = await prisma.renewalRequest.findFirst({
+      where: { id: renewal.id, tenantId: req.tenantId },
+      include: {
+        vehicle: { select: { vehicleNumber: true } },
+        document: { select: { documentType: true, expiryDate: true } },
+        quotes: {
+          include: { partner: { select: { name: true, partnerType: true } } },
+          orderBy: { amount: 'asc' },
+        },
+      },
+    })
+
+    return res.json(updated)
+  } catch (err) {
+    console.error('Add manual quote error:', err)
+    return res.status(500).json({ error: 'Server error' })
+  }
+})
+
 // ── PUT /api/renewals/:id/select/:quoteId — Select a quote ───────────────────
 
 router.put('/:id/select/:quoteId', requireRole('owner', 'manager'), async (req, res) => {

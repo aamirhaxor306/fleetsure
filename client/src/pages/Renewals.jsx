@@ -56,13 +56,13 @@ export default function Renewals() {
         breadcrumbs={[{ label: 'Fleet Health', to: '/fleet-health' }, { label: 'Renewals' }]}
       />
 
-      {/* Coming Soon banner */}
-      <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6">
+      {/* Info banner */}
+      <div className="bg-teal-50 border border-teal-200 rounded-lg p-4 mb-6">
         <div className="flex items-start gap-3">
-          <AlertTriangleIcon className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+          <RefreshIcon className="w-5 h-5 text-teal-600 shrink-0 mt-0.5" />
           <div>
-            <h4 className="text-sm font-semibold text-amber-900">Live Insurance Quotes -- Coming Soon</h4>
-            <p className="text-xs text-amber-700 mt-0.5">We're integrating with insurance partners to bring you real-time quotes. For now, you can track which documents need renewal.</p>
+            <h4 className="text-sm font-semibold text-teal-900">Compare quotes from your agents</h4>
+            <p className="text-xs text-teal-700 mt-0.5">Start a renewal, then add quotes you received from agents or brokers. We'll compare them side-by-side and recommend the best one.</p>
           </div>
         </div>
       </div>

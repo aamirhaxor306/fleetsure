@@ -34,6 +34,7 @@ import settingsRoutes from './routes/settings.js'
 import pdfRoutes from './routes/pdfDocuments.js'
 import fastagRoutes from './routes/fastag.js'
 import fuelRoutes from './routes/fuel.js'
+import moneyLostRoutes from './routes/moneyLost.js'
 import leadRoutes from './routes/leads.js'
 import adminRoutes from './routes/admin.js'
 import prisma from './lib/prisma.js'
@@ -103,6 +104,7 @@ app.use('/api/settings', settingsRoutes)
 app.use('/api/pdf', pdfRoutes)
 app.use('/api/fastag', fastagRoutes)
 app.use('/api/fuel', fuelRoutes)
+app.use('/api/money-lost', moneyLostRoutes)
 app.use('/api/admin', adminRoutes)
 
 // ── Serve client build in production ───────────────────────────────────────

@@ -25,6 +25,8 @@ export default function QuickAddTrip() {
 
   const fileRef = useRef(null)
   const [scanning, setScanning] = useState(false)
+  const [estimating, setEstimating] = useState(false)
+  const [estimateInfo, setEstimateInfo] = useState('')
 
   useEffect(() => {
     Promise.allSettled([vehiclesApi.list(), savedRoutesApi.list()])
@@ -99,7 +101,64 @@ export default function QuickAddTrip() {
     setSaving(false)
   }
 
+  const handleAutoEstimate = async () => {
+    if (!form.loadingLocation?.trim() || !form.destination?.trim()) {
+      setEstimateInfo('Enter both From and To to auto-calculate.')
+      return
+    }
+
+    setEstimating(true)
+    setEstimateInfo('Calculating distance and diesel rate...')
+    try {
+      const result = await tripsApi.autoEstimate({
+        from: form.loadingLocation,
+        to: form.destination,
+        vehicleId: form.vehicleId || undefined,
+      })
+
+      const next = {
+        ...form,
+        distance: result.distanceKm ? String(result.distanceKm) : form.distance,
+      }
+
+      if (result.dieselRate) {
+        next.dieselRate = String(result.dieselRate)
+      }
+
+      const litres = parseFloat(next.fuelLitres) || 0
+      const rate = parseFloat(next.dieselRate) || 0
+      if (litres > 0 && rate > 0) {
+        next.fuelExpense = String(Math.round(litres * rate))
+      }
+
+      setForm(next)
+
+      const distancePart = result.distanceKm ? `Distance: ${result.distanceKm} km` : 'Distance unavailable'
+      const ratePart = result.dieselRate
+        ? `Diesel: ₹${result.dieselRate}/L (${result.dieselRateNote || result.dieselRateSource || 'suggested'})`
+        : 'Diesel rate unavailable'
+      setEstimateInfo(`${distancePart} · ${ratePart}`)
+    } catch (err) {
+      setEstimateInfo(err.message || 'Could not auto-calculate. You can still fill manually.')
+    }
+    setEstimating(false)
+  }
+
   if (loading) return <div className="animate-pulse"><div className="h-8 bg-slate-200 rounded w-48 mb-4" /><div className="h-64 bg-slate-200 rounded-lg" /></div>
+
+  if (vehicles.length === 0) {
+    return (
+      <div className="max-w-lg mx-auto">
+        <PageHeader title={t('logTrip') || 'Log Trip'} subtitle="Add a vehicle first to start logging trips" />
+        <div className="card p-6 text-center">
+          <div className="text-3xl mb-2">🚛</div>
+          <h2 className="text-base font-bold text-slate-900 mb-1">No vehicles found</h2>
+          <p className="text-sm text-slate-500 mb-4">Create your first vehicle, then come back to log this trip.</p>
+          <button onClick={() => navigate('/vehicles')} className="btn-primary text-xs">Go to Vehicles</button>
+        </div>
+      </div>
+    )
+  }
 
   if (success) {
     return (
@@ -177,6 +236,20 @@ export default function QuickAddTrip() {
           {/* Route */}
           <div className="pt-2 border-t border-slate-100">
             <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">Route</div>
+            <div className="mb-3 rounded-lg border border-slate-200 bg-slate-50 p-2.5">
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-[11px] text-slate-600">Auto-calculate distance + diesel rate</p>
+                <button
+                  type="button"
+                  onClick={handleAutoEstimate}
+                  className="btn-secondary text-xs !py-1.5 !px-2.5"
+                  disabled={estimating}
+                >
+                  {estimating ? 'Calculating...' : 'Auto-calc'}
+                </button>
+              </div>
+              {estimateInfo && <p className="text-[11px] text-teal-700 mt-1.5">{estimateInfo}</p>}
+            </div>
             <div className="grid grid-cols-2 gap-3">
               <div><label className="block text-xs font-medium text-slate-600 mb-1">From</label>
                 <input className="inp" value={form.loadingLocation} onChange={e => setForm({...form, loadingLocation: e.target.value})} placeholder="Loading point" /></div>

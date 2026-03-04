@@ -123,6 +123,36 @@ router.get('/team', async (req, res) => {
 
 // ── POST /api/settings/team/invite (owner only) ────────────────────────────
 
+async function sendClerkInvitation(email, tenantName, role) {
+  const CLERK_SECRET = process.env.CLERK_SECRET_KEY
+  if (!CLERK_SECRET) return { sent: false, reason: 'Clerk not configured' }
+
+  try {
+    const res = await fetch('https://api.clerk.com/v1/invitations', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${CLERK_SECRET}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        email_address: email,
+        public_metadata: { role, tenantName },
+        redirect_url: process.env.APP_URL || undefined,
+        notify: true,
+      }),
+    })
+
+    const data = await res.json()
+    if (!res.ok) {
+      const msg = data?.errors?.[0]?.long_message || data?.errors?.[0]?.message || 'Clerk invitation failed'
+      return { sent: false, reason: msg }
+    }
+    return { sent: true, invitationId: data.id }
+  } catch (err) {
+    return { sent: false, reason: err.message }
+  }
+}
+
 router.post('/team/invite', requireRole('owner'), async (req, res) => {
   try {
     const { email, role } = req.body
@@ -134,7 +164,6 @@ router.post('/team/invite', requireRole('owner'), async (req, res) => {
     const allowedRoles = ['manager', 'viewer']
     const assignRole = allowedRoles.includes(role) ? role : 'viewer'
 
-    // Check if user already exists
     let user = await prisma.user.findUnique({ where: { email: cleanEmail } })
 
     if (user) {
@@ -144,19 +173,27 @@ router.post('/team/invite', requireRole('owner'), async (req, res) => {
       if (user.tenantId) {
         return res.status(400).json({ error: 'User belongs to another fleet' })
       }
-      // User exists but has no tenant — link them
       user = await prisma.user.update({
         where: { id: user.id },
         data: { tenantId: req.tenantId, role: assignRole },
       })
     } else {
-      // Create new user linked to this tenant
       user = await prisma.user.create({
         data: { email: cleanEmail, tenantId: req.tenantId, role: assignRole },
       })
     }
 
-    return res.json({ ok: true, user: { id: user.id, email: user.email, role: user.role } })
+    const tenant = await prisma.tenant.findUnique({ where: { id: req.tenantId }, select: { name: true } })
+    const clerkResult = await sendClerkInvitation(cleanEmail, tenant?.name || 'Fleet', assignRole)
+
+    return res.json({
+      ok: true,
+      user: { id: user.id, email: user.email, role: user.role },
+      emailSent: clerkResult.sent,
+      emailNote: clerkResult.sent
+        ? `Invitation email sent to ${cleanEmail}`
+        : `User added but email not sent: ${clerkResult.reason}. Share the login link manually.`,
+    })
   } catch (err) {
     console.error('Settings invite error:', err)
     return res.status(500).json({ error: 'Server error' })

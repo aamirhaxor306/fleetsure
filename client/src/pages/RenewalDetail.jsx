@@ -23,6 +23,9 @@ export default function RenewalDetail() {
   const [showCompleteForm, setShowCompleteForm] = useState(false)
   const [showCoverage, setShowCoverage] = useState(false)
   const [quoteForm, setQuoteForm] = useState({ idv: '', policyType: 'comprehensive', ncbPercentage: '0' })
+  const [showManualQuote, setShowManualQuote] = useState(false)
+  const [manualQuote, setManualQuote] = useState({ partnerName: '', amount: '', addOns: '' })
+  const [savingQuote, setSavingQuote] = useState(false)
 
   const load = () => {
     renewalsApi.get(id).then(setRenewal).catch(console.error).finally(() => setLoading(false))
@@ -101,10 +104,10 @@ export default function RenewalDetail() {
         breadcrumbs={[{ label: 'Renewals', to: '/renewals' }, { label: 'Detail' }]}
       />
 
-      {/* Coming Soon note */}
-      <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-6 flex items-start gap-2">
-        <AlertTriangleIcon className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-        <p className="text-xs text-amber-700">Live quotes from insurance partners are coming soon. Currently showing estimated/manual quotes.</p>
+      {/* Info banner */}
+      <div className="bg-teal-50 border border-teal-200 rounded-lg p-3 mb-6 flex items-start gap-2">
+        <CheckIcon className="w-4 h-4 text-teal-600 shrink-0 mt-0.5" />
+        <p className="text-xs text-teal-700">Add quotes from your agents or brokers below. We'll compare them and recommend the best one.</p>
       </div>
 
       {/* Status Pipeline */}
@@ -130,29 +133,91 @@ export default function RenewalDetail() {
         </div>
       </div>
 
-      {/* Step: Pending -- Fetch Quotes */}
-      {renewal.status === 'pending' && (
-        <div className="card p-5">
-          <h3 className="text-sm font-semibold text-slate-700 mb-4">Get Quotes</h3>
-          {isInsurance && (
-            <div className="grid grid-cols-3 gap-3 mb-4">
-              <div><label className="block text-xs font-medium text-slate-600 mb-1">Vehicle Value (IDV) ₹</label>
-                <input className="inp" type="number" value={quoteForm.idv} onChange={e => setQuoteForm({...quoteForm, idv: e.target.value})} placeholder="e.g. 500000" />
-                <p className="text-[10px] text-slate-400 mt-0.5">How much your vehicle is insured for</p></div>
-              <div><label className="block text-xs font-medium text-slate-600 mb-1">Policy Type</label>
-                <select className="inp" value={quoteForm.policyType} onChange={e => setQuoteForm({...quoteForm, policyType: e.target.value})}>
-                  <option value="comprehensive">Full Cover (Comprehensive)</option><option value="third_party">Third Party Only</option><option value="own_damage">Own Damage Only</option>
-                </select></div>
-              <div><label className="block text-xs font-medium text-slate-600 mb-1">No Claim Bonus %</label>
-                <select className="inp" value={quoteForm.ncbPercentage} onChange={e => setQuoteForm({...quoteForm, ncbPercentage: e.target.value})}>
-                  {[0, 20, 25, 35, 45, 50].map(n => <option key={n} value={n}>{n}%</option>)}
-                </select>
-                <p className="text-[10px] text-slate-400 mt-0.5">Discount for not making claims — increases each year</p></div>
+      {/* Step: Pending or Quotes Received -- Add Manual Quotes */}
+      {(renewal.status === 'pending' || renewal.status === 'quotes_received') && (
+        <div className="card p-5 mb-4">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-sm font-semibold text-slate-700">
+              {quotes.length > 0 ? `Quotes (${quotes.length})` : 'Add Quotes'}
+            </h3>
+            <button
+              onClick={() => setShowManualQuote(!showManualQuote)}
+              className="btn-primary text-xs"
+            >
+              + Add Quote from Agent
+            </button>
+          </div>
+
+          {showManualQuote && (
+            <div className="bg-slate-50 rounded-xl p-4 mb-4 border border-slate-200">
+              <h4 className="text-xs font-semibold text-slate-700 mb-3">Enter Quote Details</h4>
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-xs font-medium text-slate-600 mb-1">Agent / Insurer / Broker Name *</label>
+                  <input
+                    className="inp"
+                    value={manualQuote.partnerName}
+                    onChange={e => setManualQuote({...manualQuote, partnerName: e.target.value})}
+                    placeholder="e.g. Bajaj Allianz, Local Agent Sharma"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-600 mb-1">Premium Amount (₹) *</label>
+                  <input
+                    className="inp"
+                    type="number"
+                    value={manualQuote.amount}
+                    onChange={e => setManualQuote({...manualQuote, amount: e.target.value})}
+                    placeholder="e.g. 35000"
+                  />
+                </div>
+                {isInsurance && (
+                  <div>
+                    <label className="block text-xs font-medium text-slate-600 mb-1">Add-ons included (comma separated)</label>
+                    <input
+                      className="inp"
+                      value={manualQuote.addOns}
+                      onChange={e => setManualQuote({...manualQuote, addOns: e.target.value})}
+                      placeholder="e.g. Zero Dep, Roadside Assist, Engine Cover"
+                    />
+                  </div>
+                )}
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowManualQuote(false)}
+                    className="btn-secondary text-xs"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    disabled={savingQuote || !manualQuote.partnerName || !manualQuote.amount}
+                    onClick={async () => {
+                      setSavingQuote(true)
+                      try {
+                        const updated = await renewalsApi.addQuote(id, manualQuote)
+                        setRenewal(updated)
+                        setManualQuote({ partnerName: '', amount: '', addOns: '' })
+                        setShowManualQuote(false)
+                      } catch (err) { alert(err.message) }
+                      setSavingQuote(false)
+                    }}
+                    className="btn-primary text-xs"
+                  >
+                    {savingQuote ? 'Saving...' : 'Save Quote'}
+                  </button>
+                </div>
+              </div>
             </div>
           )}
-          <button onClick={handleFetchQuotes} disabled={fetching} className="btn-primary">
-            {fetching ? 'Fetching...' : 'Get Quotes'}
-          </button>
+
+          {quotes.length === 0 && !showManualQuote && (
+            <div className="text-center py-8">
+              <div className="text-2xl mb-2">📋</div>
+              <p className="text-sm text-slate-500">No quotes yet. Add quotes you received from agents to compare them.</p>
+            </div>
+          )}
         </div>
       )}
 

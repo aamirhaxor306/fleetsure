@@ -11,21 +11,49 @@ import {
   FuelIcon, ServiceIcon,
 } from './Icons'
 
-const NAV_ITEMS = [
-  { to: '/', icon: DashboardIcon, key: 'navHome', exact: true },
-  { to: '/vehicles', icon: TruckIcon, key: 'navVehicles' },
-  { to: '/drivers', icon: UserIcon, key: 'navDrivers' },
-  { to: '/trips', icon: RouteIcon, key: 'navTrips' },
-  { to: '/services', icon: ServiceIcon, key: 'navServices' },
-  { to: '/fuel', icon: FuelIcon, key: 'navFuel' },
-  { to: '/fastag', icon: FasTagIcon, key: 'navFasTag' },
-  { to: '/fleet-health', icon: HeartPulseIcon, key: 'navFleetHealth', badge: true },
-  { to: '/renewals', icon: RefreshIcon, key: 'navRenewals' },
-  { to: '/insurance', icon: ShieldIcon, key: 'navInsurance' },
-  { to: '/ai-chat', icon: SparkleIcon, key: 'navAIChat' },
-  { to: '/documents', icon: FileTextIcon, key: 'navDocuments' },
-  { to: '/settings', icon: SettingsIcon, key: 'navSettings' },
-  { to: '/admin', icon: BarChartIcon, key: 'navAdmin' },
+const NAV_GROUPS = [
+  {
+    id: 'core',
+    label: 'Core',
+    defaultOpen: true,
+    items: [
+      { to: '/', icon: DashboardIcon, key: 'navHome', exact: true },
+      { to: '/vehicles', icon: TruckIcon, key: 'navVehicles' },
+      { to: '/drivers', icon: UserIcon, key: 'navDrivers' },
+      { to: '/trips', icon: RouteIcon, key: 'navTrips' },
+    ],
+  },
+  {
+    id: 'expenses',
+    label: 'Expenses',
+    defaultOpen: false,
+    items: [
+      { to: '/services', icon: ServiceIcon, key: 'navServices' },
+      { to: '/fuel', icon: FuelIcon, key: 'navFuel' },
+      { to: '/fastag', icon: FasTagIcon, key: 'navFasTag' },
+    ],
+  },
+  {
+    id: 'compliance',
+    label: 'Compliance',
+    defaultOpen: false,
+    items: [
+      { to: '/fleet-health', icon: HeartPulseIcon, key: 'navFleetHealth', badge: true },
+      { to: '/renewals', icon: RefreshIcon, key: 'navRenewals' },
+      { to: '/insurance', icon: ShieldIcon, key: 'navInsurance' },
+      { to: '/documents', icon: FileTextIcon, key: 'navDocuments' },
+    ],
+  },
+  {
+    id: 'tools',
+    label: 'Tools',
+    defaultOpen: false,
+    items: [
+      { to: '/ai-chat', icon: SparkleIcon, key: 'navAIChat' },
+      { to: '/settings', icon: SettingsIcon, key: 'navSettings' },
+      { to: '/admin', icon: BarChartIcon, key: 'navAdmin', adminOnly: true },
+    ],
+  },
 ]
 
 export default function Layout() {
@@ -35,6 +63,12 @@ export default function Layout() {
   const [collapsed, setCollapsed] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
   const [alertCount, setAlertCount] = useState(0)
+  const [openGroups, setOpenGroups] = useState({
+    core: true,
+    expenses: false,
+    compliance: false,
+    tools: false,
+  })
 
   useEffect(() => {
     alertsApi.list().then((res) => {
@@ -49,6 +83,39 @@ export default function Layout() {
     exact ? location.pathname === to : location.pathname.startsWith(to)
 
   const initials = (user?.name?.[0] || user?.email?.[0] || 'U').toUpperCase()
+  const adminEmails = (import.meta.env.VITE_ADMIN_EMAILS || 'aamirsec6@gmail.com')
+    .split(',')
+    .map((x) => x.trim().toLowerCase())
+    .filter(Boolean)
+  const isAdminUser = adminEmails.includes((user?.email || '').toLowerCase())
+  const visibleGroups = NAV_GROUPS.map((g) => ({
+    ...g,
+    items: g.items.filter((item) => !item.adminOnly || isAdminUser),
+  })).filter((g) => g.items.length > 0)
+
+  const renderNavItem = ({ to, icon: Icon, key, exact, badge }) => {
+    const active = isActive(to, exact)
+    return (
+      <NavLink
+        key={to}
+        to={to}
+        className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium transition-all relative ${
+          active
+            ? 'bg-white text-teal-800 shadow-sm shadow-black/5'
+            : 'text-teal-50/80 hover:bg-white/10 hover:text-white'
+        } ${collapsed ? 'justify-center px-2' : ''}`}
+        title={collapsed ? t(key) : undefined}
+      >
+        <Icon className={`w-[18px] h-[18px] shrink-0 ${active ? 'text-teal-600' : ''}`} />
+        {!collapsed && <span>{t(key)}</span>}
+        {badge && alertCount > 0 && (
+          <span className={`${collapsed ? 'absolute -top-0.5 -right-0.5' : 'ml-auto'} bg-red-500 text-white text-[10px] font-bold rounded-full w-4.5 h-4.5 flex items-center justify-center`}>
+            {alertCount > 9 ? '9+' : alertCount}
+          </span>
+        )}
+      </NavLink>
+    )
+  }
 
   const SidebarContent = () => (
     <div className="flex flex-col h-full">
@@ -71,30 +138,25 @@ export default function Layout() {
 
       {/* Nav */}
       <nav className="flex-1 overflow-y-auto py-3 px-2.5">
-        <div className="space-y-1">
-          {NAV_ITEMS.map(({ to, icon: Icon, key, exact, badge }) => {
-            const active = isActive(to, exact)
-            return (
-              <NavLink
-                key={to}
-                to={to}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium transition-all relative ${
-                  active
-                    ? 'bg-white text-teal-800 shadow-sm shadow-black/5'
-                    : 'text-teal-50/80 hover:bg-white/10 hover:text-white'
-                } ${collapsed ? 'justify-center px-2' : ''}`}
-                title={collapsed ? t(key) : undefined}
-              >
-                <Icon className={`w-[18px] h-[18px] shrink-0 ${active ? 'text-teal-600' : ''}`} />
-                {!collapsed && <span>{t(key)}</span>}
-                {badge && alertCount > 0 && (
-                  <span className={`${collapsed ? 'absolute -top-0.5 -right-0.5' : 'ml-auto'} bg-red-500 text-white text-[10px] font-bold rounded-full w-4.5 h-4.5 flex items-center justify-center`}>
-                    {alertCount > 9 ? '9+' : alertCount}
-                  </span>
-                )}
-              </NavLink>
-            )
-          })}
+        <div className="space-y-2">
+          {collapsed
+            ? visibleGroups.flatMap((g) => g.items).map(renderNavItem)
+            : visibleGroups.map((group) => {
+                const groupOpen = openGroups[group.id]
+                return (
+                  <div key={group.id} className="space-y-1">
+                    <button
+                      type="button"
+                      onClick={() => setOpenGroups((prev) => ({ ...prev, [group.id]: !prev[group.id] }))}
+                      className="w-full flex items-center justify-between px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-teal-100/70 hover:text-white transition-colors"
+                    >
+                      <span>{group.label}</span>
+                      <span className={`transition-transform ${groupOpen ? 'rotate-180' : ''}`}>⌄</span>
+                    </button>
+                    {groupOpen && group.items.map(renderNavItem)}
+                  </div>
+                )
+              })}
         </div>
       </nav>
 

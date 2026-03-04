@@ -21,12 +21,23 @@ export default function Vehicles() {
   const [showAdd, setShowAdd] = useState(false)
   const [form, setForm] = useState({ vehicleNumber: '', vehicleType: 'truck', purchaseYear: new Date().getFullYear(), approxKm: 0, axleConfig: '6W' })
   const [saving, setSaving] = useState(false)
+  const [fetchingRC, setFetchingRC] = useState(false)
+  const [rcStatus, setRcStatus] = useState({ available: false, message: 'Checking auto-fetch availability...', supported: [] })
+  const [rcFetchInfo, setRcFetchInfo] = useState(null)
 
   useEffect(() => {
-    Promise.allSettled([vehiclesApi.list(), tripsApi.analytics()])
-      .then(([v, a]) => {
+    Promise.allSettled([vehiclesApi.list(), tripsApi.analytics(), vehiclesApi.fetchRCStatus()])
+      .then(([v, a, rc]) => {
         if (v.status === 'fulfilled') setVehicles(v.value)
         if (a.status === 'fulfilled') setAnalytics(a.value)
+        if (rc.status === 'fulfilled') setRcStatus(rc.value)
+        if (rc.status === 'rejected') {
+          setRcStatus({
+            available: false,
+            message: 'Auto-fetch unavailable right now. You can continue with manual entry.',
+            supported: ['RC', 'insurance', 'FC', 'PUC', 'permit'],
+          })
+        }
         setLoading(false)
       })
   }, [])
@@ -55,6 +66,50 @@ export default function Vehicles() {
       alert(err.message)
     }
     setSaving(false)
+  }
+
+  const normalizeVehicleType = (type) => {
+    const t = String(type || '').toLowerCase()
+    if (t.includes('tanker')) return 'tanker'
+    if (t.includes('trailer')) return 'trailer'
+    return 'truck'
+  }
+
+  const handleFetchRC = async () => {
+    if (!form.vehicleNumber?.trim()) {
+      setRcFetchInfo({ type: 'error', message: 'Enter vehicle number first (e.g. MH04AB1234).' })
+      return
+    }
+    setFetchingRC(true)
+    setRcFetchInfo(null)
+    try {
+      const res = await vehiclesApi.fetchRC(form.vehicleNumber)
+      if (res.available === false) {
+        setRcFetchInfo({
+          type: 'warn',
+          message: res.message || 'Auto-fetch is not configured. Continue with manual entry.',
+        })
+        return
+      }
+
+      const fetchedVehicle = res.vehicle
+      setVehicles((prev) => [fetchedVehicle, ...prev.filter((v) => v.id !== fetchedVehicle.id)])
+      setForm((prev) => ({
+        ...prev,
+        vehicleNumber: fetchedVehicle.vehicleNumber || prev.vehicleNumber,
+        vehicleType: normalizeVehicleType(fetchedVehicle.vehicleType),
+        purchaseYear: fetchedVehicle.purchaseYear || prev.purchaseYear,
+      }))
+
+      const docCount = Array.isArray(res.documents) ? res.documents.length : 0
+      setRcFetchInfo({
+        type: 'success',
+        message: `Vehicle synced from RC lookup. ${docCount} compliance document${docCount === 1 ? '' : 's'} updated (insurance/FC/PUC/permit where available).`,
+      })
+    } catch (err) {
+      setRcFetchInfo({ type: 'error', message: err.message || 'Auto-fetch failed. Continue with manual entry.' })
+    }
+    setFetchingRC(false)
   }
 
   const inr = (n) => `₹${Number(n).toLocaleString('en-IN')}`
@@ -131,17 +186,54 @@ export default function Vehicles() {
         {filtered.length > 0 ? (
           <DataTable columns={columns} data={filtered} onRowClick={(row) => navigate(`/vehicles/${row.id}`)} />
         ) : (
-          <EmptyState icon={TruckIcon} title="No vehicles found" subtitle="Try adjusting your search or add a new vehicle" />
+          <div className="py-10">
+            <EmptyState icon={TruckIcon} title="No vehicles found" subtitle="Add your first vehicle to start logging trips" />
+            <div className="mt-3 text-center">
+              <button onClick={() => setShowAdd(true)} className="btn-primary text-xs">Add Your First Vehicle</button>
+            </div>
+          </div>
         )}
       </div>
 
       {/* Add Vehicle SlideOver */}
       <SlideOver open={showAdd} onClose={() => setShowAdd(false)} title="Add Vehicle">
         <form onSubmit={handleAdd} className="space-y-4">
+          <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-xs font-semibold text-slate-700">Auto-fetch from RC/VAHAN</p>
+                <p className="text-[11px] text-slate-500 mt-0.5">
+                  {rcStatus.available ? 'Fetch RC + insurance + FC + PUC + permit (if available)' : rcStatus.message}
+                </p>
+              </div>
+              <button
+                type="button"
+                className="btn-secondary text-xs whitespace-nowrap"
+                onClick={handleFetchRC}
+                disabled={fetchingRC}
+              >
+                {fetchingRC ? 'Fetching...' : 'Fetch Details'}
+              </button>
+            </div>
+          </div>
+
           <div>
             <label className="block text-xs font-medium text-slate-600 mb-1">Vehicle Number *</label>
             <input className="inp" placeholder="MH04AB1234" value={form.vehicleNumber} onChange={e => setForm({ ...form, vehicleNumber: e.target.value })} required />
           </div>
+
+          {rcFetchInfo && (
+            <div className={`rounded-lg px-3 py-2 text-xs font-medium ${
+              rcFetchInfo.type === 'success'
+                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                : rcFetchInfo.type === 'warn'
+                ? 'bg-amber-50 text-amber-700 border border-amber-200'
+                : 'bg-red-50 text-red-700 border border-red-200'
+            }`}>
+              {rcFetchInfo.message}
+            </div>
+          )}
+
           <div>
             <label className="block text-xs font-medium text-slate-600 mb-1">Type *</label>
             <select className="inp" value={form.vehicleType} onChange={e => setForm({ ...form, vehicleType: e.target.value })}>

@@ -5,6 +5,10 @@ dotenv.config()
 const SUREPASS_BASE = 'https://kyc-api.surepass.io/api/v1'
 const TOKEN = process.env.SUREPASS_API_TOKEN
 
+export function isSurepassConfigured() {
+  return Boolean(TOKEN)
+}
+
 /**
  * Fetch vehicle RC details from Surepass (Vahan/mParivahan data).
  * @param {string} vehicleNumber — e.g. "MP09AB1234"
@@ -12,7 +16,7 @@ const TOKEN = process.env.SUREPASS_API_TOKEN
  */
 export async function fetchRCDetails(vehicleNumber) {
   if (!TOKEN) {
-    throw new Error('SUREPASS_API_TOKEN is not configured. Add it to your .env file.')
+    throw new Error('SUREPASS_API_TOKEN is not configured')
   }
 
   const cleaned = vehicleNumber.toUpperCase().replace(/\s+/g, '')
