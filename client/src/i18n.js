@@ -84,6 +84,25 @@ const translations = {
     issuesNeedAttention: "{count} issues need attention",
     issueNeedsAttention: "1 issue needs attention",
 
+    // Dashboard — Improvements
+    refreshData: "Refresh",
+    refreshing: "Refreshing…",
+    topVehicle: "Top Performer",
+    topVehicleSub: "Highest revenue this month",
+    fuelEfficiency: "Fuel Efficiency",
+    fleetAvgKmPerL: "Fleet avg",
+    expiresInDays: "expires in {days}d",
+    expiredDaysAgo: "expired {days}d ago",
+    noVehiclesYet: "No vehicles yet",
+    addFirstVehicle: "Add your first vehicle →",
+    noTripsYet: "No trips logged",
+    logFirstTrip: "Log your first trip →",
+    errorLoading: "Failed to load",
+    retry: "Retry",
+    weeklyActivity: "Weekly Activity",
+    kmPerL: "km/L",
+    mostUrgentRenewal: "Most Urgent",
+
     // Dashboard — Attention Items
     tripsNeedFreight: '{count} trip(s) need freight amount',
     tripsNeedFreightSub: 'Add freight to see profit & loss',
@@ -278,6 +297,25 @@ const translations = {
     marginLabel: "मार्जिन",
     issuesNeedAttention: "{count} समस्याओं पर ध्यान दें",
     issueNeedsAttention: "1 समस्या पर ध्यान दें",
+
+    // Dashboard — Improvements
+    refreshData: "रिफ्रेश",
+    refreshing: "रिफ्रेश हो रहा है…",
+    topVehicle: "सबसे अच्छी गाड़ी",
+    topVehicleSub: "इस महीने सबसे ज़्यादा कमाई",
+    fuelEfficiency: "ईंधन दक्षता",
+    fleetAvgKmPerL: "फ्लीट औसत",
+    expiresInDays: "{days} दिन में खत्म",
+    expiredDaysAgo: "{days} दिन पहले खत्म",
+    noVehiclesYet: "अभी कोई गाड़ी नहीं",
+    addFirstVehicle: "पहली गाड़ी जोड़ें →",
+    noTripsYet: "कोई ट्रिप नहीं",
+    logFirstTrip: "पहली ट्रिप डालें →",
+    errorLoading: "लोड नहीं हो सका",
+    retry: "फिर से",
+    weeklyActivity: "साप्ताहिक गतिविधि",
+    kmPerL: "km/L",
+    mostUrgentRenewal: "सबसे ज़रूरी",
 
     // Dashboard — Attention Items
     tripsNeedFreight: '{count} ट्रिप में भाड़ा डालो',

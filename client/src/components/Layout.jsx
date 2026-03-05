@@ -2,12 +2,14 @@ import { useState, useEffect } from 'react'
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { useAuth } from '../App'
 import { useLang } from '../context/LanguageContext'
+import { useTheme } from '../context/ThemeContext'
 import { alerts as alertsApi } from '../api'
 import {
   DashboardIcon, TruckIcon, RouteIcon, UserIcon, ShieldIcon,
   BellIcon, SparkleIcon, HeartPulseIcon, MenuIcon,
   PlusIcon, LogOutIcon, SidebarCollapseIcon,
   RefreshIcon, SettingsIcon, FileTextIcon, FasTagIcon, BarChartIcon,
+  SunIcon, MoonIcon,
   FuelIcon, ServiceIcon,
 } from './Icons'
 
@@ -59,6 +61,7 @@ const NAV_GROUPS = [
 export default function Layout() {
   const { user, logout } = useAuth()
   const { lang, toggleLang, t } = useLang()
+  const { isDark, toggleTheme } = useTheme()
   const location = useLocation()
   const [collapsed, setCollapsed] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
@@ -74,7 +77,7 @@ export default function Layout() {
     alertsApi.list().then((res) => {
       const arr = res?.alerts || res || []
       setAlertCount(Array.isArray(arr) ? arr.filter(x => !x.resolved).length : 0)
-    }).catch(() => {})
+    }).catch(() => { })
   }, [location.pathname])
 
   useEffect(() => { setMobileOpen(false) }, [location.pathname])
@@ -99,11 +102,10 @@ export default function Layout() {
       <NavLink
         key={to}
         to={to}
-        className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium transition-all relative ${
-          active
-            ? 'bg-white text-teal-800 shadow-sm shadow-black/5'
-            : 'text-teal-50/80 hover:bg-white/10 hover:text-white'
-        } ${collapsed ? 'justify-center px-2' : ''}`}
+        className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium transition-all relative ${active
+          ? 'bg-white text-teal-800 shadow-sm shadow-black/5'
+          : 'text-teal-50/80 hover:bg-white/10 hover:text-white'
+          } ${collapsed ? 'justify-center px-2' : ''}`}
         title={collapsed ? t(key) : undefined}
       >
         <Icon className={`w-[18px] h-[18px] shrink-0 ${active ? 'text-teal-600' : ''}`} />
@@ -142,21 +144,21 @@ export default function Layout() {
           {collapsed
             ? visibleGroups.flatMap((g) => g.items).map(renderNavItem)
             : visibleGroups.map((group) => {
-                const groupOpen = openGroups[group.id]
-                return (
-                  <div key={group.id} className="space-y-1">
-                    <button
-                      type="button"
-                      onClick={() => setOpenGroups((prev) => ({ ...prev, [group.id]: !prev[group.id] }))}
-                      className="w-full flex items-center justify-between px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-teal-100/70 hover:text-white transition-colors"
-                    >
-                      <span>{group.label}</span>
-                      <span className={`transition-transform ${groupOpen ? 'rotate-180' : ''}`}>⌄</span>
-                    </button>
-                    {groupOpen && group.items.map(renderNavItem)}
-                  </div>
-                )
-              })}
+              const groupOpen = openGroups[group.id]
+              return (
+                <div key={group.id} className="space-y-1">
+                  <button
+                    type="button"
+                    onClick={() => setOpenGroups((prev) => ({ ...prev, [group.id]: !prev[group.id] }))}
+                    className="w-full flex items-center justify-between px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-teal-100/70 hover:text-white transition-colors"
+                  >
+                    <span>{group.label}</span>
+                    <span className={`transition-transform ${groupOpen ? 'rotate-180' : ''}`}>⌄</span>
+                  </button>
+                  {groupOpen && group.items.map(renderNavItem)}
+                </div>
+              )
+            })}
         </div>
       </nav>
 
@@ -181,12 +183,11 @@ export default function Layout() {
   )
 
   return (
-    <div className="min-h-screen bg-[#f0f4f8] flex">
+    <div className="min-h-screen bg-[#f0f4f8] dark:bg-slate-900 flex">
       {/* Desktop Sidebar */}
       <aside
-        className={`hidden md:flex flex-col shrink-0 transition-all duration-200 fixed inset-y-0 left-0 z-30 ${
-          collapsed ? 'w-[68px]' : 'w-60'
-        }`}
+        className={`hidden md:flex flex-col shrink-0 transition-all duration-200 fixed inset-y-0 left-0 z-30 ${collapsed ? 'w-[68px]' : 'w-60'
+          }`}
         style={{ background: 'linear-gradient(180deg, #0d9488 0%, #0f766e 50%, #115e59 100%)' }}
       >
         <SidebarContent />
@@ -208,7 +209,7 @@ export default function Layout() {
       {/* Main Area */}
       <div className={`flex-1 flex flex-col min-w-0 transition-all duration-200 ${collapsed ? 'md:ml-[68px]' : 'md:ml-60'}`}>
         {/* Top Bar */}
-        <header className="sticky top-0 z-20 bg-white h-14 flex items-center px-4 sm:px-6 gap-4 border-b border-slate-200/80">
+        <header className="sticky top-0 z-20 bg-white dark:bg-slate-800 h-14 flex items-center px-4 sm:px-6 gap-4 border-b border-slate-200/80 dark:border-slate-700">
           <button onClick={() => setMobileOpen(true)} className="md:hidden p-1.5 rounded-lg text-slate-500 hover:bg-slate-100 hover:text-slate-700">
             <MenuIcon className="w-5 h-5" />
           </button>
@@ -220,7 +221,7 @@ export default function Layout() {
               <input
                 type="text"
                 placeholder="Search..."
-                className="w-full pl-9 pr-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-400 transition-all"
+                className="w-full pl-9 pr-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-sm text-slate-700 dark:text-slate-200 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-400 transition-all"
                 readOnly
               />
             </div>
@@ -231,14 +232,22 @@ export default function Layout() {
           {/* Right actions */}
           <div className="flex items-center gap-1.5">
             <button
+              onClick={toggleTheme}
+              className="p-2 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-700 dark:hover:text-slate-200 transition-colors"
+              title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+            >
+              {isDark ? <SunIcon className="w-5 h-5" /> : <MoonIcon className="w-5 h-5" />}
+            </button>
+
+            <button
               onClick={toggleLang}
-              className="px-2.5 py-1.5 rounded-lg text-xs font-bold text-slate-500 hover:text-teal-700 hover:bg-teal-50 transition-all"
+              className="px-2.5 py-1.5 rounded-lg text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-teal-700 dark:hover:text-teal-400 hover:bg-teal-50 dark:hover:bg-teal-900/30 transition-all"
               title={lang === 'en' ? 'हिंदी में बदलो' : 'Switch to English'}
             >
               {lang === 'en' ? 'हिं' : 'EN'}
             </button>
 
-            <NavLink to="/fleet-health" className="relative p-2 rounded-lg text-slate-500 hover:bg-slate-100 hover:text-slate-700 transition-colors">
+            <NavLink to="/fleet-health" className="relative p-2 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-700 dark:hover:text-slate-200 transition-colors">
               <BellIcon className="w-5 h-5" />
               {alertCount > 0 && (
                 <span className="absolute top-1 right-1 bg-red-500 text-white text-[8px] font-bold rounded-full w-3.5 h-3.5 flex items-center justify-center">
@@ -247,8 +256,8 @@ export default function Layout() {
               )}
             </NavLink>
 
-            <button onClick={logout} className="p-2 rounded-lg text-slate-400 hover:bg-red-50 hover:text-red-500 transition-colors" title="Logout">
-              <LogOutIcon className="w-4.5 h-4.5" />
+            <button onClick={logout} className="p-2 rounded-lg text-slate-400 hover:bg-red-50 dark:hover:bg-red-900/30 hover:text-red-500 transition-colors" title="Logout">
+              <LogOutIcon className="w-5 h-5" />
             </button>
           </div>
         </header>

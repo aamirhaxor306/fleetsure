@@ -1,6 +1,7 @@
 import express from 'express'
 import cookieParser from 'cookie-parser'
 import cors from 'cors'
+import helmet from 'helmet'
 import cron from 'node-cron'
 import dotenv from 'dotenv'
 import { fileURLToPath } from 'url'
@@ -38,6 +39,9 @@ import moneyLostRoutes from './routes/moneyLost.js'
 import leadRoutes from './routes/leads.js'
 import adminRoutes from './routes/admin.js'
 import prisma from './lib/prisma.js'
+import logger, { httpLogger } from './lib/logger.js'
+import { generalLimiter, authLimiter, heavyLimiter } from './middleware/rateLimiter.js'
+import { errorHandler } from './middleware/errorHandler.js'
 import { runAlertEngine } from './services/alertEngine.js'
 import { startDriverBot, sendMorningBrief, sendEveningSummary, sendWeeklyReport } from './services/driverBot.js'
 import { startOwnerBot, sendDailyFleetSummary } from './services/ownerBot.js'
@@ -48,15 +52,21 @@ const PORT = process.env.PORT || 4000
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
 
-// ── Middleware ──────────────────────────────────────────────────────────────
+// ── Security & Middleware ───────────────────────────────────────────────────
 
-app.use(express.json())
-app.use(express.urlencoded({ extended: false }))
+app.use(helmet({
+  contentSecurityPolicy: false,  // CSP handled by Vite in dev
+  crossOriginEmbedderPolicy: false,
+}))
+app.use(express.json({ limit: '1mb' }))  // Prevent payload bombs
+app.use(express.urlencoded({ extended: false, limit: '1mb' }))
 app.use(cookieParser())
 app.use(cors({
   origin: process.env.NODE_ENV === 'production' ? false : 'http://localhost:5173',
   credentials: true,
 }))
+app.use(httpLogger)           // Structured request logging
+app.use(generalLimiter)       // 100 req/min per IP
 
 // ── Static uploads ──────────────────────────────────────────────────────────
 
@@ -80,7 +90,7 @@ app.use(express.static(join(__dirname, '..', 'public')))
 
 // ── API Routes ─────────────────────────────────────────────────────────────
 
-app.use('/api/auth', authRoutes)
+app.use('/api/auth', authLimiter, authRoutes)  // Stricter: 10 req/min
 app.use('/api/vehicles', vehicleRoutes)
 app.use('/api/maintenance', maintenanceRoutes)
 app.use('/api/documents', documentRoutes)
@@ -93,10 +103,10 @@ app.use('/api/renewals', renewalRoutes)
 app.use('/api/renewal-partners', renewalPartnerRoutes)
 app.use('/api/monthly-bills', monthlyBillRoutes)
 app.use('/api/revenue', revenueRoutes)
-app.use('/api/ocr', ocrRoutes)
+app.use('/api/ocr', heavyLimiter, ocrRoutes)       // Heavy: 20 req/min
 app.use('/api/tyres', tyreRoutes)
 app.use('/api/drivers', driverRoutes)
-app.use('/api/insights', insightsRoutes)
+app.use('/api/insights', heavyLimiter, insightsRoutes) // Heavy: 20 req/min
 app.use('/api/fleet-health', fleetHealthRoutes)
 app.use('/api/tracking', trackingRoutes)
 app.use('/api/insurance', insuranceRoutes)
@@ -106,6 +116,10 @@ app.use('/api/fastag', fastagRoutes)
 app.use('/api/fuel', fuelRoutes)
 app.use('/api/money-lost', moneyLostRoutes)
 app.use('/api/admin', adminRoutes)
+
+// ── Global error handler (MUST be after all routes) ────────────────────────
+
+app.use(errorHandler)
 
 // ── Serve client build in production ───────────────────────────────────────
 
@@ -198,7 +212,7 @@ cron.schedule('30 3 * * 1', async () => {
 // ── Start ──────────────────────────────────────────────────────────────────
 
 app.listen(PORT, async () => {
-  console.log(`Fleetsure server running on http://localhost:${PORT}`)
+  logger.info(`Fleetsure server running on http://localhost:${PORT}`)
 
   // Start Telegram bots (driver + owner)
   await startDriverBot()

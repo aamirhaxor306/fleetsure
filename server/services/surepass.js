@@ -2,7 +2,9 @@ import dotenv from 'dotenv'
 
 dotenv.config()
 
-const SUREPASS_BASE = 'https://kyc-api.surepass.io/api/v1'
+const SUREPASS_BASE = process.env.SUREPASS_SANDBOX === 'false'
+  ? 'https://kyc-api.surepass.io/api/v1'
+  : 'https://sandbox.surepass.app/api/v1'
 const TOKEN = process.env.SUREPASS_API_TOKEN
 
 export function isSurepassConfigured() {
@@ -21,7 +23,7 @@ export async function fetchRCDetails(vehicleNumber) {
 
   const cleaned = vehicleNumber.toUpperCase().replace(/\s+/g, '')
 
-  const res = await fetch(`${SUREPASS_BASE}/rc/rc-verification`, {
+  const res = await fetch(`${SUREPASS_BASE}/rc/rc-v2`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

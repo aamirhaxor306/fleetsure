@@ -1,9 +1,57 @@
 /**
- * Fleetsure — Auth Middleware (Clerk + legacy JWT fallback)
+ * Fleetsure — Auth Middleware (Clerk JWKS + legacy JWT fallback)
+ *
+ * ENTERPRISE: Clerk tokens are now verified using JWKS (JSON Web Key Sets)
+ * instead of just decoding. This prevents forged tokens.
  */
 import jwt from 'jsonwebtoken'
+import jwksClient from 'jwks-rsa'
 import prisma from '../lib/prisma.js'
+import logger from '../lib/logger.js'
 
+// ── JWKS client for Clerk token verification ────────────────────────────
+function getClerkIssuer() {
+  if (process.env.CLERK_ISSUER_URL) return process.env.CLERK_ISSUER_URL
+  const pk = process.env.VITE_CLERK_PUBLISHABLE_KEY
+  if (!pk) return null
+  try {
+    // Clerk pk format: pk_test_<base64-encoded-domain>$  or pk_live_<base64-encoded-domain>$
+    const encoded = pk.replace(/^pk_(test|live)_/, '').replace(/\$$/, '')
+    const domain = Buffer.from(encoded, 'base64').toString('utf8').replace(/\$$/, '')
+    if (domain) return `https://${domain}`
+  } catch { }
+  return null
+}
+
+const clerkIssuer = getClerkIssuer()
+
+let jwks = null
+function getJwksClient() {
+  if (jwks) return jwks
+  if (!clerkIssuer) return null
+  jwks = jwksClient({
+    jwksUri: `${clerkIssuer}/.well-known/jwks.json`,
+    cache: true,
+    cacheMaxAge: 600000,  // 10 minutes
+    rateLimit: true,
+    jwksRequestsPerMinute: 10,
+  })
+  return jwks
+}
+
+function getSigningKey(header, callback) {
+  const client = getJwksClient()
+  if (!client) {
+    return callback(null, null)
+  }
+  client.getSigningKey(header.kid, (err, key) => {
+    if (err) return callback(err)
+    const signingKey = key.getPublicKey()
+    callback(null, signingKey)
+  })
+}
+
+// ── Main auth middleware ────────────────────────────────────────────────
 export function requireAuth(req, res, next) {
   const authHeader = req.headers.authorization
   if (authHeader && authHeader.startsWith('Bearer ')) {
@@ -33,7 +81,26 @@ async function fetchClerkUser(clerkId) {
 async function verifyClerkToken(req, res, next) {
   try {
     const token = req.headers.authorization.split(' ')[1]
-    const payload = jwt.decode(token)
+
+    // Try JWKS verification first
+    let payload
+    const client = getJwksClient()
+    if (client) {
+      payload = await new Promise((resolve, reject) => {
+        jwt.verify(token, getSigningKey, {
+          algorithms: ['RS256'],
+          // Clerk tokens use the Clerk instance URL as issuer
+        }, (err, decoded) => {
+          if (err) reject(err)
+          else resolve(decoded)
+        })
+      })
+    } else {
+      // Dev fallback when no JWKS configured — decode only
+      logger.warn('JWKS not configured — using jwt.decode (NOT SAFE FOR PRODUCTION)')
+      payload = jwt.decode(token)
+    }
+
     if (!payload || !payload.sub) {
       return res.status(401).json({ error: 'Invalid token' })
     }
@@ -45,7 +112,7 @@ async function verifyClerkToken(req, res, next) {
       const clerkUser = await fetchClerkUser(clerkId)
 
       const email = clerkUser?.email_addresses?.[0]?.email_address ||
-                    payload.email || `clerk_${clerkId}@fleetsure.app`
+        payload.email || `clerk_${clerkId}@fleetsure.app`
       const name = clerkUser ? `${clerkUser.first_name || ''} ${clerkUser.last_name || ''}`.trim() : null
       const phone = clerkUser?.phone_numbers?.[0]?.phone_number || null
 
@@ -69,7 +136,7 @@ async function verifyClerkToken(req, res, next) {
     req.adminId = user.id
     next()
   } catch (err) {
-    console.error('Clerk auth error:', err.message)
+    logger.warn({ err: err.message }, 'Auth token verification failed')
     return res.status(401).json({ error: 'Invalid or expired token' })
   }
 }

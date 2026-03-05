@@ -3,6 +3,7 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import { ClerkProvider, SignedIn, SignedOut, useUser, useAuth as useClerkAuth } from '@clerk/clerk-react'
 import { auth as authApi, setClerkGetToken } from './api'
 import { LanguageProvider } from './context/LanguageContext'
+import { ThemeProvider } from './context/ThemeContext'
 import Layout from './components/Layout'
 import Login from './pages/Login'
 import Onboarding from './pages/Onboarding'
@@ -59,7 +60,7 @@ function AuthenticatedApp() {
   }, [clerkUser])
 
   const logout = async () => {
-    try { await authApi.logout() } catch {}
+    try { await authApi.logout() } catch { }
     await signOut()
     setUser(null)
   }
@@ -125,14 +126,16 @@ function App() {
 
   return (
     <ClerkProvider publishableKey={CLERK_KEY}>
-      <LanguageProvider>
-        <SignedOut>
-          <Login />
-        </SignedOut>
-        <SignedIn>
-          <AuthenticatedApp />
-        </SignedIn>
-      </LanguageProvider>
+      <ThemeProvider>
+        <LanguageProvider>
+          <SignedOut>
+            <Login />
+          </SignedOut>
+          <SignedIn>
+            <AuthenticatedApp />
+          </SignedIn>
+        </LanguageProvider>
+      </ThemeProvider>
     </ClerkProvider>
   )
 }
