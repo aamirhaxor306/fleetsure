@@ -192,7 +192,7 @@ async function main() {
   }
   console.log(`  ${routes.length} saved routes`)
 
-  console.log(`\n✅ Done! Login with: ${EMAIL}`)
+  console.log(`\nDone! Login with: ${EMAIL}`)
 }
 
 main().catch(e => { console.error(e); process.exit(1) }).finally(() => prisma.$disconnect())

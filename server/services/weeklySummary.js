@@ -5,146 +5,146 @@ import prisma from '../lib/prisma.js'
  * @param {string} tenantId - Tenant ID to scope all data
  */
 export async function generateWeeklySummary(tenantId) {
-  const now = new Date()
-  const sevenDaysAgo = new Date(now)
-  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
-  const thirtyDaysAgo = new Date(now)
-  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+ const now = new Date()
+ const sevenDaysAgo = new Date(now)
+ sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
+ const thirtyDaysAgo = new Date(now)
+ thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
 
-  const whereTenant = tenantId ? { tenantId } : undefined
+ const whereTenant = tenantId ? { tenantId } : undefined
 
-  // ── Unresolved alerts ─────────────────────────────────────────────────
+ // ── Unresolved alerts ─────────────────────────────────────────────────
 
-  const unresolvedAlerts = await prisma.alert.findMany({
-    where: { resolved: false, ...whereTenant },
-    include: { vehicle: { select: { vehicleNumber: true } } },
-    orderBy: { severity: 'desc' },
-  })
+ const unresolvedAlerts = await prisma.alert.findMany({
+ where: { resolved: false, ...whereTenant },
+ include: { vehicle: { select: { vehicleNumber: true } } },
+ orderBy: { severity: 'desc' },
+ })
 
-  // ── This week's maintenance ───────────────────────────────────────────
+ // ── This week's maintenance ───────────────────────────────────────────
 
-  const weekMaintenance = await prisma.maintenanceLog.findMany({
-    where: { maintenanceDate: { gte: sevenDaysAgo }, ...whereTenant },
-    include: { vehicle: { select: { vehicleNumber: true } } },
-    orderBy: { maintenanceDate: 'desc' },
-  })
+ const weekMaintenance = await prisma.maintenanceLog.findMany({
+ where: { maintenanceDate: { gte: sevenDaysAgo }, ...whereTenant },
+ include: { vehicle: { select: { vehicleNumber: true } } },
+ orderBy: { maintenanceDate: 'desc' },
+ })
 
-  const weekSpend = weekMaintenance.reduce((s, m) => s + m.amount, 0)
+ const weekSpend = weekMaintenance.reduce((s, m) => s + m.amount, 0)
 
-  // ── Upcoming document expiries (next 30 days) ────────────────────────
+ // ── Upcoming document expiries (next 30 days) ────────────────────────
 
-  const upcomingExpiries = await prisma.document.findMany({
-    where: {
-      ...whereTenant,
-      expiryDate: { lte: new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000) },
-    },
-    include: { vehicle: { select: { vehicleNumber: true } } },
-    orderBy: { expiryDate: 'asc' },
-  })
+ const upcomingExpiries = await prisma.document.findMany({
+ where: {
+ ...whereTenant,
+ expiryDate: { lte: new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000) },
+ },
+ include: { vehicle: { select: { vehicleNumber: true } } },
+ orderBy: { expiryDate: 'asc' },
+ })
 
-  // ── Top spenders (last 30 days) ──────────────────────────────────────
+ // ── Top spenders (last 30 days) ──────────────────────────────────────
 
-  const monthMaintenance = await prisma.maintenanceLog.findMany({
-    where: { maintenanceDate: { gte: thirtyDaysAgo }, ...whereTenant },
-    include: { vehicle: { select: { vehicleNumber: true } } },
-  })
+ const monthMaintenance = await prisma.maintenanceLog.findMany({
+ where: { maintenanceDate: { gte: thirtyDaysAgo }, ...whereTenant },
+ include: { vehicle: { select: { vehicleNumber: true } } },
+ })
 
-  const spendByVehicle = {}
-  for (const m of monthMaintenance) {
-    const vn = m.vehicle.vehicleNumber
-    spendByVehicle[vn] = (spendByVehicle[vn] || 0) + m.amount
-  }
+ const spendByVehicle = {}
+ for (const m of monthMaintenance) {
+ const vn = m.vehicle.vehicleNumber
+ spendByVehicle[vn] = (spendByVehicle[vn] || 0) + m.amount
+ }
 
-  const topSpenders = Object.entries(spendByVehicle)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 5)
+ const topSpenders = Object.entries(spendByVehicle)
+ .sort((a, b) => b[1] - a[1])
+ .slice(0, 5)
 
-  // ── Build text ────────────────────────────────────────────────────────
+ // ── Build text ────────────────────────────────────────────────────────
 
-  const lines = []
-  const dateStr = now.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
-  lines.push(`FLEETSURE WEEKLY SUMMARY`)
-  lines.push(`${dateStr}`)
-  lines.push(`${'─'.repeat(35)}`)
-  lines.push('')
+ const lines = []
+ const dateStr = now.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
+ lines.push(`FLEETSURE WEEKLY SUMMARY`)
+ lines.push(`${dateStr}`)
+ lines.push(`${'─'.repeat(35)}`)
+ lines.push('')
 
-  // Attention needed
-  if (unresolvedAlerts.length > 0) {
-    lines.push(`⚠ ATTENTION NEEDED (${unresolvedAlerts.length} alerts)`)
-    lines.push('')
-    const highAlerts = unresolvedAlerts.filter((a) => a.severity === 'high')
-    const medAlerts = unresolvedAlerts.filter((a) => a.severity === 'medium')
-    const lowAlerts = unresolvedAlerts.filter((a) => a.severity === 'low')
+ // Attention needed
+ if (unresolvedAlerts.length > 0) {
+ lines.push(` ATTENTION NEEDED (${unresolvedAlerts.length} alerts)`)
+ lines.push('')
+ const highAlerts = unresolvedAlerts.filter((a) => a.severity === 'high')
+ const medAlerts = unresolvedAlerts.filter((a) => a.severity === 'medium')
+ const lowAlerts = unresolvedAlerts.filter((a) => a.severity === 'low')
 
-    if (highAlerts.length > 0) {
-      lines.push(`  🔴 HIGH (${highAlerts.length}):`)
-      for (const a of highAlerts) {
-        lines.push(`    • ${a.message}`)
-      }
-      lines.push('')
-    }
-    if (medAlerts.length > 0) {
-      lines.push(`  🟡 MEDIUM (${medAlerts.length}):`)
-      for (const a of medAlerts) {
-        lines.push(`    • ${a.message}`)
-      }
-      lines.push('')
-    }
-    if (lowAlerts.length > 0) {
-      lines.push(`  🔵 LOW (${lowAlerts.length}):`)
-      for (const a of lowAlerts) {
-        lines.push(`    • ${a.message}`)
-      }
-      lines.push('')
-    }
-  } else {
-    lines.push(`✅ No open alerts — all clear!`)
-    lines.push('')
-  }
+ if (highAlerts.length > 0) {
+ lines.push(` HIGH (${highAlerts.length}):`)
+ for (const a of highAlerts) {
+ lines.push(` • ${a.message}`)
+ }
+ lines.push('')
+ }
+ if (medAlerts.length > 0) {
+ lines.push(` MEDIUM (${medAlerts.length}):`)
+ for (const a of medAlerts) {
+ lines.push(` • ${a.message}`)
+ }
+ lines.push('')
+ }
+ if (lowAlerts.length > 0) {
+ lines.push(` LOW (${lowAlerts.length}):`)
+ for (const a of lowAlerts) {
+ lines.push(` • ${a.message}`)
+ }
+ lines.push('')
+ }
+ } else {
+ lines.push(` No open alerts — all clear!`)
+ lines.push('')
+ }
 
-  // This week maintenance
-  lines.push(`${'─'.repeat(35)}`)
-  lines.push(`🔧 THIS WEEK'S MAINTENANCE`)
-  lines.push(`   Total spend: ₹${weekSpend.toLocaleString('en-IN')}`)
-  lines.push(`   Entries: ${weekMaintenance.length}`)
-  if (weekMaintenance.length > 0) {
-    for (const m of weekMaintenance.slice(0, 5)) {
-      lines.push(`   • ${m.vehicle.vehicleNumber} — ${m.maintenanceType} — ₹${m.amount.toLocaleString('en-IN')}`)
-    }
-    if (weekMaintenance.length > 5) {
-      lines.push(`   ... and ${weekMaintenance.length - 5} more`)
-    }
-  }
-  lines.push('')
+ // This week maintenance
+ lines.push(`${'─'.repeat(35)}`)
+ lines.push(` THIS WEEK'S MAINTENANCE`)
+ lines.push(` Total spend: ₹${weekSpend.toLocaleString('en-IN')}`)
+ lines.push(` Entries: ${weekMaintenance.length}`)
+ if (weekMaintenance.length > 0) {
+ for (const m of weekMaintenance.slice(0, 5)) {
+ lines.push(` • ${m.vehicle.vehicleNumber} — ${m.maintenanceType} — ₹${m.amount.toLocaleString('en-IN')}`)
+ }
+ if (weekMaintenance.length > 5) {
+ lines.push(` ... and ${weekMaintenance.length - 5} more`)
+ }
+ }
+ lines.push('')
 
-  // Document expiries
-  lines.push(`${'─'.repeat(35)}`)
-  lines.push(`📄 UPCOMING DOCUMENT EXPIRIES (30 days)`)
-  if (upcomingExpiries.length > 0) {
-    for (const d of upcomingExpiries) {
-      const expDate = new Date(d.expiryDate)
-      const daysLeft = Math.ceil((expDate - now) / (1000 * 60 * 60 * 24))
-      const status = daysLeft <= 0 ? 'EXPIRED' : `${daysLeft} days left`
-      lines.push(`   • ${d.vehicle.vehicleNumber} — ${d.documentType} — ${status}`)
-    }
-  } else {
-    lines.push(`   All documents valid for next 30 days.`)
-  }
-  lines.push('')
+ // Document expiries
+ lines.push(`${'─'.repeat(35)}`)
+ lines.push(` UPCOMING DOCUMENT EXPIRIES (30 days)`)
+ if (upcomingExpiries.length > 0) {
+ for (const d of upcomingExpiries) {
+ const expDate = new Date(d.expiryDate)
+ const daysLeft = Math.ceil((expDate - now) / (1000 * 60 * 60 * 24))
+ const status = daysLeft <= 0 ? 'EXPIRED' : `${daysLeft} days left`
+ lines.push(` • ${d.vehicle.vehicleNumber} — ${d.documentType} — ${status}`)
+ }
+ } else {
+ lines.push(` All documents valid for next 30 days.`)
+ }
+ lines.push('')
 
-  // Top spenders
-  if (topSpenders.length > 0) {
-    lines.push(`${'─'.repeat(35)}`)
-    lines.push(`💰 TOP SPENDERS (last 30 days)`)
-    for (const [vn, amount] of topSpenders) {
-      lines.push(`   • ${vn} — ₹${amount.toLocaleString('en-IN')}`)
-    }
-    lines.push('')
-  }
+ // Top spenders
+ if (topSpenders.length > 0) {
+ lines.push(`${'─'.repeat(35)}`)
+ lines.push(` TOP SPENDERS (last 30 days)`)
+ for (const [vn, amount] of topSpenders) {
+ lines.push(` • ${vn} — ₹${amount.toLocaleString('en-IN')}`)
+ }
+ lines.push('')
+ }
 
-  lines.push(`${'─'.repeat(35)}`)
-  lines.push(`Generated by Fleetsure`)
+ lines.push(`${'─'.repeat(35)}`)
+ lines.push(`Generated by Fleetsure`)
 
-  const text = lines.join('\n')
-  return { text, generatedAt: now.toISOString() }
+ const text = lines.join('\n')
+ return { text, generatedAt: now.toISOString() }
 }
