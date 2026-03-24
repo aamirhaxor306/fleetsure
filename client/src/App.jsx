@@ -26,6 +26,7 @@ import FASTag from './pages/FASTag'
 import ServiceManager from './pages/ServiceManager'
 import FuelManager from './pages/FuelManager'
 import PlatformStats from './pages/PlatformStats'
+import Invoices from './pages/Invoices'
 import InstallPrompt from './components/InstallPrompt'
 
 const CLERK_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY
@@ -103,6 +104,7 @@ function AuthenticatedApp() {
           <Route path="services" element={<ServiceManager />} />
           <Route path="fuel" element={<FuelManager />} />
           <Route path="admin" element={<PlatformStats />} />
+          <Route path="invoices" element={<Invoices />} />
           <Route path="alerts" element={<Navigate to="/fleet-health" replace />} />
           <Route path="maintenance" element={<Navigate to="/fleet-health" replace />} />
         </Route>

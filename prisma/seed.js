@@ -78,6 +78,18 @@ const TRIP_DATA = [
 async function main() {
   console.log('Seeding database...')
 
+  // ── 0. Clean up existing demo data ─────────────────────────────────────────
+  console.log('  Cleaning up old demo data...')
+  try {
+    const demoUser = await prisma.user.findUnique({ where: { email: 'demo@fleetsure.in' } })
+    if (demoUser) {
+      await prisma.user.delete({ where: { email: 'demo@fleetsure.in' } })
+      await prisma.tenant.delete({ where: { id: demoUser.tenantId } })
+    }
+  } catch (e) {
+    console.log('  Nothing to clean up or error during cleanup:', e.message)
+  }
+
   // ── 1. Create demo Tenant ──────────────────────────────────────────────────
   const tenant = await prisma.tenant.create({
     data: { name: 'Demo Fleet Transport' },
@@ -897,6 +909,86 @@ async function main() {
     txnCount++
   }
   console.log(`  Seeded ${txnCount} FASTag transactions`)
+
+  // ── Seed Invoice & Workshop Data ─────────────────────────────────────────
+  const workshop = await prisma.workshop.create({
+    data: {
+      name: 'Reliance Auto Works',
+      location: 'Plot 45, MIDC, Andheri East, Mumbai',
+      contactPerson: 'Amit Singh',
+      phone: '9876543222',
+      serviceCapacity: 5,
+      rating: 4.8,
+    }
+  })
+
+  // Create some spare parts
+  const part1 = await prisma.sparePartSKU.create({
+    data: { skuName: 'Brake Pad Set - Front', partCategory: 'BRAKES', currentStock: 15, reorderLevel: 5, purchasePrice: 2200, sellingPrice: 3500 }
+  })
+  const part2 = await prisma.sparePartSKU.create({
+    data: { skuName: 'Engine Oil Filter', partCategory: 'ENGINE', currentStock: 40, reorderLevel: 10, purchasePrice: 450, sellingPrice: 850 }
+  })
+
+  // Create a completed service job
+  const jobVeh = allVehicles[0]
+  const job = await prisma.serviceJob.create({
+    data: {
+      tenantId: T,
+      vehicleId: jobVeh.id,
+      workshopId: workshop.id,
+      jobStatus: 'COMPLETED',
+      issueDescription: 'Regular 20,000 KM Service & Brake Inspection',
+      odometerKm: 145000,
+      startedAt: new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000),
+      completedAt: new Date(now.getTime() - 4 * 24 * 60 * 60 * 1000),
+    }
+  })
+
+  // Add parts to job
+  await prisma.jobParts.create({
+    data: { jobId: job.id, skuId: part1.id, quantityUsed: 2, costPrice: 2200, sellPrice: 3500 }
+  })
+  await prisma.jobParts.create({
+    data: { jobId: job.id, skuId: part2.id, quantityUsed: 1, costPrice: 450, sellPrice: 850 }
+  })
+
+  // Add labor to job
+  await prisma.jobLabor.create({
+    data: { jobId: job.id, laborDescription: 'Brake Pad Replacement Labor', laborCost: 500, laborCharge: 1200 }
+  })
+  await prisma.jobLabor.create({
+    data: { jobId: job.id, laborDescription: 'General Service & Inspection', laborCost: 800, laborCharge: 2000 }
+  })
+
+  // Create the actual Invoice representing this job
+  // Parts Total: (2 * 3500) + (1 * 850) = 7850
+  // Labor Total: 1200 + 2000 = 3200
+  // Total: 11050
+  const invoice = await prisma.invoice.create({
+    data: {
+      tenantId: T,
+      jobId: job.id,
+      partsTotal: 7850,
+      laborTotal: 3200,
+      totalAmount: 11050,
+      paymentStatus: 'PENDING',
+      createdAt: new Date(now.getTime() - 4 * 24 * 60 * 60 * 1000),
+    }
+  })
+
+  // Create a ledger entry reflecting the pending payment
+  await prisma.fleetLedger.create({
+    data: {
+      tenantId: T,
+      invoiceId: invoice.id,
+      description: `Invoice for Job ${job.id.slice(-6)} - ${jobVeh.vehicleNumber}`,
+      debitAmount: 11050,
+      creditAmount: 0,
+      balanceAfter: -11050, // Ops is owed 11050
+    }
+  })
+  console.log(`  Seeded 1 invoice (Total: ₹11,050) for vehicle ${jobVeh.vehicleNumber}`)
 
   console.log('\nSeeding complete!')
   console.log(`\n  Login with email: demo@fleetsure.in`)

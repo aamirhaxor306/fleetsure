@@ -275,3 +275,11 @@ export const fastag = {
   txnStatus: (txnId) =>
     request(`/fastag/transactions/${txnId}/status`),
 }
+
+// ── Invoices ─────────────────────────────────────────────
+export const invoices = {
+  list: () => request('/invoices'),
+  get: (id) => request(`/invoices/${id}`),
+  updateStatus: (id, paymentStatus) =>
+    request(`/invoices/${id}/status`, { method: 'PATCH', body: JSON.stringify({ paymentStatus }) }),
+}

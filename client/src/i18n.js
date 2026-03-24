@@ -41,6 +41,7 @@ const translations = {
     navInsurance: 'Insurance',
     navRevenue: 'Revenue',
     navFleetHealth: 'Fleet Health',
+    navInvoices: 'Invoices',
 
     // ── Dashboard ──────────────────────────────────────────────
     greetingMorning: 'Good morning',
@@ -255,6 +256,7 @@ const translations = {
     navInsurance: 'बीमा',
     navRevenue: 'कमाई',
     navFleetHealth: 'फ्लीट हेल्थ',
+    navInvoices: 'इनवॉइस',
 
     // ── Dashboard ──────────────────────────────────────────────
     greetingMorning: 'सुप्रभात',

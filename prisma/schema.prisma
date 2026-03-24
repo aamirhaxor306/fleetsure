@@ -41,6 +41,12 @@ model Tenant {
   fastagTransactions FasTagTransaction[]
   fuelLogs          FuelLog[]
 
+  // Ops Relations
+  opsJobs            ServiceJob[]
+  opsInvoices        Invoice[]
+  opsLedgerEntries   FleetLedger[]
+  fleetMessages      FleetMessage[]
+
   @@map("tenants")
 }
 
@@ -100,6 +106,9 @@ model Vehicle {
   drivers          Driver[]
   fastag           FasTag?
   fuelLogs         FuelLog[]
+
+  // Ops Relations
+  opsJobs          ServiceJob[]
 
   @@unique([tenantId, vehicleNumber])
   @@map("vehicles")
@@ -616,3 +625,142 @@ model FuelLog {
 
   @@map("fuel_logs")
 }
+
+// ─── Ops Management System ──────────────────────────────────────────────────────────────
+
+model Workshop {
+  id              String   @id @default(uuid())
+  name            String
+  location        String?
+  contactPerson   String?
+  phone           String?
+  serviceCapacity Int?     @default(5)
+  rating          Float?   @default(0.0)
+  activeStatus    Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  jobs            ServiceJob[]
+}
+
+model SparePartSKU {
+  id              String   @id @default(uuid())
+  skuName         String
+  partCategory    String
+  currentStock    Int      @default(0)
+  reorderLevel    Int      @default(5)
+  purchasePrice   Float    @default(0.0)
+  sellingPrice    Float    @default(0.0)
+  createdAt       DateTime @default(now())
+  
+  transactions    InventoryTransaction[]
+  usedInJobs      JobParts[]
+}
+
+model InventoryTransaction {
+  id              String   @id @default(uuid())
+  skuId           String
+  transactionType String   // "IN" or "OUT"
+  quantity        Int
+  unitPrice       Float
+  referenceJobId  String?
+  notes           String?
+  createdAt       DateTime @default(now())
+
+  sku             SparePartSKU @relation(fields: [skuId], references: [id])
+}
+
+model ServiceJob {
+  id               String   @id @default(uuid())
+  tenantId         String
+  vehicleId        String
+  workshopId       String?
+  jobStatus        String   // "OPEN", "ASSIGNED", "IN_PROGRESS", "COMPLETED"
+  issueDescription String
+  odometerKm       Int?
+  startedAt        DateTime?
+  completedAt      DateTime?
+  createdAt        DateTime @default(now())
+
+  tenant           Tenant     @relation(fields: [tenantId], references: [id])
+  vehicle          Vehicle    @relation(fields: [vehicleId], references: [id])
+  workshop         Workshop?  @relation(fields: [workshopId], references: [id])
+  partsUsed        JobParts[]
+  laborItems       JobLabor[]
+  invoices         Invoice[]
+}
+
+model FleetMessage {
+  id              String   @id @default(uuid())
+  tenantId        String?  // Nullable if msg comes from unknown number
+  customerPhone   String
+  messageBody     String
+  direction       String   // "INBOUND" or "OUTBOUND"
+  provider        String   // "WHATSAPP", "SMS", etc.
+  messageStatus   String   // "RECEIVED", "SENT", "DELIVERED", "FAILED"
+  createdAt       DateTime @default(now())
+
+  tenant          Tenant?  @relation(fields: [tenantId], references: [id])
+}
+
+model JobParts {
+  id              String   @id @default(uuid())
+  jobId           String
+  skuId           String
+  quantityUsed    Int
+  costPrice       Float
+  sellPrice       Float
+  createdAt       DateTime @default(now())
+
+  job             ServiceJob   @relation(fields: [jobId], references: [id])
+  sku             SparePartSKU @relation(fields: [skuId], references: [id])
+}
+
+model JobLabor {
+  id               String   @id @default(uuid())
+  jobId            String
+  laborDescription String
+  laborCost        Float    // what ops pays the mechanic
+  laborCharge      Float    // what ops charges the fleet
+  createdAt        DateTime @default(now())
+
+  job              ServiceJob @relation(fields: [jobId], references: [id])
+}
+
+model Invoice {
+  id              String   @id @default(uuid())
+  tenantId        String
+  jobId           String
+  partsTotal      Float
+  laborTotal      Float
+  totalAmount     Float
+  paymentStatus   String   // "PENDING", "PAID"
+  createdAt       DateTime @default(now())
+
+  tenant          Tenant      @relation(fields: [tenantId], references: [id])
+  job             ServiceJob  @relation(fields: [jobId], references: [id])
+  ledgerEntries   FleetLedger[]
+}
+
+model FleetLedger {
+  id              String   @id @default(uuid())
+  tenantId        String
+  invoiceId       String?
+  description     String
+  debitAmount     Float    @default(0.0) // amount owed for service
+  creditAmount    Float    @default(0.0) // amount paid
+  balanceAfter    Float                 // running balance
+  createdAt       DateTime @default(now())
+
+  tenant          Tenant   @relation(fields: [tenantId], references: [id])
+  invoice         Invoice? @relation(fields: [invoiceId], references: [id])
+}
+
+model OpsUser {
+  id              String   @id @default(uuid())
+  email           String   @unique
+  passwordHash    String
+  name            String
+  role            String   @default("MANAGER") // ADMIN or MANAGER
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+}
+

@@ -33,6 +33,7 @@ const NAV_GROUPS = [
       { to: '/services', icon: ServiceIcon, key: 'navServices' },
       { to: '/fuel', icon: FuelIcon, key: 'navFuel' },
       { to: '/fastag', icon: FasTagIcon, key: 'navFasTag' },
+      { to: '/invoices', icon: FileTextIcon, key: 'navInvoices' },
     ],
   },
   {

@@ -38,6 +38,7 @@ import fuelRoutes from './routes/fuel.js'
 import moneyLostRoutes from './routes/moneyLost.js'
 import leadRoutes from './routes/leads.js'
 import adminRoutes from './routes/admin.js'
+import invoiceRoutes from './routes/invoices.js'
 import prisma from './lib/prisma.js'
 import logger, { httpLogger } from './lib/logger.js'
 import { generalLimiter, authLimiter, heavyLimiter } from './middleware/rateLimiter.js'
@@ -116,6 +117,7 @@ app.use('/api/fastag', fastagRoutes)
 app.use('/api/fuel', fuelRoutes)
 app.use('/api/money-lost', moneyLostRoutes)
 app.use('/api/admin', adminRoutes)
+app.use('/api/invoices', invoiceRoutes)
 
 // ── Global error handler (MUST be after all routes) ────────────────────────
 
