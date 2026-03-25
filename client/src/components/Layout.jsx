@@ -113,8 +113,25 @@ export default function Layout() {
 
  const SidebarContent = () => (
  <div className="flex flex-col h-full">
+ <div className={`shrink-0 ${collapsed ? 'px-2 pt-4 pb-2' : 'px-4 pt-5 pb-3'}`}>
+ <NavLink
+ to="/"
+ className={`block rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50 ${collapsed ? 'flex justify-center' : ''}`}
+ title="Home"
+ >
+ <img
+ src="/logo-fleetsureops.png"
+ alt="Fleetsure Ops"
+ className={
+ collapsed
+ ? 'h-10 w-auto max-w-[52px] object-contain object-left'
+ : 'h-[52px] w-full max-w-[200px] object-contain object-left'
+ }
+ />
+ </NavLink>
+ </div>
  {/* User profile section */}
- <div className={`px-4 pt-6 pb-4 shrink-0 ${collapsed ? 'px-2 pt-4 pb-3' : ''}`}>
+ <div className={`px-4 pb-4 shrink-0 ${collapsed ? 'px-2 pb-3' : ''}`}>
  <div className={`flex items-center gap-3 ${collapsed ? 'justify-center' : ''}`}>
  <div className="w-10 h-10 rounded-full bg-white/20 border-2 border-white/30 flex items-center justify-center text-white font-bold text-sm shrink-0">
  {initials}

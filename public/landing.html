@@ -16,9 +16,8 @@
  /* === NAV === */
  .nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; background: rgba(255,255,255,0.85); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(0,0,0,0.07); }
  .nav-inner { max-width: 1100px; margin: 0 auto; padding: 0 24px; display: flex; align-items: center; justify-content: space-between; height: 64px; }
- .nav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
- .nav-logo-icon { width: 36px; height: 36px; border-radius: 10px; background: #f59e0b; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 16px; color: #0f172a; box-shadow: 0 4px 12px rgba(245,158,11,0.3); }
- .nav-logo-text { font-size: 17px; font-weight: 800; color: #0f172a; }
+ .nav-logo { display: flex; align-items: center; text-decoration: none; }
+ .nav-logo-img { height: 40px; width: auto; max-width: min(200px, 46vw); object-fit: contain; object-position: left center; display: block; }
  .nav-links { display: flex; align-items: center; gap: 28px; }
  .nav-link { font-size: 14px; font-weight: 600; color: #475569; text-decoration: none; transition: color 0.2s; }
  .nav-link:hover { color: #f59e0b; }
@@ -136,9 +135,8 @@
  .footer { background: #0a0f1c; padding: 56px 24px 36px; border-top: 1px solid rgba(255,255,255,0.06); }
  .footer-inner { max-width: 1100px; margin: 0 auto; }
  .footer-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 40px; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.07); }
- .footer-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
- .footer-logo-icon { width: 36px; height: 36px; border-radius: 10px; background: #f59e0b; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 16px; color: #0f172a; }
- .footer-logo-text { font-size: 16px; font-weight: 800; color: #fff; }
+ .footer-logo { display: flex; align-items: center; text-decoration: none; }
+ .footer-logo-img { height: 38px; width: auto; max-width: 220px; object-fit: contain; object-position: left center; display: block; }
  .footer-tagline { font-size: 13px; color: rgba(255,255,255,0.35); margin-top: 4px; }
  .footer-ctas { display: flex; gap: 12px; }
  .footer-btn-primary { background: #f59e0b; color: #0f172a; font-weight: 700; font-size: 14px; padding: 10px 20px; border-radius: 10px; text-decoration: none; transition: all 0.2s; }
@@ -177,9 +175,8 @@
  /* Dash Layout */
  .dash-layout { display: grid; grid-template-columns: 180px 1fr; min-height: 480px; }
  .dash-sidebar { background: #0f172a; padding: 20px 0; border-right: 1px solid rgba(255,255,255,0.06); }
- .dash-logo { display: flex; align-items: center; gap: 8px; padding: 0 16px 20px; border-bottom: 1px solid rgba(255,255,255,0.06); margin-bottom: 12px; }
- .dash-logo-icon { width: 28px; height: 28px; background: #f59e0b; border-radius: 7px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 13px; color: #0f172a; }
- .dash-logo span { font-size: 13px; font-weight: 800; color: #fff; }
+ .dash-logo { display: flex; align-items: center; padding: 0 12px 16px; border-bottom: 1px solid rgba(255,255,255,0.06); margin-bottom: 12px; }
+ .dash-logo-img { height: 26px; width: auto; max-width: 148px; object-fit: contain; object-position: left center; display: block; }
  .dash-nav { display: flex; flex-direction: column; gap: 2px; padding: 0 8px; }
  .dash-nav-item { font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.45); padding: 8px 10px; border-radius: 8px; cursor: default; transition: all 0.2s; }
  .dash-nav-item:hover { color: rgba(255,255,255,0.7); background: rgba(255,255,255,0.05); }
@@ -251,8 +248,7 @@
 <nav class="nav">
  <div class="nav-inner">
  <a href="#hero" class="nav-logo">
- <div class="nav-logo-icon">F</div>
- <span class="nav-logo-text">Fleetsure</span>
+ <img src="/logo-fleetsureops.png" alt="Fleetsure Ops" class="nav-logo-img" width="200" height="109" />
  </a>
  <div class="nav-links">
  <a href="#why" class="nav-link">Why Fleetsure</a>
@@ -375,8 +371,7 @@
  <!-- Sidebar -->
  <div class="dash-sidebar">
  <div class="dash-logo">
- <div class="dash-logo-icon">F</div>
- <span>Fleetsure</span>
+ <img src="/logo-fleetsureops.png" alt="" class="dash-logo-img" width="148" height="81" />
  </div>
  <nav class="dash-nav">
  <div class="dash-nav-item active"> Dashboard</div>
@@ -658,8 +653,7 @@
  <div class="footer-top">
  <div>
  <a href="#hero" class="footer-logo">
- <div class="footer-logo-icon">F</div>
- <span class="footer-logo-text">Fleetsure</span>
+ <img src="/logo-fleetsureops.png" alt="Fleetsure Ops" class="footer-logo-img" width="220" height="120" />
  </a>
  <p class="footer-tagline">Fleet Compliance &amp; Maintenance OS for India</p>
  </div>
