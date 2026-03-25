@@ -2,13 +2,31 @@ import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { vehicles as vehiclesApi, trips as tripsApi, savedRoutes as savedRoutesApi, ocr as ocrApi } from '../api'
 import { useLang } from '../context/LanguageContext'
+import { useAuth } from '../App'
 import PageHeader from '../components/PageHeader'
 import { CheckIcon, UploadIcon } from '../components/Icons'
+import { QUICK_ADD_CAMERA_PENDING_KEY, QUICK_ADD_DRAFT_KEY } from '../constants/quickAddTripSession'
 
 const STEPS = ['Trip Details', 'Review & Save']
 
+function matchVehicleFromOcr(vehicles, ocrNumber) {
+ if (!ocrNumber || !vehicles?.length) return null
+ const norm = (s) => String(s).replace(/[\s\-.]/g, '').toUpperCase()
+ const target = norm(ocrNumber)
+ let match = vehicles.find((v) => norm(v.vehicleNumber) === target)
+ if (match) return match
+ return (
+ vehicles.find(
+ (v) =>
+ norm(v.vehicleNumber).includes(target) ||
+ (target.length >= 8 && norm(v.vehicleNumber).startsWith(target.slice(0, 8)))
+ ) || null
+ )
+}
+
 export default function QuickAddTrip() {
  const navigate = useNavigate()
+ const { user } = useAuth()
  const { t } = useLang()
  const [step, setStep] = useState(0)
  const [vehicles, setVehicles] = useState([])
@@ -27,6 +45,7 @@ export default function QuickAddTrip() {
  const [scanning, setScanning] = useState(false)
  const [estimating, setEstimating] = useState(false)
  const [estimateInfo, setEstimateInfo] = useState('')
+ const restoredRef = useRef(false)
 
  useEffect(() => {
  Promise.allSettled([vehiclesApi.list(), savedRoutesApi.list()])
@@ -36,6 +55,48 @@ export default function QuickAddTrip() {
  setLoading(false)
  })
  }, [])
+
+ useEffect(() => {
+ if (loading || restoredRef.current) return
+ restoredRef.current = true
+ try {
+ const raw = sessionStorage.getItem(QUICK_ADD_DRAFT_KEY)
+ if (raw) {
+ const draft = JSON.parse(raw)
+ if (draft.userId && user?.id && draft.userId !== user.id) {
+ sessionStorage.removeItem(QUICK_ADD_DRAFT_KEY)
+ } else if (draft.form && typeof draft.form === 'object') {
+ setForm((prev) => ({ ...prev, ...draft.form }))
+ if (typeof draft.step === 'number' && draft.step >= 0 && draft.step <= 1) {
+ setStep(draft.step)
+ }
+ }
+ }
+ sessionStorage.removeItem(QUICK_ADD_CAMERA_PENDING_KEY)
+ } catch { /* ignore */ }
+ }, [loading, user?.id])
+
+ useEffect(() => {
+ if (loading || success) return
+ const id = setTimeout(() => {
+ try {
+ sessionStorage.setItem(
+ QUICK_ADD_DRAFT_KEY,
+ JSON.stringify({ form, step, userId: user?.id ?? null, savedAt: Date.now() })
+ )
+ } catch { /* ignore */ }
+ }, 300)
+ return () => clearTimeout(id)
+ }, [form, step, loading, success, user?.id])
+
+ useEffect(
+ () => () => {
+ try {
+ sessionStorage.removeItem(QUICK_ADD_CAMERA_PENDING_KEY)
+ } catch { /* ignore */ }
+ },
+ []
+ )
 
  const selectedVehicle = vehicles.find(v => v.id === form.vehicleId)
 
@@ -57,23 +118,51 @@ export default function QuickAddTrip() {
  try {
  const result = await ocrApi.scanLoadingSlip(file)
  if (result) {
- setForm(prev => ({
+ setForm((prev) => {
+ const match = result.vehicleNumber ? matchVehicleFromOcr(vehicles, result.vehicleNumber) : null
+ const next = {
  ...prev,
+ vehicleId: match?.id ?? prev.vehicleId,
  loadingLocation: result.originPlant || prev.loadingLocation,
  destination: result.destinationPlant || prev.destination,
  loadingSlipNumber: result.loadingSlipNumber || prev.loadingSlipNumber,
  tripDate: result.tripDate || prev.tripDate,
- }))
-
- if (result.vehicleNumber) {
- const match = vehicles.find(v =>
- v.vehicleNumber.replace(/[\s\-.]/g, '').toUpperCase() === result.vehicleNumber.replace(/[\s\-.]/g, '').toUpperCase()
+ }
+ try {
+ sessionStorage.setItem(
+ QUICK_ADD_DRAFT_KEY,
+ JSON.stringify({ form: next, step, userId: user?.id ?? null, savedAt: Date.now() })
  )
- if (match) setForm(prev => ({ ...prev, vehicleId: match.id }))
+ } catch { /* ignore */ }
+ return next
+ })
  }
- }
- } catch (err) { console.error('OCR error:', err) }
+ } catch (err) {
+ console.error('OCR error:', err)
+ } finally {
+ try {
+ sessionStorage.removeItem(QUICK_ADD_CAMERA_PENDING_KEY)
+ if (e.target) e.target.value = ''
+ } catch { /* ignore */ }
  setScanning(false)
+ }
+ }
+
+ const persistDraftNow = () => {
+ try {
+ sessionStorage.setItem(
+ QUICK_ADD_DRAFT_KEY,
+ JSON.stringify({ form, step, userId: user?.id ?? null, savedAt: Date.now() })
+ )
+ } catch { /* ignore */ }
+ }
+
+ const openSlipCamera = () => {
+ try {
+ sessionStorage.setItem(QUICK_ADD_CAMERA_PENDING_KEY, String(Date.now()))
+ persistDraftNow()
+ } catch { /* ignore */ }
+ fileRef.current?.click()
  }
 
  const handleRouteSelect = (routeId) => {
@@ -96,6 +185,10 @@ export default function QuickAddTrip() {
  setSaving(true)
  try {
  await tripsApi.create(form)
+ try {
+ sessionStorage.removeItem(QUICK_ADD_DRAFT_KEY)
+ sessionStorage.removeItem(QUICK_ADD_CAMERA_PENDING_KEY)
+ } catch { /* ignore */ }
  setSuccess(true)
  } catch (err) { alert(err.message) }
  setSaving(false)
@@ -169,7 +262,15 @@ export default function QuickAddTrip() {
  <h2 className="text-lg font-bold text-slate-900 mb-1">Trip Saved!</h2>
  <p className="text-sm text-slate-500 mb-6">The trip has been recorded successfully.</p>
  <div className="flex gap-3 justify-center">
- <button onClick={() => { setSuccess(false); setStep(0); setForm({ vehicleId: '', loadingLocation: '', destination: '', distance: '', fuelLitres: '', dieselRate: '', fuelExpense: '', toll: '', cashExpense: '', loadingSlipNumber: '', tripDate: new Date().toISOString().slice(0, 10) }) }} className="btn-secondary">Log Another</button>
+ <button onClick={() => {
+ try {
+ sessionStorage.removeItem(QUICK_ADD_DRAFT_KEY)
+ sessionStorage.removeItem(QUICK_ADD_CAMERA_PENDING_KEY)
+ } catch { /* ignore */ }
+ setSuccess(false)
+ setStep(0)
+ setForm({ vehicleId: '', loadingLocation: '', destination: '', distance: '', fuelLitres: '', dieselRate: '', fuelExpense: '', toll: '', cashExpense: '', loadingSlipNumber: '', tripDate: new Date().toISOString().slice(0, 10) })
+ }} className="btn-secondary">Log Another</button>
  <button onClick={() => navigate('/trips')} className="btn-primary">View Trips</button>
  </div>
  </div>
@@ -215,7 +316,7 @@ export default function QuickAddTrip() {
  {/* Photo Scan */}
  <div className="border border-dashed border-slate-300 rounded-lg p-4 text-center">
  <input type="file" ref={fileRef} accept="image/*" capture="environment" className="hidden" onChange={handleScan} />
- <button onClick={() => fileRef.current?.click()} disabled={scanning} className="btn-secondary text-xs">
+ <button type="button" onClick={openSlipCamera} disabled={scanning} className="btn-secondary text-xs">
  <UploadIcon className="w-4 h-4 inline mr-1" />
  {scanning ? 'Reading...' : 'Take Photo of Slip'}
  </button>

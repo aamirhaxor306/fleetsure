@@ -34,6 +34,8 @@ import pdfRoutes from './routes/pdfDocuments.js'
 import fastagRoutes from './routes/fastag.js'
 import fuelRoutes from './routes/fuel.js'
 import moneyLostRoutes from './routes/moneyLost.js'
+import adminPerformanceRoutes from './routes/adminPerformance.js'
+import adminOpsAuthRoutes from './routes/adminOpsAuth.js'
 import leadRoutes from './routes/leads.js'
 import prisma from './lib/prisma.js'
 import logger, { httpLogger } from './lib/logger.js'
@@ -120,6 +122,9 @@ app.use('/api/pdf', pdfRoutes)
 app.use('/api/fastag', fastagRoutes)
 app.use('/api/fuel', fuelRoutes)
 app.use('/api/money-lost', moneyLostRoutes)
+app.use('/api/admin/ops', authLimiter, adminOpsAuthRoutes)
+
+app.use('/api/admin/performance', heavyLimiter, adminPerformanceRoutes)
 
 // ── Global error handler (MUST be after all routes) ────────────────────────
 

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { NavLink, Outlet, useLocation } from 'react-router-dom'
+import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../App'
 import { useLang } from '../context/LanguageContext'
 import { useTheme } from '../context/ThemeContext'
@@ -11,8 +11,10 @@ import {
  RefreshIcon, SettingsIcon, FileTextIcon, FasTagIcon,
  SunIcon, MoonIcon,
  FuelIcon, ServiceIcon,
+ BarChartIcon,
 } from './Icons'
 import FirstTimeTour from './FirstTimeTour'
+import { QUICK_ADD_CAMERA_PENDING_KEY, QUICK_ADD_DRAFT_KEY } from '../constants/quickAddTripSession'
 
 const NAV_GROUPS = [
  {
@@ -56,11 +58,40 @@ const NAV_GROUPS = [
  },
 ]
 
+const PLATFORM_ADMIN_NAV = [
+ {
+ id: 'platform',
+ label: 'Platform',
+ defaultOpen: true,
+ items: [
+ { to: '/performance', icon: BarChartIcon, key: 'navPerformance', exact: false },
+ ],
+ },
+]
+
 export default function Layout() {
  const { user, logout } = useAuth()
+ const platformAdminOnly = user?.platformAdminOnly === true
+
+ function getVisibleNavGroups() {
+ if (platformAdminOnly) return PLATFORM_ADMIN_NAV
+ const base = NAV_GROUPS.map((g) => ({ ...g, items: [...g.items] }))
+ if (user?.isPlatformAdmin) {
+ const tools = base.find((x) => x.id === 'tools')
+ if (tools) {
+ tools.items = [
+ { to: '/performance', icon: BarChartIcon, key: 'navPerformance' },
+ ...tools.items,
+ ]
+ }
+ }
+ return base
+ }
+ const visibleGroups = getVisibleNavGroups()
  const { lang, toggleLang, t } = useLang()
  const { isDark, toggleTheme } = useTheme()
  const location = useLocation()
+ const navigate = useNavigate()
  const [collapsed, setCollapsed] = useState(false)
  const [mobileOpen, setMobileOpen] = useState(false)
  const [alertCount, setAlertCount] = useState(0)
@@ -69,22 +100,43 @@ export default function Layout() {
  expenses: false,
  compliance: false,
  tools: false,
+ platform: true,
  })
 
  useEffect(() => {
+ if (platformAdminOnly) return
  alertsApi.list().then((res) => {
  const arr = res?.alerts || res || []
  setAlertCount(Array.isArray(arr) ? arr.filter(x => !x.resolved).length : 0)
  }).catch(() => { })
- }, [location.pathname])
+ }, [location.pathname, platformAdminOnly])
 
  useEffect(() => { setMobileOpen(false) }, [location.pathname])
+
+ // After camera capture, many mobile browsers reload the app at "/" — send user back to Log Trip with saved draft.
+ useEffect(() => {
+ if (platformAdminOnly) return
+ if (location.pathname !== '/') return
+ try {
+ const pendingTs = sessionStorage.getItem(QUICK_ADD_CAMERA_PENDING_KEY)
+ if (!pendingTs) return
+ const age = Date.now() - parseInt(pendingTs, 10)
+ if (Number.isNaN(age) || age > 5 * 60 * 1000) {
+ sessionStorage.removeItem(QUICK_ADD_CAMERA_PENDING_KEY)
+ return
+ }
+ if (!sessionStorage.getItem(QUICK_ADD_DRAFT_KEY)) {
+ sessionStorage.removeItem(QUICK_ADD_CAMERA_PENDING_KEY)
+ return
+ }
+ navigate('/quick-add', { replace: true })
+ } catch { /* ignore */ }
+ }, [location.pathname, platformAdminOnly, navigate])
 
  const isActive = (to, exact) =>
  exact ? location.pathname === to : location.pathname.startsWith(to)
 
  const initials = (user?.name?.[0] || user?.email?.[0] || 'U').toUpperCase()
- const visibleGroups = NAV_GROUPS
 
  const renderNavItem = ({ to, icon: Icon, key, exact, badge }) => {
  const active = isActive(to, exact)
@@ -115,9 +167,9 @@ export default function Layout() {
  <div className="flex flex-col h-full">
  <div className={`shrink-0 ${collapsed ? 'px-2 pt-4 pb-2' : 'px-4 pt-5 pb-3'}`}>
  <NavLink
- to="/"
+ to={platformAdminOnly ? '/performance' : '/'}
  className={`block rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50 ${collapsed ? 'flex justify-center' : ''}`}
- title="Home"
+ title={platformAdminOnly ? 'Performance' : 'Home'}
  >
  <img
  src="/logo-fleetsureops.png"
@@ -139,7 +191,7 @@ export default function Layout() {
  {!collapsed && (
  <div className="min-w-0">
  <div className="text-sm font-semibold text-white truncate">{user?.name || 'User'}</div>
- <div className="text-[11px] text-teal-100/60 truncate">{user?.tenantName || 'Fleet Owner'}</div>
+ <div className="text-[11px] text-teal-100/60 truncate">{user?.tenantName || (platformAdminOnly ? 'Platform admin' : 'Fleet Owner')}</div>
  </div>
  )}
  </div>
@@ -173,6 +225,7 @@ export default function Layout() {
 
  {/* Bottom actions */}
  <div className="px-2.5 py-3 space-y-1.5 shrink-0">
+ {!platformAdminOnly && (
  <NavLink
  to="/quick-add"
  className={`flex items-center gap-2 px-3 py-2.5 rounded-xl text-[13px] font-semibold text-teal-900 bg-white/90 hover:bg-white transition-all shadow-sm ${collapsed ? 'justify-center px-2' : ''}`}
@@ -180,6 +233,7 @@ export default function Layout() {
  <PlusIcon className="w-4 h-4" />
  {!collapsed && <span>{t('navQuickAdd')}</span>}
  </NavLink>
+ )}
  <button
  onClick={() => setCollapsed(!collapsed)}
  className={`hidden md:flex items-center gap-2 px-3 py-2 rounded-xl text-[13px] text-teal-100/40 hover:text-teal-50 hover:bg-white/10 transition-all w-full ${collapsed ? 'justify-center' : ''}`}
@@ -256,6 +310,7 @@ export default function Layout() {
  {lang === 'en' ? 'हिं' : 'EN'}
  </button>
 
+ {!platformAdminOnly && (
  <NavLink to="/fleet-health" className="relative p-2 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-700 dark:hover:text-slate-200 transition-colors">
  <BellIcon className="w-5 h-5" />
  {alertCount > 0 && (
@@ -264,6 +319,7 @@ export default function Layout() {
  </span>
  )}
  </NavLink>
+ )}
 
  <button onClick={logout} className="p-2 rounded-lg text-slate-400 hover:bg-red-50 dark:hover:bg-red-900/30 hover:text-red-500 transition-colors" title="Logout">
  <LogOutIcon className="w-5 h-5" />
@@ -275,7 +331,7 @@ export default function Layout() {
  <Outlet />
  </main>
  </div>
- <FirstTimeTour />
+ {!platformAdminOnly && <FirstTimeTour />}
  </div>
  )
 }

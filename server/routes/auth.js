@@ -12,6 +12,7 @@ import prisma from '../lib/prisma.js'
 import jwt from 'jsonwebtoken'
 import { Resend } from 'resend'
 import { requireAuth } from '../middleware/auth.js'
+import { isPlatformAdminEmail } from '../lib/platformAdmin.js'
 
 const router = Router()
 
@@ -208,6 +209,7 @@ router.post('/onboard', requireAuth, async (req, res) => {
  role: user.role,
  tenantId: tenant.id,
  tenantName: tenant.name,
+ isPlatformAdmin: isPlatformAdminEmail(user.email),
  },
  })
  } catch (err) {
@@ -240,6 +242,7 @@ router.get('/me', requireAuth, async (req, res) => {
  role: user.role,
  tenantId: user.tenantId,
  tenantName,
+ isPlatformAdmin: isPlatformAdminEmail(user.email),
  })
  } catch (err) {
  return res.status(500).json({ error: 'Server error' })

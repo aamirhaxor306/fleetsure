@@ -198,6 +198,7 @@ const translations = {
  navServices: 'Services',
  navFuel: 'Fuel',
  navSettings: 'Settings',
+  navPerformance: 'Performance',
 
  // ── Vehicle import (Excel / CSV) ───────────────────────────
  vehicleImportBtn: 'Import Excel',
@@ -448,6 +449,7 @@ const translations = {
  navFuel: 'ईंधन',
  navDocuments: 'दस्तावेज़',
  navSettings: 'सेटिंग्स',
+  navPerformance: 'प्रदर्शन',
 
  // ── Vehicle import (Excel / CSV) ───────────────────────────
  vehicleImportBtn: 'Excel से आयात',

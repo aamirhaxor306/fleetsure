@@ -1,10 +1,11 @@
 import { useState, useEffect, createContext, useContext } from 'react'
-import { Routes, Route, Navigate } from 'react-router-dom'
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { ClerkProvider, SignedIn, SignedOut, useUser, useAuth as useClerkAuth } from '@clerk/clerk-react'
 import { auth as authApi, setClerkGetToken } from './api'
 import { LanguageProvider } from './context/LanguageContext'
 import { ThemeProvider } from './context/ThemeContext'
 import Layout from './components/Layout'
+import AdminLayout from './components/AdminLayout'
 import Login from './pages/Login'
 import Onboarding from './pages/Onboarding'
 import Dashboard from './pages/Dashboard'
@@ -22,6 +23,7 @@ import DocumentGenerator from './pages/DocumentGenerator'
 import FASTag from './pages/FASTag'
 import ServiceManager from './pages/ServiceManager'
 import FuelManager from './pages/FuelManager'
+import Performance from './pages/Performance'
 import InstallPrompt from './components/InstallPrompt'
 import { PENDING_NAV_TOUR_KEY } from './constants/firstTimeTour'
 
@@ -29,6 +31,14 @@ const CLERK_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY
 
 const AuthContext = createContext(null)
 export const useAuth = () => useContext(AuthContext)
+
+function normalizeUser(u) {
+ if (!u) return u
+ return {
+ ...u,
+ platformAdminOnly: Boolean(u.isPlatformAdmin),
+ }
+}
 
 function AuthenticatedApp() {
  const { getToken, signOut } = useClerkAuth()
@@ -45,7 +55,9 @@ function AuthenticatedApp() {
  try {
  const u = await authApi.me()
  if (u.tenantId) {
- setUser(u)
+ setUser(normalizeUser(u))
+ } else if (u.isPlatformAdmin) {
+ setUser(normalizeUser(u))
  } else {
  setUser(null)
  }
@@ -66,7 +78,11 @@ function AuthenticatedApp() {
  try {
  if (u?.id) localStorage.setItem(PENDING_NAV_TOUR_KEY, u.id)
  } catch { /* ignore */ }
- setUser(u)
+ setUser(normalizeUser({
+ ...u,
+ tenantId: u.tenantId,
+ isPlatformAdmin: u.isPlatformAdmin,
+ }))
  }
 
  if (user === undefined) {
@@ -79,6 +95,20 @@ function AuthenticatedApp() {
 
  if (user === null) {
  return <Onboarding onComplete={handleOnboardComplete} />
+ }
+
+ if (user.platformAdminOnly) {
+ return (
+ <AuthContext.Provider value={{ user, logout }}>
+ <Routes>
+ <Route element={<AdminLayout />}>
+ <Route index element={<Navigate to="/performance" replace />} />
+ <Route path="performance" element={<Performance />} />
+ </Route>
+ <Route path="*" element={<Navigate to="/performance" replace />} />
+ </Routes>
+ </AuthContext.Provider>
+ )
  }
 
  return (
@@ -102,6 +132,7 @@ function AuthenticatedApp() {
  <Route path="fastag" element={<FASTag />} />
  <Route path="services" element={<ServiceManager />} />
  <Route path="fuel" element={<FuelManager />} />
+ <Route path="performance" element={<Performance />} />
  <Route path="revenue" element={<Navigate to="/" replace />} />
  <Route path="admin" element={<Navigate to="/" replace />} />
  <Route path="alerts" element={<Navigate to="/fleet-health" replace />} />
@@ -112,6 +143,22 @@ function AuthenticatedApp() {
  </Routes>
  </AuthContext.Provider>
  )
+}
+
+
+function SignedOutGate() {
+  const location = useLocation()
+  const path = location.pathname || ''
+
+  if (path.startsWith('/performance')) {
+    return (
+      <AdminLayout>
+        <Performance />
+      </AdminLayout>
+    )
+  }
+
+  return <Login />
 }
 
 function App() {
@@ -131,8 +178,8 @@ function App() {
  <ThemeProvider>
  <LanguageProvider>
  <SignedOut>
- <Login />
- </SignedOut>
+            <SignedOutGate />
+          </SignedOut>
  <SignedIn>
  <AuthenticatedApp />
  </SignedIn>

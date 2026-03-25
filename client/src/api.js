@@ -18,7 +18,7 @@ async function request(path, opts = {}) {
  headers,
  ...opts,
  })
- if (res.status === 401 && !path.startsWith('/auth')) {
+ if (res.status === 401 && !path.startsWith('/auth') && !path.startsWith('/admin/ops')) {
  window.location.href = '/login'
  throw new Error('Not authenticated')
  }
@@ -41,7 +41,7 @@ async function requestMultipart(path, formData) {
  headers,
  body: formData,
  })
- if (res.status === 401 && !path.startsWith('/auth')) {
+ if (res.status === 401 && !path.startsWith('/auth') && !path.startsWith('/admin/ops')) {
  window.location.href = '/login'
  throw new Error('Not authenticated')
  }
@@ -198,15 +198,22 @@ export const renewalPartners = {
 // ── OCR (Server-side PaddleOCR) ─────────────────────────
 export const ocr = {
  scanLoadingSlip: async (imageFile) => {
+ const headers = {}
+ if (_getToken) {
+ try {
+ const token = await _getToken()
+ if (token) headers['Authorization'] = `Bearer ${token}`
+ } catch { /* ignore */ }
+ }
  const formData = new FormData()
  formData.append('image', imageFile)
  const res = await fetch('/api/ocr/loading-slip', {
  method: 'POST',
  credentials: 'include',
+ headers,
  body: formData,
  })
  if (res.status === 401) {
- window.location.href = '/login'
  throw new Error('Not authenticated')
  }
  const data = await res.json()
@@ -304,4 +311,16 @@ export const fastag = {
  },
  txnStatus: (txnId) =>
  request(`/fastag/transactions/${txnId}/status`),
+}
+
+// ── Platform admin ─────────────────────────────────────
+export const admin = {
+  performance: () => request('/admin/performance'),
+}
+
+// ── Ops admin (no Clerk) ─────────────────────────────────────
+export const adminOps = {
+  login: (data) => request('/admin/ops/login', { method: 'POST', body: JSON.stringify(data) }),
+  logout: () => request('/admin/ops/logout', { method: 'POST' }),
+  me: () => request('/admin/ops/me'),
 }

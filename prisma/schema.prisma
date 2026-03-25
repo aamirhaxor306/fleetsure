@@ -40,6 +40,7 @@ model Tenant {
   fastags           FasTag[]
   fastagTransactions FasTagTransaction[]
   fuelLogs          FuelLog[]
+  npsResponses      NpsResponse[]
 
   // Ops Relations
   opsJobs            ServiceJob[]
@@ -65,7 +66,8 @@ model User {
   otpExpiresAt DateTime? @map("otp_expires_at")
   createdAt    DateTime  @default(now()) @map("created_at")
 
-  tenant Tenant? @relation(fields: [tenantId], references: [id])
+  tenant       Tenant?       @relation(fields: [tenantId], references: [id])
+  npsResponses NpsResponse[]
 
   @@map("users")
 }
@@ -329,6 +331,22 @@ model PlatformTransaction {
   renewalRequest RenewalRequest @relation(fields: [renewalRequestId], references: [id])
 
   @@map("platform_transactions")
+}
+
+// ─── Platform NPS (optional in-app collection) ───────────────────────────────
+
+model NpsResponse {
+  id        String   @id @default(uuid())
+  score     Int
+  comment   String?
+  userId    String?  @map("user_id")
+  tenantId  String?  @map("tenant_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+  tenant Tenant? @relation(fields: [tenantId], references: [id], onDelete: SetNull)
+
+  @@map("nps_responses")
 }
 
 // ─── Renewal Partners ────────────────────────────────────────────────────────
