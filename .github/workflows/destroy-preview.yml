@@ -1,0 +1,36 @@
+name: railway-destroy-preview
+
+on:
+  pull_request:
+    types: [closed]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: destroy-preview-pr-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+
+jobs:
+  destroy:
+    runs-on: ubuntu-latest
+    env:
+      RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+      RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_PROJECT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Railway CLI
+        run: npm i -g @railway/cli
+
+      - name: Link Railway project
+        run: railway link --project "${RAILWAY_PROJECT_ID}"
+
+      - name: Delete PR environment
+        run: |
+          ENV_NAME="pr-${{ github.event.pull_request.number }}"
+          railway environment delete "${ENV_NAME}" --yes || true

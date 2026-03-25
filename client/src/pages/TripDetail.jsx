@@ -6,6 +6,7 @@ import PageHeader from '../components/PageHeader'
 import KPICard from '../components/KPICard'
 import StatusDot from '../components/StatusDot'
 import { MapPinIcon, UserIcon, CalendarIcon, TruckIcon } from '../components/Icons'
+import { useRechartsTheme } from '../hooks/useRechartsTheme'
 
 export default function TripDetail() {
  const { id } = useParams()
@@ -20,6 +21,8 @@ export default function TripDetail() {
  useEffect(() => {
  tripsApi.get(id).then(setTrip).catch(() => {}).finally(() => setLoading(false))
  }, [id])
+
+ const chartTheme = useRechartsTheme()
 
  const startEdit = async () => {
  const [vList, dList] = await Promise.all([vehiclesApi.list(), driversApi.list()])
@@ -122,10 +125,15 @@ export default function TripDetail() {
  <h3>Cost Breakdown</h3>
  <ResponsiveContainer width="100%" height={200}>
  <BarChart data={waterfallData}>
- <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
- <XAxis dataKey="name" tick={{ fontSize: 11, fill: '#94a3b8' }} />
- <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} tickFormatter={v => `₹${Math.abs(v / 1000).toFixed(0)}k`} />
- <Tooltip formatter={v => inr(Math.abs(v))} />
+ <CartesianGrid strokeDasharray="3 3" stroke={chartTheme.gridStroke} />
+ <XAxis dataKey="name" tick={{ fontSize: 11, fill: chartTheme.tickFill }} />
+ <YAxis tick={{ fontSize: 11, fill: chartTheme.tickFill }} tickFormatter={v => `₹${Math.abs(v / 1000).toFixed(0)}k`} />
+ <Tooltip
+ formatter={v => inr(Math.abs(v))}
+ contentStyle={chartTheme.tooltipContentStyle}
+ labelStyle={chartTheme.tooltipLabelStyle}
+ itemStyle={chartTheme.tooltipItemStyle}
+ />
  <Bar dataKey="value" radius={[4, 4, 0, 0]} barSize={32}>
  {waterfallData.map((d, i) => <Cell key={i} fill={d.fill} />)}
  </Bar>
@@ -295,10 +303,15 @@ export default function TripDetail() {
  <h3>This Trip vs Route Average ({similarTrips.length} similar trips)</h3>
  <ResponsiveContainer width="100%" height={200}>
  <BarChart data={comparisonData}>
- <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
- <XAxis dataKey="name" tick={{ fontSize: 11, fill: '#94a3b8' }} />
- <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} tickFormatter={v => `₹${(v/1000).toFixed(0)}k`} />
- <Tooltip formatter={v => inr(v)} />
+ <CartesianGrid strokeDasharray="3 3" stroke={chartTheme.gridStroke} />
+ <XAxis dataKey="name" tick={{ fontSize: 11, fill: chartTheme.tickFill }} />
+ <YAxis tick={{ fontSize: 11, fill: chartTheme.tickFill }} tickFormatter={v => `₹${(v/1000).toFixed(0)}k`} />
+ <Tooltip
+ formatter={v => inr(v)}
+ contentStyle={chartTheme.tooltipContentStyle}
+ labelStyle={chartTheme.tooltipLabelStyle}
+ itemStyle={chartTheme.tooltipItemStyle}
+ />
  <Bar dataKey="freight" fill="#2563eb" radius={[4, 4, 0, 0]} barSize={20} name="Freight" />
  <Bar dataKey="cost" fill="#ef4444" radius={[4, 4, 0, 0]} barSize={20} name="Cost" />
  <Bar dataKey="profit" fill="#10b981" radius={[4, 4, 0, 0]} barSize={20} name="Profit" />

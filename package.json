@@ -11,9 +11,10 @@
     "dev:server": "node --watch server/index.js",
     "dev:client": "cd client && npx vite",
     "build": "npx prisma generate && cd client && npx vite build",
-    "start": "npx prisma db push --accept-data-loss && NODE_ENV=production node server/index.js",
+    "start": "npm run db:deploy && NODE_ENV=production node server/index.js",
     "postinstall": "npx prisma generate",
     "db:push": "npx prisma db push",
+    "db:deploy": "npx prisma db push",
     "db:seed": "node prisma/seed.js",
     "db:studio": "npx prisma studio",
     "db:setup": "npx prisma db push && node prisma/seed.js"

@@ -8,10 +8,12 @@ import StatusDot from '../components/StatusDot'
 import SlideOver from '../components/SlideOver'
 import EmptyState from '../components/EmptyState'
 import { AlertTriangleIcon, PlusIcon } from '../components/Icons'
+import { useRechartsTheme } from '../hooks/useRechartsTheme'
 
 const COLORS = ['#ef4444', '#f59e0b', '#10b981', '#2563eb', '#8b5cf6']
 
 export default function FleetHealth() {
+ const chartTheme = useRechartsTheme()
  const navigate = useNavigate()
  const [health, setHealth] = useState(null)
  const [documents, setDocuments] = useState([])
@@ -271,7 +273,12 @@ export default function FleetHealth() {
  <Pie data={maintPieData} cx="50%" cy="50%" innerRadius={35} outerRadius={55} dataKey="value" paddingAngle={3}>
  {maintPieData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
  </Pie>
- <Tooltip formatter={v => inr(v)} />
+ <Tooltip
+ formatter={v => inr(v)}
+ contentStyle={chartTheme.tooltipContentStyle}
+ labelStyle={chartTheme.tooltipLabelStyle}
+ itemStyle={chartTheme.tooltipItemStyle}
+ />
  </PieChart>
  </ResponsiveContainer>
  <div className="space-y-1 text-xs">
@@ -290,10 +297,15 @@ export default function FleetHealth() {
  <h3>Monthly trend</h3>
  <ResponsiveContainer width="100%" height={140}>
  <LineChart data={maintTrend}>
- <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
- <XAxis dataKey="month" tick={{ fontSize: 10, fill: '#94a3b8' }} />
- <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} tickFormatter={v => `₹${(v/1000).toFixed(0)}k`} />
- <Tooltip formatter={v => inr(v)} />
+ <CartesianGrid strokeDasharray="3 3" stroke={chartTheme.gridStroke} />
+ <XAxis dataKey="month" tick={{ fontSize: 10, fill: chartTheme.tickFill }} />
+ <YAxis tick={{ fontSize: 11, fill: chartTheme.tickFill }} tickFormatter={v => `₹${(v/1000).toFixed(0)}k`} />
+ <Tooltip
+ formatter={v => inr(v)}
+ contentStyle={chartTheme.tooltipContentStyle}
+ labelStyle={chartTheme.tooltipLabelStyle}
+ itemStyle={chartTheme.tooltipItemStyle}
+ />
  <Line type="monotone" dataKey="amount" stroke="#2563eb" strokeWidth={2} dot={{ r: 3 }} />
  </LineChart>
  </ResponsiveContainer>

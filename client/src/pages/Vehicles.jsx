@@ -11,6 +11,7 @@ import StatusDot from '../components/StatusDot'
 import EmptyState from '../components/EmptyState'
 import SlideOver from '../components/SlideOver'
 import { TruckIcon, PlusIcon, UploadIcon, XIcon } from '../components/Icons'
+import { useRechartsTheme } from '../hooks/useRechartsTheme'
 
 function downloadSampleVehiclesCsv() {
  const csv = `Vehicle Number,Type,Year,KM,Axle,Status
@@ -47,6 +48,8 @@ export default function Vehicles() {
  const [importBusy, setImportBusy] = useState(false)
  const [importResult, setImportResult] = useState(null)
  const [importErr, setImportErr] = useState('')
+
+ const chartTheme = useRechartsTheme()
 
  const runImportPreview = useCallback(async (file) => {
  if (!file) return
@@ -202,7 +205,7 @@ export default function Vehicles() {
 
  const columns = [
  { key: 'status', label: 'Status', width: '60px', render: (_, row) => <StatusDot status={row.status} /> },
- { key: 'vehicleNumber', label: 'Vehicle', render: (v) => <span className="font-mono font-semibold text-slate-900">{v}</span> },
+ { key: 'vehicleNumber', label: 'Vehicle', render: (v) => <span className="font-mono font-semibold text-slate-900 dark:text-slate-100">{v}</span> },
  { key: 'vehicleType', label: 'Type', render: (v) => <span className="capitalize">{v}</span> },
  { key: 'axleConfig', label: 'Size', render: (v) => { const m = { '6W': '6-Wheeler', '10W': '10-Wheeler', '12W': '12-Wheeler', '14W': '14-Wheeler' }; return m[v] || v } },
  { key: 'purchaseYear', label: 'Year' },
@@ -239,10 +242,15 @@ export default function Vehicles() {
  <h3>Profit per Vehicle (Top 10)</h3>
  <ResponsiveContainer width="100%" height={220}>
  <BarChart data={vehicleProfit} layout="vertical" margin={{ left: 70 }}>
- <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
- <XAxis type="number" tick={{ fontSize: 11, fill: '#94a3b8' }} tickFormatter={v => inr(v)} />
- <YAxis type="category" dataKey="vehicleNumber" tick={{ fontSize: 10, fill: '#64748b' }} width={70} />
- <Tooltip formatter={v => inr(v)} />
+ <CartesianGrid strokeDasharray="3 3" stroke={chartTheme.gridStroke} />
+ <XAxis type="number" tick={{ fontSize: 11, fill: chartTheme.tickFill }} tickFormatter={v => inr(v)} />
+ <YAxis type="category" dataKey="vehicleNumber" tick={{ fontSize: 10, fill: chartTheme.tickFill }} width={70} />
+ <Tooltip
+ formatter={v => inr(v)}
+ contentStyle={chartTheme.tooltipContentStyle}
+ labelStyle={chartTheme.tooltipLabelStyle}
+ itemStyle={chartTheme.tooltipItemStyle}
+ />
  <Bar dataKey="profit" radius={[0, 4, 4, 0]} barSize={16}>
  {vehicleProfit.map((entry, i) => (
  <Cell key={i} fill={entry.margin > 30 ? '#10b981' : entry.margin > 15 ? '#f59e0b' : '#ef4444'} />

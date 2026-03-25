@@ -9,10 +9,12 @@ import StatusDot from '../components/StatusDot'
 import SlideOver from '../components/SlideOver'
 import TyreDiagram from '../components/TyreDiagram'
 import { TruckIcon, WrenchIcon, FileTextIcon, AlertTriangleIcon } from '../components/Icons'
+import { useRechartsTheme } from '../hooks/useRechartsTheme'
 
 const COLORS = ['#2563eb', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6']
 
 export default function VehicleDetail() {
+ const chartTheme = useRechartsTheme()
  const { id } = useParams()
  const navigate = useNavigate()
  const { t } = useLang()
@@ -130,10 +132,15 @@ export default function VehicleDetail() {
  <h3>Trip Revenue vs Cost</h3>
  <ResponsiveContainer width="100%" height={200}>
  <ComposedChart data={tripChartData}>
- <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
- <XAxis dataKey="name" tick={{ fontSize: 10, fill: '#94a3b8' }} />
- <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} tickFormatter={v => `₹${(v/1000).toFixed(0)}k`} />
- <Tooltip formatter={v => inr(v)} />
+ <CartesianGrid strokeDasharray="3 3" stroke={chartTheme.gridStroke} />
+ <XAxis dataKey="name" tick={{ fontSize: 10, fill: chartTheme.tickFill }} />
+ <YAxis tick={{ fontSize: 11, fill: chartTheme.tickFill }} tickFormatter={v => `₹${(v/1000).toFixed(0)}k`} />
+ <Tooltip
+ formatter={v => inr(v)}
+ contentStyle={chartTheme.tooltipContentStyle}
+ labelStyle={chartTheme.tooltipLabelStyle}
+ itemStyle={chartTheme.tooltipItemStyle}
+ />
  <Bar dataKey="revenue" fill="#2563eb" radius={[4, 4, 0, 0]} barSize={20} name="Revenue" />
  <Line type="monotone" dataKey="cost" stroke="#ef4444" strokeWidth={2} dot={false} name="Cost" />
  </ComposedChart>
@@ -196,7 +203,12 @@ export default function VehicleDetail() {
  <Pie data={maintPieData} cx="50%" cy="50%" innerRadius={35} outerRadius={60} dataKey="value" paddingAngle={3}>
  {maintPieData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
  </Pie>
- <Tooltip formatter={v => inr(v)} />
+ <Tooltip
+ formatter={v => inr(v)}
+ contentStyle={chartTheme.tooltipContentStyle}
+ labelStyle={chartTheme.tooltipLabelStyle}
+ itemStyle={chartTheme.tooltipItemStyle}
+ />
  </PieChart>
  </ResponsiveContainer>
  <div className="space-y-1">

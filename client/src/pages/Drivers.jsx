@@ -9,8 +9,10 @@ import StatusDot from '../components/StatusDot'
 import EmptyState from '../components/EmptyState'
 import SlideOver from '../components/SlideOver'
 import { UserIcon, PlusIcon } from '../components/Icons'
+import { useRechartsTheme } from '../hooks/useRechartsTheme'
 
 export default function Drivers() {
+ const chartTheme = useRechartsTheme()
  const [drivers, setDrivers] = useState([])
  const [vehicles, setVehicles] = useState([])
  const [loading, setLoading] = useState(true)
@@ -107,10 +109,14 @@ export default function Drivers() {
  <h3>Trips per Driver</h3>
  <ResponsiveContainer width="100%" height={200}>
  <BarChart data={chartData} layout="vertical" margin={{ left: 60 }}>
- <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
- <XAxis type="number" tick={{ fontSize: 11, fill: '#94a3b8' }} />
- <YAxis type="category" dataKey="name" tick={{ fontSize: 11, fill: '#64748b' }} width={60} />
- <Tooltip />
+ <CartesianGrid strokeDasharray="3 3" stroke={chartTheme.gridStroke} />
+ <XAxis type="number" tick={{ fontSize: 11, fill: chartTheme.tickFill }} />
+ <YAxis type="category" dataKey="name" tick={{ fontSize: 11, fill: chartTheme.tickFill }} width={60} />
+ <Tooltip
+ contentStyle={chartTheme.tooltipContentStyle}
+ labelStyle={chartTheme.tooltipLabelStyle}
+ itemStyle={chartTheme.tooltipItemStyle}
+ />
  <Bar dataKey="trips" fill="#2563eb" radius={[0, 4, 4, 0]} barSize={14} />
  </BarChart>
  </ResponsiveContainer>
