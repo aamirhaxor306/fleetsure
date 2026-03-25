@@ -5,45 +5,45 @@
  * Docs: https://docs.bulkpe.in/
  *
  * Endpoints used:
- *  1. GET  /client/listFastagProvider     — list FASTag bank providers
- *  2. POST /client/verifyFastag           — verify & get FASTag balance
- *  3. POST /client/bbps/selectBiller      — list billers for a category
- *  4. POST /client/bbps/FetchBillSingle   — fetch bill / balance for recharge
- *  5. POST /client/bbps/BillPayTxn        — execute recharge payment
- *  6. POST /client/bbps/transactionStatusCheck — check txn status
- *  7. POST /client/bbps/listBillTransactions   — transaction history
+ * 1. GET /client/listFastagProvider — list FASTag bank providers
+ * 2. POST /client/verifyFastag — verify & get FASTag balance
+ * 3. POST /client/bbps/selectBiller — list billers for a category
+ * 4. POST /client/bbps/FetchBillSingle — fetch bill / balance for recharge
+ * 5. POST /client/bbps/BillPayTxn — execute recharge payment
+ * 6. POST /client/bbps/transactionStatusCheck — check txn status
+ * 7. POST /client/bbps/listBillTransactions — transaction history
  */
 
 const BASE_URL = 'https://api.bulkpe.in'
 
 function getApiKey() {
-  const key = process.env.BULKPE_API_KEY
-  if (!key) throw new Error('BULKPE_API_KEY not configured')
-  return key
+ const key = process.env.BULKPE_API_KEY
+ if (!key) throw new Error('BULKPE_API_KEY not configured')
+ return key
 }
 
 async function bulkpeRequest(method, path, body = null) {
-  const url = `${BASE_URL}${path}`
-  const headers = {
-    'Authorization': `Bearer ${getApiKey()}`,
-    'Content-Type': 'application/json',
-  }
+ const url = `${BASE_URL}${path}`
+ const headers = {
+ 'Authorization': `Bearer ${getApiKey()}`,
+ 'Content-Type': 'application/json',
+ }
 
-  const opts = { method, headers }
-  if (body) opts.body = JSON.stringify(body)
+ const opts = { method, headers }
+ if (body) opts.body = JSON.stringify(body)
 
-  const res = await fetch(url, opts)
-  const data = await res.json()
+ const res = await fetch(url, opts)
+ const data = await res.json()
 
-  if (!res.ok || data.status === false) {
-    const msg = data.message || data.error || `BulkPe API error (${res.status})`
-    const err = new Error(msg)
-    err.statusCode = res.status
-    err.bulkpeData = data
-    throw err
-  }
+ if (!res.ok || data.status === false) {
+ const msg = data.message || data.error || `BulkPe API error (${res.status})`
+ const err = new Error(msg)
+ err.statusCode = res.status
+ err.bulkpeData = data
+ throw err
+ }
 
-  return data
+ return data
 }
 
 // ── In-memory cache for providers (refreshed every 15 days) ─────────────────
@@ -56,14 +56,14 @@ const CACHE_TTL_MS = 15 * 24 * 60 * 60 * 1000 // 15 days
  * Cached in memory for 15 days as recommended by BulkPe docs.
  */
 export async function listFastagProviders(forceRefresh = false) {
-  const now = Date.now()
-  if (!forceRefresh && providerCache.data && (now - providerCache.fetchedAt) < CACHE_TTL_MS) {
-    return providerCache.data
-  }
+ const now = Date.now()
+ if (!forceRefresh && providerCache.data && (now - providerCache.fetchedAt) < CACHE_TTL_MS) {
+ return providerCache.data
+ }
 
-  const result = await bulkpeRequest('GET', '/client/listFastagProvider')
-  providerCache = { data: result.data || result, fetchedAt: now }
-  return providerCache.data
+ const result = await bulkpeRequest('GET', '/client/listFastagProvider')
+ providerCache = { data: result.data || result, fetchedAt: now }
+ return providerCache.data
 }
 
 /**
@@ -73,11 +73,11 @@ export async function listFastagProviders(forceRefresh = false) {
  * @param {string} reference - Unique reference number
  */
 export async function verifyFastag(vrn, provider, reference) {
-  return bulkpeRequest('POST', '/client/verifyFastag', {
-    vrn,
-    provider,
-    reference,
-  })
+ return bulkpeRequest('POST', '/client/verifyFastag', {
+ vrn,
+ provider,
+ reference,
+ })
 }
 
 /**
@@ -85,9 +85,9 @@ export async function verifyFastag(vrn, provider, reference) {
  * Returns biller IDs, names, and required customer params.
  */
 export async function listFastagBillers() {
-  return bulkpeRequest('POST', '/client/bbps/selectBiller', {
-    biller: 'Fastag',
-  })
+ return bulkpeRequest('POST', '/client/bbps/selectBiller', {
+ biller: 'Fastag',
+ })
 }
 
 /**
@@ -97,11 +97,11 @@ export async function listFastagBillers() {
  * @param {string} reference - Unique reference
  */
 export async function fetchBill(billerId, custParam, reference) {
-  return bulkpeRequest('POST', '/client/bbps/FetchBillSingle', {
-    billerId,
-    custParam,
-    reference,
-  })
+ return bulkpeRequest('POST', '/client/bbps/FetchBillSingle', {
+ billerId,
+ custParam,
+ reference,
+ })
 }
 
 /**
@@ -112,11 +112,11 @@ export async function fetchBill(billerId, custParam, reference) {
  * @param {string} reference - Unique reference
  */
 export async function payBill(fetchId, amount, reference) {
-  return bulkpeRequest('POST', '/client/bbps/BillPayTxn', {
-    fetchId,
-    amount: String(amount),
-    reference,
-  })
+ return bulkpeRequest('POST', '/client/bbps/BillPayTxn', {
+ fetchId,
+ amount: String(amount),
+ reference,
+ })
 }
 
 /**
@@ -124,9 +124,9 @@ export async function payBill(fetchId, amount, reference) {
  * @param {string} transactionId - Transaction ID from payBill response
  */
 export async function checkTxnStatus(transactionId) {
-  return bulkpeRequest('POST', '/client/bbps/transactionStatusCheck', {
-    transactionId,
-  })
+ return bulkpeRequest('POST', '/client/bbps/transactionStatusCheck', {
+ transactionId,
+ })
 }
 
 /**
@@ -136,17 +136,17 @@ export async function checkTxnStatus(transactionId) {
  * @param {string} status - SUCCESS | PENDING | FAILED
  */
 export async function listTransactions(page = 1, limit = 50, status = '') {
-  return bulkpeRequest('POST', '/client/bbps/listBillTransactions', {
-    page: String(page),
-    limit: String(limit),
-    category: 'Fastag',
-    status,
-  })
+ return bulkpeRequest('POST', '/client/bbps/listBillTransactions', {
+ page: String(page),
+ limit: String(limit),
+ category: 'Fastag',
+ status,
+ })
 }
 
 /**
  * Check if BulkPe API key is configured.
  */
 export function isConfigured() {
-  return !!process.env.BULKPE_API_KEY
+ return !!process.env.BULKPE_API_KEY
 }

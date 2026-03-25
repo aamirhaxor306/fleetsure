@@ -21,11 +21,9 @@ import savedRouteRoutes from './routes/savedRoutes.js'
 import renewalRoutes from './routes/renewals.js'
 import renewalPartnerRoutes from './routes/renewalPartners.js'
 import monthlyBillRoutes from './routes/monthlyBills.js'
-import revenueRoutes from './routes/revenue.js'
 import ocrRoutes from './routes/ocr.js'
 import tyreRoutes from './routes/tyres.js'
 import driverRoutes from './routes/drivers.js'
-// whatsappRoutes kept in codebase but not mounted (switched to Telegram)
 import insightsRoutes from './routes/insights.js'
 import fleetHealthRoutes from './routes/fleetHealth.js'
 import trackingRoutes from './routes/tracking.js'
@@ -37,12 +35,11 @@ import fastagRoutes from './routes/fastag.js'
 import fuelRoutes from './routes/fuel.js'
 import moneyLostRoutes from './routes/moneyLost.js'
 import leadRoutes from './routes/leads.js'
-import adminRoutes from './routes/admin.js'
-import invoiceRoutes from './routes/invoices.js'
 import prisma from './lib/prisma.js'
 import logger, { httpLogger } from './lib/logger.js'
 import { generalLimiter, authLimiter, heavyLimiter } from './middleware/rateLimiter.js'
 import { errorHandler } from './middleware/errorHandler.js'
+import { isTelegramPollingEnabled } from './lib/telegramPolling.js'
 import { runAlertEngine } from './services/alertEngine.js'
 import { startDriverBot, sendMorningBrief, sendEveningSummary, sendWeeklyReport } from './services/driverBot.js'
 import { startOwnerBot, sendDailyFleetSummary } from './services/ownerBot.js'
@@ -52,6 +49,17 @@ const PORT = process.env.PORT || 4000
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
+
+// Behind Railway / other reverse proxies (correct client IP for rate limits)
+app.set('trust proxy', 1)
+
+// ── Health (before rate limits & heavy middleware — deploy probes must always pass)
+app.get('/health', (_req, res) => {
+  res.status(200).type('text/plain').send('ok')
+})
+app.get('/api/health', (_req, res) => {
+  res.json({ status: 'ok', ts: Date.now() })
+})
 
 // ── Security & Middleware ───────────────────────────────────────────────────
 
@@ -73,10 +81,6 @@ app.use(generalLimiter)       // 100 req/min per IP
 
 app.use('/uploads', express.static(join(__dirname, '..', 'uploads')))
 
-// ── Health check (for Railway) ────────────────────────────────────────────────
-
-app.get('/api/health', (_req, res) => res.json({ status: 'ok', ts: Date.now() }))
-
 // ── Public API (no auth) ─────────────────────────────────────────────────────
 
 app.use('/api/leads', leadRoutes)
@@ -87,6 +91,7 @@ app.use('/api/t', trackingPublicRoutes)
 
 // ── Serve public/ for Landing Page ──────────────────────────────────────────
 
+// Marketing landing: single source at repo root public/landing.html (not client/public — avoids drift)
 app.use(express.static(join(__dirname, '..', 'public')))
 
 // ── API Routes ─────────────────────────────────────────────────────────────
@@ -103,7 +108,6 @@ app.use('/api/saved-routes', savedRouteRoutes)
 app.use('/api/renewals', renewalRoutes)
 app.use('/api/renewal-partners', renewalPartnerRoutes)
 app.use('/api/monthly-bills', monthlyBillRoutes)
-app.use('/api/revenue', revenueRoutes)
 app.use('/api/ocr', heavyLimiter, ocrRoutes)       // Heavy: 20 req/min
 app.use('/api/tyres', tyreRoutes)
 app.use('/api/drivers', driverRoutes)
@@ -116,8 +120,6 @@ app.use('/api/pdf', pdfRoutes)
 app.use('/api/fastag', fastagRoutes)
 app.use('/api/fuel', fuelRoutes)
 app.use('/api/money-lost', moneyLostRoutes)
-app.use('/api/admin', adminRoutes)
-app.use('/api/invoices', invoiceRoutes)
 
 // ── Global error handler (MUST be after all routes) ────────────────────────
 
@@ -213,10 +215,23 @@ cron.schedule('30 3 * * 1', async () => {
 
 // ── Start ──────────────────────────────────────────────────────────────────
 
-app.listen(PORT, async () => {
-  logger.info(`Fleetsure server running on http://localhost:${PORT}`)
+app.listen(PORT, () => {
+  logger.info({ port: PORT }, 'Fleetsure server listening')
 
-  // Start Telegram bots (driver + owner)
-  await startDriverBot()
-  await startOwnerBot()
+  // Never throw from listen callback — unhandled rejections can kill the process during deploy healthchecks
+  void (async () => {
+    try {
+      if (isTelegramPollingEnabled()) {
+        await startDriverBot()
+        await startOwnerBot()
+      } else {
+        logger.info(
+          'Telegram polling off (not production or TELEGRAM_POLLING=false). ' +
+          'Set TELEGRAM_POLLING=true locally to test bots without Railway running.'
+        )
+      }
+    } catch (err) {
+      logger.error({ err }, 'Telegram bot startup failed — server continues')
+    }
+  })()
 })

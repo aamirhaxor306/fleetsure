@@ -1,0 +1,47 @@
+name: deploy-staging
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-staging
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+      RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_PROJECT_ID }}
+      RAILWAY_STAGING_ENV: ${{ secrets.RAILWAY_STAGING_ENV }}
+      RAILWAY_SERVICE: ${{ secrets.RAILWAY_SERVICE }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Railway CLI
+        run: npm i -g @railway/cli
+
+      - name: Link Railway project
+        run: railway link --project "${RAILWAY_PROJECT_ID}"
+
+      - name: Ensure staging environment exists
+        run: |
+          ENV_NAME="${RAILWAY_STAGING_ENV:-staging}"
+          railway environment new "${ENV_NAME}" --json >/dev/null 2>&1 || true
+
+      - name: Deploy to staging
+        run: |
+          ENV_NAME="${RAILWAY_STAGING_ENV:-staging}"
+          if [ -n "${RAILWAY_SERVICE}" ]; then
+            railway up --service "${RAILWAY_SERVICE}" --environment "${ENV_NAME}" --detach
+          else
+            railway up --environment "${ENV_NAME}" --detach
+          fi

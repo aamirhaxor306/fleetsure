@@ -1,785 +1,785 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Fleetsure — Fleet Compliance &amp; Maintenance Control OS</title>
-  <meta name="description" content="Never miss a fleet compliance renewal again. Manage insurance, PUC, fitness, permits, and maintenance for all your trucks in one dashboard." />
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
-  <style>
-    * { box-sizing: border-box; }
-    html { scroll-behavior: smooth; }
-    body { font-family: 'Inter', system-ui, sans-serif; margin: 0; padding: 0; background: #f8fafc; color: #0f172a; }
+ <meta charset="UTF-8" />
+ <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+ <title>Fleetsure — Fleet Compliance &amp; Maintenance Control OS</title>
+ <meta name="description" content="Never miss a fleet compliance renewal again. Manage insurance, PUC, fitness, permits, and maintenance for all your trucks in one dashboard." />
+ <script src="https://cdn.tailwindcss.com"></script>
+ <link rel="preconnect" href="https://fonts.googleapis.com" />
+ <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+ <style>
+ * { box-sizing: border-box; }
+ html { scroll-behavior: smooth; }
+ body { font-family: 'Inter', system-ui, sans-serif; margin: 0; padding: 0; background: #f8fafc; color: #0f172a; }
 
-    /* === NAV === */
-    .nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; background: rgba(255,255,255,0.85); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(0,0,0,0.07); }
-    .nav-inner { max-width: 1100px; margin: 0 auto; padding: 0 24px; display: flex; align-items: center; justify-content: space-between; height: 64px; }
-    .nav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
-    .nav-logo-icon { width: 36px; height: 36px; border-radius: 10px; background: #f59e0b; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 16px; color: #0f172a; box-shadow: 0 4px 12px rgba(245,158,11,0.3); }
-    .nav-logo-text { font-size: 17px; font-weight: 800; color: #0f172a; }
-    .nav-links { display: flex; align-items: center; gap: 28px; }
-    .nav-link { font-size: 14px; font-weight: 600; color: #475569; text-decoration: none; transition: color 0.2s; }
-    .nav-link:hover { color: #f59e0b; }
-    .btn-primary { background: #f59e0b; color: #0f172a; font-weight: 700; font-size: 14px; padding: 10px 20px; border-radius: 10px; text-decoration: none; transition: all 0.2s; box-shadow: 0 4px 14px rgba(245,158,11,0.35); }
-    .btn-primary:hover { background: #d97706; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(245,158,11,0.4); }
-    .btn-ghost { background: transparent; color: #0f172a; font-weight: 700; font-size: 14px; padding: 10px 16px; border-radius: 10px; text-decoration: none; transition: color 0.2s; }
-    .btn-ghost:hover { color: #f59e0b; }
-    
-    /* === HERO === */
-    .hero { position: relative; min-height: 100vh; display: flex; align-items: center; overflow: hidden;
-      background: #060d1a; padding: 100px 0 60px; }
-    .hero-bg-img { position: absolute; inset: 0; background: url('https://images.unsplash.com/photo-1519003722824-194d4455a60c?w=1920&q=80') center/cover; opacity: 0.18; }
-    .hero-overlay { position: absolute; inset: 0; background: linear-gradient(135deg, rgba(6,13,26,0.97) 0%, rgba(15,23,42,0.85) 50%, rgba(6,13,26,0.92) 100%); }
-    .hero-glow-1 { position: absolute; top: 20%; left: 15%; width: 500px; height: 500px; background: radial-gradient(circle, rgba(245,158,11,0.12) 0%, transparent 70%); pointer-events: none; }
-    .hero-glow-2 { position: absolute; bottom: 10%; right: 10%; width: 400px; height: 400px; background: radial-gradient(circle, rgba(59,130,246,0.08) 0%, transparent 70%); pointer-events: none; }
-    .hero-inner { position: relative; z-index: 2; max-width: 1100px; margin: 0 auto; padding: 0 24px; display: grid; grid-template-columns: 1fr 420px; gap: 60px; align-items: center; }
-    
-    /* Hero Left */
-    .hero-badge { display: inline-flex; align-items: center; gap: 8px; background: rgba(245,158,11,0.12); border: 1px solid rgba(245,158,11,0.25); border-radius: 100px; padding: 6px 14px; margin-bottom: 28px; }
-    .hero-badge-dot { width: 7px; height: 7px; border-radius: 50%; background: #f59e0b; animation: ping 2s ease-in-out infinite; }
-    @keyframes ping { 0%,100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.4); opacity: 0.6; } }
-    .hero-badge-text { font-size: 11px; font-weight: 700; color: #fbbf24; letter-spacing: 0.08em; text-transform: uppercase; }
-    .hero-h1 { font-size: 72px; font-weight: 900; line-height: 1.02; letter-spacing: -2px; margin: 0 0 12px; color: #ffffff; }
-    .hero-h1 span { background: linear-gradient(135deg, #fcd34d, #f59e0b); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
-    .hero-deva { font-size: 15px; font-weight: 500; color: #34d399; margin-bottom: 20px; }
-    .hero-sub { font-size: 22px; font-weight: 700; color: rgba(255,255,255,0.85); margin-bottom: 16px; line-height: 1.4; }
-    .hero-desc { font-size: 16px; color: rgba(255,255,255,0.55); line-height: 1.7; margin-bottom: 36px; max-width: 480px; }
-    .hero-desc strong { color: rgba(255,255,255,0.85); }
-    .hero-pills { display: flex; flex-wrap: wrap; gap: 10px; }
-    .pill { display: inline-flex; align-items: center; gap: 7px; padding: 7px 14px; border-radius: 100px; font-size: 12px; font-weight: 600; background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.8); border: 1px solid rgba(255,255,255,0.1); }
-    .pill-dot { width: 6px; height: 6px; border-radius: 50%; }
+ /* === NAV === */
+ .nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; background: rgba(255,255,255,0.85); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(0,0,0,0.07); }
+ .nav-inner { max-width: 1100px; margin: 0 auto; padding: 0 24px; display: flex; align-items: center; justify-content: space-between; height: 64px; }
+ .nav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+ .nav-logo-icon { width: 36px; height: 36px; border-radius: 10px; background: #f59e0b; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 16px; color: #0f172a; box-shadow: 0 4px 12px rgba(245,158,11,0.3); }
+ .nav-logo-text { font-size: 17px; font-weight: 800; color: #0f172a; }
+ .nav-links { display: flex; align-items: center; gap: 28px; }
+ .nav-link { font-size: 14px; font-weight: 600; color: #475569; text-decoration: none; transition: color 0.2s; }
+ .nav-link:hover { color: #f59e0b; }
+ .btn-primary { background: #f59e0b; color: #0f172a; font-weight: 700; font-size: 14px; padding: 10px 20px; border-radius: 10px; text-decoration: none; transition: all 0.2s; box-shadow: 0 4px 14px rgba(245,158,11,0.35); }
+ .btn-primary:hover { background: #d97706; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(245,158,11,0.4); }
+ .btn-ghost { background: transparent; color: #0f172a; font-weight: 700; font-size: 14px; padding: 10px 16px; border-radius: 10px; text-decoration: none; transition: color 0.2s; }
+ .btn-ghost:hover { color: #f59e0b; }
 
-    /* === HERO FORM === */
-    .hero-form-card { background: rgba(15,23,42,0.8); backdrop-filter: blur(24px); border: 1px solid rgba(255,255,255,0.1); border-radius: 24px; padding: 36px; box-shadow: 0 32px 64px rgba(0,0,0,0.5); }
-    .form-title { font-size: 22px; font-weight: 800; color: #fff; text-align: center; margin-bottom: 6px; }
-    .form-sub { font-size: 13px; color: rgba(255,255,255,0.5); text-align: center; margin-bottom: 28px; }
-    .form-field { margin-bottom: 14px; }
-    .form-input { width: 100%; background: rgba(255,255,255,0.05); border: 1.5px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 13px 16px; font-size: 14px; color: #fff; outline: none; transition: all 0.2s; font-family: inherit; }
-    .form-input::placeholder { color: rgba(255,255,255,0.35); }
-    .form-input:focus { background: rgba(255,255,255,0.09); border-color: #f59e0b; box-shadow: 0 0 0 3px rgba(245,158,11,0.15); }
-    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
-    .form-phone-row { display: flex; gap: 10px; margin-bottom: 14px; }
-    .phone-prefix { background: rgba(255,255,255,0.05); border: 1.5px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 13px 14px; font-size: 14px; color: rgba(255,255,255,0.5); font-weight: 600; white-space: nowrap; font-family: inherit; }
-    .form-submit { width: 100%; background: #f59e0b; color: #0f172a; font-weight: 800; font-size: 15px; padding: 14px; border-radius: 12px; border: none; cursor: pointer; transition: all 0.2s; font-family: inherit; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 8px 24px rgba(245,158,11,0.35); }
-    .form-submit:hover { background: #d97706; transform: translateY(-1px); box-shadow: 0 12px 30px rgba(245,158,11,0.45); }
-    .form-submit:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
-    #formMsg { display: none; margin-top: 12px; padding: 12px; border-radius: 10px; font-size: 13px; font-weight: 600; text-align: center; }
-    .form-wa { display: flex; align-items: center; justify-content: center; gap: 7px; margin-top: 20px; padding-top: 18px; border-top: 1px solid rgba(255,255,255,0.08); text-decoration: none; font-size: 13px; font-weight: 600; color: #34d399; transition: color 0.2s; }
-    .form-wa:hover { color: #6ee7b7; }
+ /* === HERO === */
+ .hero { position: relative; min-height: 100vh; display: flex; align-items: center; overflow: hidden;
+ background: #060d1a; padding: 100px 0 60px; }
+ .hero-bg-img { position: absolute; inset: 0; background: url('https://images.unsplash.com/photo-1519003722824-194d4455a60c?w=1920&q=80') center/cover; opacity: 0.18; }
+ .hero-overlay { position: absolute; inset: 0; background: linear-gradient(135deg, rgba(6,13,26,0.97) 0%, rgba(15,23,42,0.85) 50%, rgba(6,13,26,0.92) 100%); }
+ .hero-glow-1 { position: absolute; top: 20%; left: 15%; width: 500px; height: 500px; background: radial-gradient(circle, rgba(245,158,11,0.12) 0%, transparent 70%); pointer-events: none; }
+ .hero-glow-2 { position: absolute; bottom: 10%; right: 10%; width: 400px; height: 400px; background: radial-gradient(circle, rgba(59,130,246,0.08) 0%, transparent 70%); pointer-events: none; }
+ .hero-inner { position: relative; z-index: 2; max-width: 1100px; margin: 0 auto; padding: 0 24px; display: grid; grid-template-columns: 1fr 420px; gap: 60px; align-items: center; }
 
-    /* === SECTIONS === */
-    .section { padding: 90px 24px; }
-    .section-inner { max-width: 1100px; margin: 0 auto; }
-    .section-tag { display: inline-block; font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #f59e0b; margin-bottom: 12px; }
-    .section-h2 { font-size: 42px; font-weight: 900; line-height: 1.1; letter-spacing: -1px; color: #0f172a; margin: 0 0 16px; }
-    .section-sub { font-size: 17px; color: #64748b; line-height: 1.7; max-width: 600px; }
-    .section-center { text-align: center; }
-    .section-center .section-sub { margin: 0 auto; }
-    
-    /* === WHY (PAIN VS GAIN) === */
-    .why-section { background: #f8fafc; border-top: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; }
-    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-top: 48px; position: relative; }
-    .vs-badge { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 44px; height: 44px; background: #fff; border: 2px solid #e2e8f0; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: #94a3b8; z-index: 5; box-shadow: 0 4px 12px rgba(0,0,0,0.06); }
-    .card-pain, .card-gain { background: #fff; border-radius: 24px; padding: 36px; border: 1.5px solid #e2e8f0; box-shadow: 0 4px 24px rgba(0,0,0,0.04); transition: all 0.3s; }
-    .card-pain:hover { border-color: #fca5a5; box-shadow: 0 16px 40px rgba(239,68,68,0.08); transform: translateY(-4px); }
-    .card-gain:hover { border-color: #6ee7b7; box-shadow: 0 16px 40px rgba(16,185,129,0.08); transform: translateY(-4px); }
-    .card-header { display: flex; align-items: center; gap: 14px; margin-bottom: 28px; }
-    .card-icon { width: 48px; height: 48px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
-    .card-title { font-size: 20px; font-weight: 800; color: #0f172a; }
-    .card-subtitle { font-size: 13px; color: #94a3b8; font-weight: 500; }
-    .card-pain .card-icon { background: #fef2f2; }
-    .card-gain .card-icon { background: #f0fdf4; }
-    .card-items { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 20px; }
-    .card-item { display: flex; gap: 14px; }
-    .card-item-dot { width: 8px; height: 8px; border-radius: 50%; margin-top: 6px; flex-shrink: 0; }
-    .card-item-title { font-size: 15px; font-weight: 700; color: #0f172a; margin-bottom: 4px; }
-    .card-item-desc { font-size: 13px; color: #64748b; line-height: 1.5; }
-    .card-footer { margin-top: 28px; padding-top: 20px; border-top: 1px solid #f1f5f9; }
-    .card-footer-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; padding: 8px 14px; border-radius: 8px; }
+ /* Hero Left */
+ .hero-badge { display: inline-flex; align-items: center; gap: 8px; background: rgba(245,158,11,0.12); border: 1px solid rgba(245,158,11,0.25); border-radius: 100px; padding: 6px 14px; margin-bottom: 28px; }
+ .hero-badge-dot { width: 7px; height: 7px; border-radius: 50%; background: #f59e0b; animation: ping 2s ease-in-out infinite; }
+ @keyframes ping { 0%,100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.4); opacity: 0.6; } }
+ .hero-badge-text { font-size: 11px; font-weight: 700; color: #fbbf24; letter-spacing: 0.08em; text-transform: uppercase; }
+ .hero-h1 { font-size: 72px; font-weight: 900; line-height: 1.02; letter-spacing: -2px; margin: 0 0 12px; color: #ffffff; }
+ .hero-h1 span { background: linear-gradient(135deg, #fcd34d, #f59e0b); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+ .hero-deva { font-size: 15px; font-weight: 500; color: #34d399; margin-bottom: 20px; }
+ .hero-sub { font-size: 22px; font-weight: 700; color: rgba(255,255,255,0.85); margin-bottom: 16px; line-height: 1.4; }
+ .hero-desc { font-size: 16px; color: rgba(255,255,255,0.55); line-height: 1.7; margin-bottom: 36px; max-width: 480px; }
+ .hero-desc strong { color: rgba(255,255,255,0.85); }
+ .hero-pills { display: flex; flex-wrap: wrap; gap: 10px; }
+ .pill { display: inline-flex; align-items: center; gap: 7px; padding: 7px 14px; border-radius: 100px; font-size: 12px; font-weight: 600; background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.8); border: 1px solid rgba(255,255,255,0.1); }
+ .pill-dot { width: 6px; height: 6px; border-radius: 50%; }
 
-    /* === NEWS GRID === */
-    .news-section { background: #fff; }
-    .news-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 48px; }
-    .news-card { background: #f8fafc; border-radius: 20px; padding: 28px; border: 1.5px solid #e2e8f0; transition: all 0.3s; }
-    .news-card:hover { border-color: #fbbf24; box-shadow: 0 12px 32px rgba(245,158,11,0.08); transform: translateY(-3px); }
-    .news-card-hero { grid-column: 1 / -1; background: linear-gradient(135deg, #0f172a, #1e293b); color: #fff; border-color: #334155; }
-    .news-card-hero:hover { border-color: #f59e0b; box-shadow: 0 16px 40px rgba(245,158,11,0.15); }
-    .news-tag { display: inline-flex; align-items: center; gap: 6px; font-size: 10px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; padding: 5px 10px; border-radius: 6px; margin-bottom: 14px; }
-    .news-card-title { font-size: 18px; font-weight: 800; color: #0f172a; margin-bottom: 10px; line-height: 1.4; }
-    .news-card-hero .news-card-title { color: #fff; font-size: 28px; }
-    .news-card-desc { font-size: 13px; color: #64748b; line-height: 1.7; }
-    .news-card-hero .news-card-desc { color: rgba(255,255,255,0.6); font-size: 15px; }
-    .news-impact { margin-top: 16px; font-size: 12px; font-weight: 700; color: #f59e0b; background: rgba(245,158,11,0.1); padding: 8px 12px; border-radius: 8px; display: inline-block; }
-    .news-card-hero .news-impact { background: rgba(245,158,11,0.15); }
+ /* === HERO FORM === */
+ .hero-form-card { background: rgba(15,23,42,0.8); backdrop-filter: blur(24px); border: 1px solid rgba(255,255,255,0.1); border-radius: 24px; padding: 36px; box-shadow: 0 32px 64px rgba(0,0,0,0.5); }
+ .form-title { font-size: 22px; font-weight: 800; color: #fff; text-align: center; margin-bottom: 6px; }
+ .form-sub { font-size: 13px; color: rgba(255,255,255,0.5); text-align: center; margin-bottom: 28px; }
+ .form-field { margin-bottom: 14px; }
+ .form-input { width: 100%; background: rgba(255,255,255,0.05); border: 1.5px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 13px 16px; font-size: 14px; color: #fff; outline: none; transition: all 0.2s; font-family: inherit; }
+ .form-input::placeholder { color: rgba(255,255,255,0.35); }
+ .form-input:focus { background: rgba(255,255,255,0.09); border-color: #f59e0b; box-shadow: 0 0 0 3px rgba(245,158,11,0.15); }
+ .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+ .form-phone-row { display: flex; gap: 10px; margin-bottom: 14px; }
+ .phone-prefix { background: rgba(255,255,255,0.05); border: 1.5px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 13px 14px; font-size: 14px; color: rgba(255,255,255,0.5); font-weight: 600; white-space: nowrap; font-family: inherit; }
+ .form-submit { width: 100%; background: #f59e0b; color: #0f172a; font-weight: 800; font-size: 15px; padding: 14px; border-radius: 12px; border: none; cursor: pointer; transition: all 0.2s; font-family: inherit; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 8px 24px rgba(245,158,11,0.35); }
+ .form-submit:hover { background: #d97706; transform: translateY(-1px); box-shadow: 0 12px 30px rgba(245,158,11,0.45); }
+ .form-submit:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+ #formMsg { display: none; margin-top: 12px; padding: 12px; border-radius: 10px; font-size: 13px; font-weight: 600; text-align: center; }
+ .form-wa { display: flex; align-items: center; justify-content: center; gap: 7px; margin-top: 20px; padding-top: 18px; border-top: 1px solid rgba(255,255,255,0.08); text-decoration: none; font-size: 13px; font-weight: 600; color: #34d399; transition: color 0.2s; }
+ .form-wa:hover { color: #6ee7b7; }
 
-    /* === STATS === */
-    .stats-section { background: #f8fafc; border-top: 1px solid #e2e8f0; }
-    .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 48px; }
-    .stat-card { background: #fff; border-radius: 20px; padding: 32px; text-align: center; border: 1.5px solid #e2e8f0; box-shadow: 0 2px 12px rgba(0,0,0,0.03); }
-    .stat-num { font-size: 48px; font-weight: 900; color: #0f172a; line-height: 1; letter-spacing: -2px; }
-    .stat-num span { color: #f59e0b; }
-    .stat-label { font-size: 14px; font-weight: 600; color: #64748b; margin-top: 10px; }
-    .stat-source { font-size: 11px; color: #94a3b8; margin-top: 6px; }
+ /* === SECTIONS === */
+ .section { padding: 90px 24px; }
+ .section-inner { max-width: 1100px; margin: 0 auto; }
+ .section-tag { display: inline-block; font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #f59e0b; margin-bottom: 12px; }
+ .section-h2 { font-size: 42px; font-weight: 900; line-height: 1.1; letter-spacing: -1px; color: #0f172a; margin: 0 0 16px; }
+ .section-sub { font-size: 17px; color: #64748b; line-height: 1.7; max-width: 600px; }
+ .section-center { text-align: center; }
+ .section-center .section-sub { margin: 0 auto; }
 
-    /* === CTA === */
-    .cta-section { background: #060d1a; padding: 90px 24px; position: relative; overflow: hidden; }
-    .cta-glow { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 600px; height: 600px; background: radial-gradient(circle, rgba(245,158,11,0.1) 0%, transparent 70%); pointer-events: none; }
-    .cta-inner { position: relative; z-index: 2; max-width: 700px; margin: 0 auto; text-align: center; }
-    .cta-h2 { font-size: 48px; font-weight: 900; color: #fff; letter-spacing: -1.5px; line-height: 1.1; margin-bottom: 20px; }
-    .cta-desc { font-size: 18px; color: rgba(255,255,255,0.55); line-height: 1.7; margin-bottom: 40px; }
-    .cta-btn { display: inline-flex; align-items: center; gap: 10px; background: #f59e0b; color: #0f172a; font-weight: 800; font-size: 16px; padding: 16px 32px; border-radius: 14px; text-decoration: none; transition: all 0.2s; box-shadow: 0 8px 32px rgba(245,158,11,0.35); }
-    .cta-btn:hover { background: #d97706; transform: translateY(-2px); box-shadow: 0 16px 48px rgba(245,158,11,0.45); }
+ /* === WHY (PAIN VS GAIN) === */
+ .why-section { background: #f8fafc; border-top: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; }
+ .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-top: 48px; position: relative; }
+ .vs-badge { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 44px; height: 44px; background: #fff; border: 2px solid #e2e8f0; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: #94a3b8; z-index: 5; box-shadow: 0 4px 12px rgba(0,0,0,0.06); }
+ .card-pain, .card-gain { background: #fff; border-radius: 24px; padding: 36px; border: 1.5px solid #e2e8f0; box-shadow: 0 4px 24px rgba(0,0,0,0.04); transition: all 0.3s; }
+ .card-pain:hover { border-color: #fca5a5; box-shadow: 0 16px 40px rgba(239,68,68,0.08); transform: translateY(-4px); }
+ .card-gain:hover { border-color: #6ee7b7; box-shadow: 0 16px 40px rgba(16,185,129,0.08); transform: translateY(-4px); }
+ .card-header { display: flex; align-items: center; gap: 14px; margin-bottom: 28px; }
+ .card-icon { width: 48px; height: 48px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+ .card-title { font-size: 20px; font-weight: 800; color: #0f172a; }
+ .card-subtitle { font-size: 13px; color: #94a3b8; font-weight: 500; }
+ .card-pain .card-icon { background: #fef2f2; }
+ .card-gain .card-icon { background: #f0fdf4; }
+ .card-items { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 20px; }
+ .card-item { display: flex; gap: 14px; }
+ .card-item-dot { width: 8px; height: 8px; border-radius: 50%; margin-top: 6px; flex-shrink: 0; }
+ .card-item-title { font-size: 15px; font-weight: 700; color: #0f172a; margin-bottom: 4px; }
+ .card-item-desc { font-size: 13px; color: #64748b; line-height: 1.5; }
+ .card-footer { margin-top: 28px; padding-top: 20px; border-top: 1px solid #f1f5f9; }
+ .card-footer-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; padding: 8px 14px; border-radius: 8px; }
 
-    /* === FOOTER === */
-    .footer { background: #0a0f1c; padding: 56px 24px 36px; border-top: 1px solid rgba(255,255,255,0.06); }
-    .footer-inner { max-width: 1100px; margin: 0 auto; }
-    .footer-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 40px; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.07); }
-    .footer-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
-    .footer-logo-icon { width: 36px; height: 36px; border-radius: 10px; background: #f59e0b; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 16px; color: #0f172a; }
-    .footer-logo-text { font-size: 16px; font-weight: 800; color: #fff; }
-    .footer-tagline { font-size: 13px; color: rgba(255,255,255,0.35); margin-top: 4px; }
-    .footer-ctas { display: flex; gap: 12px; }
-    .footer-btn-primary { background: #f59e0b; color: #0f172a; font-weight: 700; font-size: 14px; padding: 10px 20px; border-radius: 10px; text-decoration: none; transition: all 0.2s; }
-    .footer-btn-primary:hover { background: #d97706; }
-    .footer-btn-ghost { background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.7); font-weight: 700; font-size: 14px; padding: 10px 20px; border-radius: 10px; text-decoration: none; transition: all 0.2s; border: 1px solid rgba(255,255,255,0.08); }
-    .footer-btn-ghost:hover { background: rgba(255,255,255,0.1); }
-    .footer-bottom { display: flex; align-items: center; justify-content: space-between; }
-    .footer-copy { font-size: 12px; color: rgba(255,255,255,0.25); }
-    .footer-links { display: flex; gap: 20px; }
-    .footer-link { font-size: 12px; color: rgba(255,255,255,0.3); text-decoration: none; transition: color 0.2s; }
-    .footer-link:hover { color: #f59e0b; }
+ /* === NEWS GRID === */
+ .news-section { background: #fff; }
+ .news-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 48px; }
+ .news-card { background: #f8fafc; border-radius: 20px; padding: 28px; border: 1.5px solid #e2e8f0; transition: all 0.3s; }
+ .news-card:hover { border-color: #fbbf24; box-shadow: 0 12px 32px rgba(245,158,11,0.08); transform: translateY(-3px); }
+ .news-card-hero { grid-column: 1 / -1; background: linear-gradient(135deg, #0f172a, #1e293b); color: #fff; border-color: #334155; }
+ .news-card-hero:hover { border-color: #f59e0b; box-shadow: 0 16px 40px rgba(245,158,11,0.15); }
+ .news-tag { display: inline-flex; align-items: center; gap: 6px; font-size: 10px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; padding: 5px 10px; border-radius: 6px; margin-bottom: 14px; }
+ .news-card-title { font-size: 18px; font-weight: 800; color: #0f172a; margin-bottom: 10px; line-height: 1.4; }
+ .news-card-hero .news-card-title { color: #fff; font-size: 28px; }
+ .news-card-desc { font-size: 13px; color: #64748b; line-height: 1.7; }
+ .news-card-hero .news-card-desc { color: rgba(255,255,255,0.6); font-size: 15px; }
+ .news-impact { margin-top: 16px; font-size: 12px; font-weight: 700; color: #f59e0b; background: rgba(245,158,11,0.1); padding: 8px 12px; border-radius: 8px; display: inline-block; }
+ .news-card-hero .news-impact { background: rgba(245,158,11,0.15); }
 
-    /* === WHATSAPP FLOAT === */
-    .wa-float { position: fixed; bottom: 24px; right: 24px; z-index: 200; width: 56px; height: 56px; background: #25d366; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 24px rgba(37,211,102,0.4); transition: all 0.2s; text-decoration: none; }
-    .wa-float:hover { background: #22c55e; transform: scale(1.1); box-shadow: 0 12px 32px rgba(37,211,102,0.5); }
-    .wa-float-ring { position: absolute; inset: 0; border-radius: 50%; border: 2px solid rgba(37,211,102,0.4); animation: ring-ping 2s ease-out infinite; }
-    @keyframes ring-ping { 0% { transform: scale(1); opacity: 1; } 100% { transform: scale(1.6); opacity: 0; } }
+ /* === STATS === */
+ .stats-section { background: #f8fafc; border-top: 1px solid #e2e8f0; }
+ .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 48px; }
+ .stat-card { background: #fff; border-radius: 20px; padding: 32px; text-align: center; border: 1.5px solid #e2e8f0; box-shadow: 0 2px 12px rgba(0,0,0,0.03); }
+ .stat-num { font-size: 48px; font-weight: 900; color: #0f172a; line-height: 1; letter-spacing: -2px; }
+ .stat-num span { color: #f59e0b; }
+ .stat-label { font-size: 14px; font-weight: 600; color: #64748b; margin-top: 10px; }
+ .stat-source { font-size: 11px; color: #94a3b8; margin-top: 6px; }
 
-    /* Select styling */
-    select.form-input option { background: #1e293b; color: #fff; }
+ /* === CTA === */
+ .cta-section { background: #060d1a; padding: 90px 24px; position: relative; overflow: hidden; }
+ .cta-glow { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 600px; height: 600px; background: radial-gradient(circle, rgba(245,158,11,0.1) 0%, transparent 70%); pointer-events: none; }
+ .cta-inner { position: relative; z-index: 2; max-width: 700px; margin: 0 auto; text-align: center; }
+ .cta-h2 { font-size: 48px; font-weight: 900; color: #fff; letter-spacing: -1.5px; line-height: 1.1; margin-bottom: 20px; }
+ .cta-desc { font-size: 18px; color: rgba(255,255,255,0.55); line-height: 1.7; margin-bottom: 40px; }
+ .cta-btn { display: inline-flex; align-items: center; gap: 10px; background: #f59e0b; color: #0f172a; font-weight: 800; font-size: 16px; padding: 16px 32px; border-radius: 14px; text-decoration: none; transition: all 0.2s; box-shadow: 0 8px 32px rgba(245,158,11,0.35); }
+ .cta-btn:hover { background: #d97706; transform: translateY(-2px); box-shadow: 0 16px 48px rgba(245,158,11,0.45); }
 
-    /* === PREVIEW / DASHBOARD ANIMATION === */
-    .preview-section { background: linear-gradient(180deg, #060d1a 0%, #0f172a 60%, #f8fafc 100%); padding: 0 24px 80px; overflow: hidden; }
-    .preview-inner { max-width: 1100px; margin: 0 auto; }
-    .preview-section .section-tag { color: #fbbf24; }
-    .preview-section .section-h2 { color: #fff; }
-    .preview-section .section-sub { color: rgba(255,255,255,0.55); }
-    
-    .browser-window { position: relative; background: #1e293b; border-radius: 16px; overflow: hidden; box-shadow: 0 40px 100px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.07); transform: perspective(1200px) rotateX(3deg); transition: transform 0.5s ease; }
-    .browser-window:hover { transform: perspective(1200px) rotateX(0deg); }
-    .browser-chrome { background: #0f172a; padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.07); }
-    .browser-dots { display: flex; gap: 7px; }
-    .br-dot { width: 12px; height: 12px; border-radius: 50%; }
-    .browser-url { display: flex; align-items: center; gap: 7px; background: rgba(255,255,255,0.06); border-radius: 8px; padding: 6px 14px; font-size: 12px; color: #94a3b8; font-family: monospace; }
+ /* === FOOTER === */
+ .footer { background: #0a0f1c; padding: 56px 24px 36px; border-top: 1px solid rgba(255,255,255,0.06); }
+ .footer-inner { max-width: 1100px; margin: 0 auto; }
+ .footer-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 40px; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.07); }
+ .footer-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+ .footer-logo-icon { width: 36px; height: 36px; border-radius: 10px; background: #f59e0b; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 16px; color: #0f172a; }
+ .footer-logo-text { font-size: 16px; font-weight: 800; color: #fff; }
+ .footer-tagline { font-size: 13px; color: rgba(255,255,255,0.35); margin-top: 4px; }
+ .footer-ctas { display: flex; gap: 12px; }
+ .footer-btn-primary { background: #f59e0b; color: #0f172a; font-weight: 700; font-size: 14px; padding: 10px 20px; border-radius: 10px; text-decoration: none; transition: all 0.2s; }
+ .footer-btn-primary:hover { background: #d97706; }
+ .footer-btn-ghost { background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.7); font-weight: 700; font-size: 14px; padding: 10px 20px; border-radius: 10px; text-decoration: none; transition: all 0.2s; border: 1px solid rgba(255,255,255,0.08); }
+ .footer-btn-ghost:hover { background: rgba(255,255,255,0.1); }
+ .footer-bottom { display: flex; align-items: center; justify-content: space-between; }
+ .footer-copy { font-size: 12px; color: rgba(255,255,255,0.25); }
+ .footer-links { display: flex; gap: 20px; }
+ .footer-link { font-size: 12px; color: rgba(255,255,255,0.3); text-decoration: none; transition: color 0.2s; }
+ .footer-link:hover { color: #f59e0b; }
 
-    /* Dash Layout */
-    .dash-layout { display: grid; grid-template-columns: 180px 1fr; min-height: 480px; }
-    .dash-sidebar { background: #0f172a; padding: 20px 0; border-right: 1px solid rgba(255,255,255,0.06); }
-    .dash-logo { display: flex; align-items: center; gap: 8px; padding: 0 16px 20px; border-bottom: 1px solid rgba(255,255,255,0.06); margin-bottom: 12px; }
-    .dash-logo-icon { width: 28px; height: 28px; background: #f59e0b; border-radius: 7px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 13px; color: #0f172a; }
-    .dash-logo span { font-size: 13px; font-weight: 800; color: #fff; }
-    .dash-nav { display: flex; flex-direction: column; gap: 2px; padding: 0 8px; }
-    .dash-nav-item { font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.45); padding: 8px 10px; border-radius: 8px; cursor: default; transition: all 0.2s; }
-    .dash-nav-item:hover { color: rgba(255,255,255,0.7); background: rgba(255,255,255,0.05); }
-    .dash-nav-item.active { color: #f59e0b; background: rgba(245,158,11,0.1); }
+ /* === WHATSAPP FLOAT === */
+ .wa-float { position: fixed; bottom: 24px; right: 24px; z-index: 200; width: 56px; height: 56px; background: #25d366; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 24px rgba(37,211,102,0.4); transition: all 0.2s; text-decoration: none; }
+ .wa-float:hover { background: #22c55e; transform: scale(1.1); box-shadow: 0 12px 32px rgba(37,211,102,0.5); }
+ .wa-float-ring { position: absolute; inset: 0; border-radius: 50%; border: 2px solid rgba(37,211,102,0.4); animation: ring-ping 2s ease-out infinite; }
+ @keyframes ring-ping { 0% { transform: scale(1); opacity: 1; } 100% { transform: scale(1.6); opacity: 0; } }
 
-    /* Main area */
-    .dash-main { background: #0d1526; padding: 20px; display: flex; flex-direction: column; gap: 16px; }
-    .dash-topbar { display: flex; align-items: center; justify-content: space-between; }
-    .dash-greeting { font-size: 16px; font-weight: 800; color: #fff; }
-    .dash-date { font-size: 11px; color: rgba(255,255,255,0.4); margin-top: 2px; }
-    .dash-alert-badge { display: flex; align-items: center; gap: 7px; background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.25); color: #f87171; font-size: 12px; font-weight: 700; padding: 7px 12px; border-radius: 8px; }
-    .dash-alert-dot { width: 7px; height: 7px; background: #ef4444; border-radius: 50%; animation: ping 2s infinite; }
+ /* Select styling */
+ select.form-input option { background: #1e293b; color: #fff; }
 
-    /* Stats */
-    .dash-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
-    .dash-stat-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 14px; transition: all 0.3s; }
-    .dash-stat-card:hover { background: rgba(255,255,255,0.06); transform: translateY(-2px); }
-    .dash-stat-label { font-size: 11px; font-weight: 600; color: rgba(255,255,255,0.4); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em; }
-    .dash-stat-num { font-size: 24px; font-weight: 900; color: #fff; letter-spacing: -1px; }
-    .dash-stat-sub { font-size: 11px; font-weight: 600; margin-top: 4px; }
+ /* === PREVIEW / DASHBOARD ANIMATION === */
+ .preview-section { background: linear-gradient(180deg, #060d1a 0%, #0f172a 60%, #f8fafc 100%); padding: 0 24px 80px; overflow: hidden; }
+ .preview-inner { max-width: 1100px; margin: 0 auto; }
+ .preview-section .section-tag { color: #fbbf24; }
+ .preview-section .section-h2 { color: #fff; }
+ .preview-section .section-sub { color: rgba(255,255,255,0.55); }
 
-    /* Bottom Row */
-    .dash-bottom-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; flex: 1; }
-    .dash-chart-card, .dash-alerts-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 16px; }
-    .dash-card-title { font-size: 12px; font-weight: 700; color: rgba(255,255,255,0.6); margin-bottom: 14px; text-transform: uppercase; letter-spacing: 0.05em; }
+ .browser-window { position: relative; background: #1e293b; border-radius: 16px; overflow: hidden; box-shadow: 0 40px 100px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.07); transform: perspective(1200px) rotateX(3deg); transition: transform 0.5s ease; }
+ .browser-window:hover { transform: perspective(1200px) rotateX(0deg); }
+ .browser-chrome { background: #0f172a; padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.07); }
+ .browser-dots { display: flex; gap: 7px; }
+ .br-dot { width: 12px; height: 12px; border-radius: 50%; }
+ .browser-url { display: flex; align-items: center; gap: 7px; background: rgba(255,255,255,0.06); border-radius: 8px; padding: 6px 14px; font-size: 12px; color: #94a3b8; font-family: monospace; }
 
-    /* Chart */
-    .dash-chart { flex: 1; }
-    .chart-bars { display: flex; align-items: flex-end; gap: 8px; height: 120px; }
-    .chart-bar-wrap { display: flex; flex-direction: column; align-items: center; gap: 6px; flex: 1; height: 100%; justify-content: flex-end; }
-    .chart-bar-wrap span { font-size: 10px; color: rgba(255,255,255,0.3); font-weight: 500; }
-    .chart-bar { width: 100%; height: var(--h); border-radius: 4px 4px 0 0; background: rgba(245,158,11,0.35); transition: height 0.8s cubic-bezier(0.34, 1.56, 0.64, 1); }
-    .chart-bar.active-bar { background: #f59e0b; box-shadow: 0 0 12px rgba(245,158,11,0.4); }
+ /* Dash Layout */
+ .dash-layout { display: grid; grid-template-columns: 180px 1fr; min-height: 480px; }
+ .dash-sidebar { background: #0f172a; padding: 20px 0; border-right: 1px solid rgba(255,255,255,0.06); }
+ .dash-logo { display: flex; align-items: center; gap: 8px; padding: 0 16px 20px; border-bottom: 1px solid rgba(255,255,255,0.06); margin-bottom: 12px; }
+ .dash-logo-icon { width: 28px; height: 28px; background: #f59e0b; border-radius: 7px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 13px; color: #0f172a; }
+ .dash-logo span { font-size: 13px; font-weight: 800; color: #fff; }
+ .dash-nav { display: flex; flex-direction: column; gap: 2px; padding: 0 8px; }
+ .dash-nav-item { font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.45); padding: 8px 10px; border-radius: 8px; cursor: default; transition: all 0.2s; }
+ .dash-nav-item:hover { color: rgba(255,255,255,0.7); background: rgba(255,255,255,0.05); }
+ .dash-nav-item.active { color: #f59e0b; background: rgba(245,158,11,0.1); }
 
-    /* Alerts */
-    .dash-alert-list { display: flex; flex-direction: column; gap: 10px; }
-    .dash-alert-item { display: flex; align-items: flex-start; gap: 10px; padding: 10px; border-radius: 8px; transition: all 0.3s; }
-    .dash-alert-item.alert-red { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.2); }
-    .dash-alert-item.alert-yellow { background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.15); }
-    .alert-icon { font-size: 14px; margin-top: 1px; }
-    .alert-title { font-size: 12px; font-weight: 700; color: rgba(255,255,255,0.85); }
-    .alert-desc { font-size: 11px; color: rgba(255,255,255,0.4); margin-top: 2px; }
+ /* Main area */
+ .dash-main { background: #0d1526; padding: 20px; display: flex; flex-direction: column; gap: 16px; }
+ .dash-topbar { display: flex; align-items: center; justify-content: space-between; }
+ .dash-greeting { font-size: 16px; font-weight: 800; color: #fff; }
+ .dash-date { font-size: 11px; color: rgba(255,255,255,0.4); margin-top: 2px; }
+ .dash-alert-badge { display: flex; align-items: center; gap: 7px; background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.25); color: #f87171; font-size: 12px; font-weight: 700; padding: 7px 12px; border-radius: 8px; }
+ .dash-alert-dot { width: 7px; height: 7px; background: #ef4444; border-radius: 50%; animation: ping 2s infinite; }
 
-    /* New alert pulse animation */
-    @keyframes alertSlideIn { 0% { opacity: 0; transform: translateX(20px); } 100% { opacity: 1; transform: translateX(0); } }
-    .alert-new { animation: alertSlideIn 0.4s ease forwards; }
+ /* Stats */
+ .dash-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+ .dash-stat-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 14px; transition: all 0.3s; }
+ .dash-stat-card:hover { background: rgba(255,255,255,0.06); transform: translateY(-2px); }
+ .dash-stat-label { font-size: 11px; font-weight: 600; color: rgba(255,255,255,0.4); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em; }
+ .dash-stat-num { font-size: 24px; font-weight: 900; color: #fff; letter-spacing: -1px; }
+ .dash-stat-sub { font-size: 11px; font-weight: 600; margin-top: 4px; }
 
-    .preview-glow { height: 120px; background: radial-gradient(ellipse at center top, rgba(245,158,11,0.12) 0%, transparent 70%); margin-top: -20px; pointer-events: none; }
+ /* Bottom Row */
+ .dash-bottom-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; flex: 1; }
+ .dash-chart-card, .dash-alerts-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 16px; }
+ .dash-card-title { font-size: 12px; font-weight: 700; color: rgba(255,255,255,0.6); margin-bottom: 14px; text-transform: uppercase; letter-spacing: 0.05em; }
 
-    @media (max-width: 768px) {
-      .hero-inner { grid-template-columns: 1fr; gap: 40px; }
-      .hero-h1 { font-size: 46px; letter-spacing: -1px; }
-      .two-col, .news-grid, .stats-grid { grid-template-columns: 1fr; }
-      .news-card-hero { grid-column: auto; }
-      .vs-badge { display: none; }
-      .footer-top { flex-direction: column; gap: 24px; text-align: center; }
-      .footer-bottom { flex-direction: column; gap: 12px; text-align: center; }
-      .nav-links { display: none; }
-      .dash-layout { grid-template-columns: 1fr; }
-      .dash-sidebar { display: none; }
-      .dash-stats { grid-template-columns: repeat(2, 1fr); }
-      .dash-bottom-row { grid-template-columns: 1fr; }
-    }
-  </style>
+ /* Chart */
+ .dash-chart { flex: 1; }
+ .chart-bars { display: flex; align-items: flex-end; gap: 8px; height: 120px; }
+ .chart-bar-wrap { display: flex; flex-direction: column; align-items: center; gap: 6px; flex: 1; height: 100%; justify-content: flex-end; }
+ .chart-bar-wrap span { font-size: 10px; color: rgba(255,255,255,0.3); font-weight: 500; }
+ .chart-bar { width: 100%; height: var(--h); border-radius: 4px 4px 0 0; background: rgba(245,158,11,0.35); transition: height 0.8s cubic-bezier(0.34, 1.56, 0.64, 1); }
+ .chart-bar.active-bar { background: #f59e0b; box-shadow: 0 0 12px rgba(245,158,11,0.4); }
+
+ /* Alerts */
+ .dash-alert-list { display: flex; flex-direction: column; gap: 10px; }
+ .dash-alert-item { display: flex; align-items: flex-start; gap: 10px; padding: 10px; border-radius: 8px; transition: all 0.3s; }
+ .dash-alert-item.alert-red { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.2); }
+ .dash-alert-item.alert-yellow { background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.15); }
+ .alert-icon { font-size: 14px; margin-top: 1px; }
+ .alert-title { font-size: 12px; font-weight: 700; color: rgba(255,255,255,0.85); }
+ .alert-desc { font-size: 11px; color: rgba(255,255,255,0.4); margin-top: 2px; }
+
+ /* New alert pulse animation */
+ @keyframes alertSlideIn { 0% { opacity: 0; transform: translateX(20px); } 100% { opacity: 1; transform: translateX(0); } }
+ .alert-new { animation: alertSlideIn 0.4s ease forwards; }
+
+ .preview-glow { height: 120px; background: radial-gradient(ellipse at center top, rgba(245,158,11,0.12) 0%, transparent 70%); margin-top: -20px; pointer-events: none; }
+
+ @media (max-width: 768px) {
+ .hero-inner { grid-template-columns: 1fr; gap: 40px; }
+ .hero-h1 { font-size: 46px; letter-spacing: -1px; }
+ .two-col, .news-grid, .stats-grid { grid-template-columns: 1fr; }
+ .news-card-hero { grid-column: auto; }
+ .vs-badge { display: none; }
+ .footer-top { flex-direction: column; gap: 24px; text-align: center; }
+ .footer-bottom { flex-direction: column; gap: 12px; text-align: center; }
+ .nav-links { display: none; }
+ .dash-layout { grid-template-columns: 1fr; }
+ .dash-sidebar { display: none; }
+ .dash-stats { grid-template-columns: repeat(2, 1fr); }
+ .dash-bottom-row { grid-template-columns: 1fr; }
+ }
+ </style>
 </head>
 <body>
 
 <!-- NAV -->
 <nav class="nav">
-  <div class="nav-inner">
-    <a href="#hero" class="nav-logo">
-      <div class="nav-logo-icon">F</div>
-      <span class="nav-logo-text">Fleetsure</span>
-    </a>
-    <div class="nav-links">
-      <a href="#why" class="nav-link">Why Fleetsure</a>
-      <a href="#news" class="nav-link">Industry Updates</a>
-      <a href="#stats" class="nav-link">Results</a>
-      <a href="#hero" class="btn-primary">Book Free Audit</a>
-      <a href="/login" class="btn-ghost">Login →</a>
-    </div>
-  </div>
+ <div class="nav-inner">
+ <a href="#hero" class="nav-logo">
+ <div class="nav-logo-icon">F</div>
+ <span class="nav-logo-text">Fleetsure</span>
+ </a>
+ <div class="nav-links">
+ <a href="#why" class="nav-link">Why Fleetsure</a>
+ <a href="#news" class="nav-link">Industry Updates</a>
+ <a href="#stats" class="nav-link">Results</a>
+ <a href="#hero" class="btn-primary">Book Free Audit</a>
+ <a href="/login" class="btn-ghost">Login →</a>
+ </div>
+ </div>
 </nav>
 
 <!-- HERO -->
 <section class="hero" id="hero">
-  <div class="hero-bg-img"></div>
-  <div class="hero-overlay"></div>
-  <div class="hero-glow-1"></div>
-  <div class="hero-glow-2"></div>
-  <div class="hero-inner">
-    <!-- Left -->
-    <div>
-      <div class="hero-badge">
-        <div class="hero-badge-dot"></div>
-        <span class="hero-badge-text">India's #1 Fleet OS</span>
-      </div>
-      <h1 class="hero-h1">Har Gaadi.<br/><span>Hamesha Tayyar.</span></h1>
-      <p class="hero-deva">हर गाड़ी। हमेशा तैयार।</p>
-      <h2 class="hero-sub">Compliance &amp; Fleet Control.<br/>Built for India.</h2>
-      <p class="hero-desc">
-        <strong>Rs 12,632 Cr</strong> in compliance fines since 2019. Track Insurance, PUC, Fitness,
-        Permits &amp; Maintenance — before ANPR cameras catch you first.
-      </p>
-      <div class="hero-pills">
-        <span class="pill"><span class="pill-dot" style="background:#f59e0b"></span>Logistics</span>
-        <span class="pill"><span class="pill-dot" style="background:#60a5fa"></span>Transport</span>
-        <span class="pill"><span class="pill-dot" style="background:#f87171"></span>LPG Tankers</span>
-        <span class="pill"><span class="pill-dot" style="background:#34d399"></span>Cold Chain</span>
-        <span class="pill"><span class="pill-dot" style="background:#c084fc"></span>FMCG</span>
-      </div>
-    </div>
-    <!-- Form -->
-    <div>
-      <div class="hero-form-card">
-        <h2 class="form-title">Free Fleet Audit</h2>
-        <p class="form-sub">We'll call you within 24 hours</p>
-        <form id="leadForm">
-          <div class="form-field">
-            <input type="text" name="name" required placeholder="Your Name" class="form-input" />
-          </div>
-          <div class="form-row">
-            <select name="fleetType" required class="form-input">
-              <option value="" disabled selected>Fleet Type</option>
-              <option value="logistics">Logistics</option>
-              <option value="transport">Transport</option>
-              <option value="lpg-tankers">LPG Tankers</option>
-              <option value="fuel-tankers">Fuel Tankers</option>
-              <option value="construction">Construction</option>
-              <option value="ecommerce">E-commerce</option>
-              <option value="cold-chain">Cold Chain</option>
-              <option value="fmcg">FMCG</option>
-              <option value="other">Other</option>
-            </select>
-            <select name="fleetSize" required class="form-input">
-              <option value="" disabled selected>Fleet Size</option>
-              <option value="1-5">1–5 trucks</option>
-              <option value="5-15">5–15 trucks</option>
-              <option value="15-30">15–30 trucks</option>
-              <option value="30-50">30–50 trucks</option>
-              <option value="50+">50+ trucks</option>
-            </select>
-          </div>
-          <div class="form-phone-row">
-            <div class="phone-prefix">+91</div>
-            <input type="tel" name="phone" required placeholder="Phone Number" maxlength="10" class="form-input" style="flex:1" />
-          </div>
-          <div class="form-field">
-            <input type="text" name="city" required placeholder="City" class="form-input" />
-          </div>
-          <div id="formMsg"></div>
-          <button type="submit" id="formBtn" class="form-submit">
-            Book My Free Audit
-            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
-          </button>
-        </form>
-        <a href="https://wa.me/917249342758?text=Hi%2C%20I%20want%20a%20demo%20of%20Fleetsure" target="_blank" rel="noopener" class="form-wa">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-          Or chat on WhatsApp
-        </a>
-      </div>
-    </div>
-  </div>
+ <div class="hero-bg-img"></div>
+ <div class="hero-overlay"></div>
+ <div class="hero-glow-1"></div>
+ <div class="hero-glow-2"></div>
+ <div class="hero-inner">
+ <!-- Left -->
+ <div>
+ <div class="hero-badge">
+ <div class="hero-badge-dot"></div>
+ <span class="hero-badge-text">India's #1 Fleet OS</span>
+ </div>
+ <h1 class="hero-h1">Har Gaadi.<br/><span>Hamesha Tayyar.</span></h1>
+ <p class="hero-deva">हर गाड़ी। हमेशा तैयार।</p>
+ <h2 class="hero-sub">Compliance &amp; Fleet Control.<br/>Built for India.</h2>
+ <p class="hero-desc">
+ <strong>Rs 12,632 Cr</strong> in compliance fines since 2019. Track Insurance, PUC, Fitness,
+ Permits &amp; Maintenance — before ANPR cameras catch you first.
+ </p>
+ <div class="hero-pills">
+ <span class="pill"><span class="pill-dot" style="background:#f59e0b"></span>Logistics</span>
+ <span class="pill"><span class="pill-dot" style="background:#60a5fa"></span>Transport</span>
+ <span class="pill"><span class="pill-dot" style="background:#f87171"></span>LPG Tankers</span>
+ <span class="pill"><span class="pill-dot" style="background:#34d399"></span>Cold Chain</span>
+ <span class="pill"><span class="pill-dot" style="background:#c084fc"></span>FMCG</span>
+ </div>
+ </div>
+ <!-- Form -->
+ <div>
+ <div class="hero-form-card">
+ <h2 class="form-title">Free Fleet Audit</h2>
+ <p class="form-sub">We'll call you within 24 hours</p>
+ <form id="leadForm">
+ <div class="form-field">
+ <input type="text" name="name" required placeholder="Your Name" class="form-input" />
+ </div>
+ <div class="form-row">
+ <select name="fleetType" required class="form-input">
+ <option value="" disabled selected>Fleet Type</option>
+ <option value="logistics">Logistics</option>
+ <option value="transport">Transport</option>
+ <option value="lpg-tankers">LPG Tankers</option>
+ <option value="fuel-tankers">Fuel Tankers</option>
+ <option value="construction">Construction</option>
+ <option value="ecommerce">E-commerce</option>
+ <option value="cold-chain">Cold Chain</option>
+ <option value="fmcg">FMCG</option>
+ <option value="other">Other</option>
+ </select>
+ <select name="fleetSize" required class="form-input">
+ <option value="" disabled selected>Fleet Size</option>
+ <option value="1-5">1–5 trucks</option>
+ <option value="5-15">5–15 trucks</option>
+ <option value="15-30">15–30 trucks</option>
+ <option value="30-50">30–50 trucks</option>
+ <option value="50+">50+ trucks</option>
+ </select>
+ </div>
+ <div class="form-phone-row">
+ <div class="phone-prefix">+91</div>
+ <input type="tel" name="phone" required placeholder="Phone Number" maxlength="10" class="form-input" style="flex:1" />
+ </div>
+ <div class="form-field">
+ <input type="text" name="city" required placeholder="City" class="form-input" />
+ </div>
+ <div id="formMsg"></div>
+ <button type="submit" id="formBtn" class="form-submit">
+ Book My Free Audit
+ <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+ </button>
+ </form>
+ <a href="https://wa.me/917249342758?text=Hi%2C%20I%20want%20a%20demo%20of%20Fleetsure" target="_blank" rel="noopener" class="form-wa">
+ <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+ Or chat on WhatsApp
+ </a>
+ </div>
+ </div>
+ </div>
 </section>
 
 <!-- PRODUCT PREVIEW -->
 <section class="preview-section" id="product">
-  <div class="preview-inner">
-    <div class="section-center" style="margin-bottom:48px">
-      <span class="section-tag">Live Product Preview</span>
-      <h2 class="section-h2">See Fleetsure in Action</h2>
-      <p class="section-sub">Manage your entire fleet from one intelligent dashboard. Real-time, automated, and built for India.</p>
-    </div>
+ <div class="preview-inner">
+ <div class="section-center" style="margin-bottom:48px">
+ <span class="section-tag">Live Product Preview</span>
+ <h2 class="section-h2">See Fleetsure in Action</h2>
+ <p class="section-sub">Manage your entire fleet from one intelligent dashboard. Real-time, automated, and built for India.</p>
+ </div>
 
-    <!-- Browser Window Mock -->
-    <div class="browser-window">
-      <!-- Browser Chrome -->
-      <div class="browser-chrome">
-        <div class="browser-dots">
-          <span class="br-dot" style="background:#ff5f57"></span>
-          <span class="br-dot" style="background:#febc2e"></span>
-          <span class="br-dot" style="background:#28c840"></span>
-        </div>
-        <div class="browser-url">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-          app.fleetsure.in/dashboard
-        </div>
-        <div style="width:60px"></div>
-      </div>
+ <!-- Browser Window Mock -->
+ <div class="browser-window">
+ <!-- Browser Chrome -->
+ <div class="browser-chrome">
+ <div class="browser-dots">
+ <span class="br-dot" style="background:#ff5f57"></span>
+ <span class="br-dot" style="background:#febc2e"></span>
+ <span class="br-dot" style="background:#28c840"></span>
+ </div>
+ <div class="browser-url">
+ <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+ app.fleetsure.in/dashboard
+ </div>
+ <div style="width:60px"></div>
+ </div>
 
-      <!-- Dashboard Content -->
-      <div class="dash-layout">
-        <!-- Sidebar -->
-        <div class="dash-sidebar">
-          <div class="dash-logo">
-            <div class="dash-logo-icon">F</div>
-            <span>Fleetsure</span>
-          </div>
-          <nav class="dash-nav">
-            <div class="dash-nav-item active">🏠 Dashboard</div>
-            <div class="dash-nav-item">🚛 Vehicles</div>
-            <div class="dash-nav-item">🗺️ Trips</div>
-            <div class="dash-nav-item">🛡️ Compliance</div>
-            <div class="dash-nav-item">🔧 Maintenance</div>
-            <div class="dash-nav-item">⛽ Fuel</div>
-            <div class="dash-nav-item">💳 FASTag</div>
-          </nav>
-        </div>
+ <!-- Dashboard Content -->
+ <div class="dash-layout">
+ <!-- Sidebar -->
+ <div class="dash-sidebar">
+ <div class="dash-logo">
+ <div class="dash-logo-icon">F</div>
+ <span>Fleetsure</span>
+ </div>
+ <nav class="dash-nav">
+ <div class="dash-nav-item active"> Dashboard</div>
+ <div class="dash-nav-item"> Vehicles</div>
+ <div class="dash-nav-item"> Trips</div>
+ <div class="dash-nav-item"> Compliance</div>
+ <div class="dash-nav-item"> Maintenance</div>
+ <div class="dash-nav-item"> Fuel</div>
+ <div class="dash-nav-item"> FASTag</div>
+ </nav>
+ </div>
 
-        <!-- Main Area -->
-        <div class="dash-main">
-          <!-- Top bar -->
-          <div class="dash-topbar">
-            <div>
-              <div class="dash-greeting">नमस्ते, Aamir 👋</div>
-              <div class="dash-date">March 2026 · Fleet Report</div>
-            </div>
-            <div class="dash-alert-badge">
-              <span class="dash-alert-dot"></span>
-              3 Alerts
-            </div>
-          </div>
+ <!-- Main Area -->
+ <div class="dash-main">
+ <!-- Top bar -->
+ <div class="dash-topbar">
+ <div>
+ <div class="dash-greeting">नमस्ते, Aamir </div>
+ <div class="dash-date">March 2026 · Fleet Report</div>
+ </div>
+ <div class="dash-alert-badge">
+ <span class="dash-alert-dot"></span>
+ 3 Alerts
+ </div>
+ </div>
 
-          <!-- Stats Row -->
-          <div class="dash-stats">
-            <div class="dash-stat-card">
-              <div class="dash-stat-label">Total Vehicles</div>
-              <div class="dash-stat-num" id="statVehicles">101</div>
-              <div class="dash-stat-sub" style="color:#34d399">86 Active</div>
-            </div>
-            <div class="dash-stat-card">
-              <div class="dash-stat-label">Total Trips</div>
-              <div class="dash-stat-num" id="statTrips">525</div>
-              <div class="dash-stat-sub" style="color:#60a5fa">This month</div>
-            </div>
-            <div class="dash-stat-card">
-              <div class="dash-stat-label">Revenue</div>
-              <div class="dash-stat-num" id="statRevenue">₹10.7L</div>
-              <div class="dash-stat-sub" style="color:#a78bfa">Freight earned</div>
-            </div>
-            <div class="dash-stat-card" style="border-color:#fca5a5">
-              <div class="dash-stat-label">Compliance Risk</div>
-              <div class="dash-stat-num" style="color:#f87171" id="statRisk">3</div>
-              <div class="dash-stat-sub" style="color:#f87171">Expiring soon</div>
-            </div>
-          </div>
+ <!-- Stats Row -->
+ <div class="dash-stats">
+ <div class="dash-stat-card">
+ <div class="dash-stat-label">Total Vehicles</div>
+ <div class="dash-stat-num" id="statVehicles">101</div>
+ <div class="dash-stat-sub" style="color:#34d399">86 Active</div>
+ </div>
+ <div class="dash-stat-card">
+ <div class="dash-stat-label">Total Trips</div>
+ <div class="dash-stat-num" id="statTrips">525</div>
+ <div class="dash-stat-sub" style="color:#60a5fa">This month</div>
+ </div>
+ <div class="dash-stat-card">
+ <div class="dash-stat-label">Revenue</div>
+ <div class="dash-stat-num" id="statRevenue">₹10.7L</div>
+ <div class="dash-stat-sub" style="color:#a78bfa">Freight earned</div>
+ </div>
+ <div class="dash-stat-card" style="border-color:#fca5a5">
+ <div class="dash-stat-label">Compliance Risk</div>
+ <div class="dash-stat-num" style="color:#f87171" id="statRisk">3</div>
+ <div class="dash-stat-sub" style="color:#f87171">Expiring soon</div>
+ </div>
+ </div>
 
-          <!-- Chart + Alerts Row -->
-          <div class="dash-bottom-row">
-            <!-- Trip Activity Chart -->
-            <div class="dash-chart-card">
-              <div class="dash-card-title">Weekly Trip Activity</div>
-              <div class="dash-chart">
-                <div class="chart-bars">
-                  <div class="chart-bar-wrap"><div class="chart-bar" style="--h:55%" id="b1"></div><span>Mon</span></div>
-                  <div class="chart-bar-wrap"><div class="chart-bar" style="--h:80%" id="b2"></div><span>Tue</span></div>
-                  <div class="chart-bar-wrap"><div class="chart-bar" style="--h:65%" id="b3"></div><span>Wed</span></div>
-                  <div class="chart-bar-wrap"><div class="chart-bar" style="--h:90%" id="b4"></div><span>Thu</span></div>
-                  <div class="chart-bar-wrap"><div class="chart-bar" style="--h:72%" id="b5"></div><span>Fri</span></div>
-                  <div class="chart-bar-wrap"><div class="chart-bar" style="--h:40%" id="b6"></div><span>Sat</span></div>
-                  <div class="chart-bar-wrap"><div class="chart-bar active-bar" style="--h:85%" id="b7"></div><span>Sun</span></div>
-                </div>
-              </div>
-            </div>
+ <!-- Chart + Alerts Row -->
+ <div class="dash-bottom-row">
+ <!-- Trip Activity Chart -->
+ <div class="dash-chart-card">
+ <div class="dash-card-title">Weekly Trip Activity</div>
+ <div class="dash-chart">
+ <div class="chart-bars">
+ <div class="chart-bar-wrap"><div class="chart-bar" style="--h:55%" id="b1"></div><span>Mon</span></div>
+ <div class="chart-bar-wrap"><div class="chart-bar" style="--h:80%" id="b2"></div><span>Tue</span></div>
+ <div class="chart-bar-wrap"><div class="chart-bar" style="--h:65%" id="b3"></div><span>Wed</span></div>
+ <div class="chart-bar-wrap"><div class="chart-bar" style="--h:90%" id="b4"></div><span>Thu</span></div>
+ <div class="chart-bar-wrap"><div class="chart-bar" style="--h:72%" id="b5"></div><span>Fri</span></div>
+ <div class="chart-bar-wrap"><div class="chart-bar" style="--h:40%" id="b6"></div><span>Sat</span></div>
+ <div class="chart-bar-wrap"><div class="chart-bar active-bar" style="--h:85%" id="b7"></div><span>Sun</span></div>
+ </div>
+ </div>
+ </div>
 
-            <!-- Compliance Alerts -->
-            <div class="dash-alerts-card">
-              <div class="dash-card-title">Compliance Alerts</div>
-              <div class="dash-alert-list" id="alertList">
-                <div class="dash-alert-item alert-red" id="al1">
-                  <div class="alert-icon">⚠️</div>
-                  <div>
-                    <div class="alert-title">MH 14 BP 7432 — Insurance</div>
-                    <div class="alert-desc">Expires in 3 days</div>
-                  </div>
-                </div>
-                <div class="dash-alert-item alert-yellow" id="al2">
-                  <div class="alert-icon">⏰</div>
-                  <div>
-                    <div class="alert-title">MH 04 AX 2211 — PUC</div>
-                    <div class="alert-desc">Expires in 12 days</div>
-                  </div>
-                </div>
-                <div class="dash-alert-item alert-yellow" id="al3">
-                  <div class="alert-icon">📋</div>
-                  <div>
-                    <div class="alert-title">MH 12 CJ 9901 — Permit</div>
-                    <div class="alert-desc">Expires in 18 days</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-    <!-- Glow under the window -->
-    <div class="preview-glow"></div>
-  </div>
+ <!-- Compliance Alerts -->
+ <div class="dash-alerts-card">
+ <div class="dash-card-title">Compliance Alerts</div>
+ <div class="dash-alert-list" id="alertList">
+ <div class="dash-alert-item alert-red" id="al1">
+ <div class="alert-icon"></div>
+ <div>
+ <div class="alert-title">MH 14 BP 7432 — Insurance</div>
+ <div class="alert-desc">Expires in 3 days</div>
+ </div>
+ </div>
+ <div class="dash-alert-item alert-yellow" id="al2">
+ <div class="alert-icon"></div>
+ <div>
+ <div class="alert-title">MH 04 AX 2211 — PUC</div>
+ <div class="alert-desc">Expires in 12 days</div>
+ </div>
+ </div>
+ <div class="dash-alert-item alert-yellow" id="al3">
+ <div class="alert-icon"></div>
+ <div>
+ <div class="alert-title">MH 12 CJ 9901 — Permit</div>
+ <div class="alert-desc">Expires in 18 days</div>
+ </div>
+ </div>
+ </div>
+ </div>
+ </div>
+ </div>
+ </div>
+ </div>
+ <!-- Glow under the window -->
+ <div class="preview-glow"></div>
+ </div>
 </section>
 
 <!-- WHY FLEETSURE -->
 <section class="section why-section" id="why">
-  <div class="section-inner">
-    <div class="section-center" style="margin-bottom: 0">
-      <span class="section-tag">The Fleetsure Advantage</span>
-      <h2 class="section-h2">Every Mistake Costs You.</h2>
-      <p class="section-sub">Non-compliance is no longer a paperwork problem. It's a business risk. Here's the difference Fleetsure makes.</p>
-    </div>
-    <div class="two-col">
-      <div class="vs-badge">VS</div>
-      <!-- Pain -->
-      <div class="card-pain">
-        <div class="card-header">
-          <div class="card-icon">⚠️</div>
-          <div>
-            <div class="card-title">Without Fleetsure</div>
-            <div class="card-subtitle">Chaos, fines &amp; downtime</div>
-          </div>
-        </div>
-        <ul class="card-items">
-          <li class="card-item">
-            <div class="card-item-dot" style="background:#f87171"></div>
-            <div>
-              <div class="card-item-title">Insurance Expired Unnoticed</div>
-              <div class="card-item-desc">Rs 2,000–4,000 fine + massive accidental liability. Vehicle grounded instantly by traffic police.</div>
-            </div>
-          </li>
-          <li class="card-item">
-            <div class="card-item-dot" style="background:#f87171"></div>
-            <div>
-              <div class="card-item-title">Permit Lapsed</div>
-              <div class="card-item-desc">Rs 10,000 fine + truck is seized by state highway authorities. Costly legal hassle to recover.</div>
-            </div>
-          </li>
-          <li class="card-item">
-            <div class="card-item-dot" style="background:#f87171"></div>
-            <div>
-              <div class="card-item-title">PUC Missed</div>
-              <div class="card-item-desc">Up to Rs 10,000 fine (MV Act Sec 190). ANPR cameras now auto-detect and issue e-challans.</div>
-            </div>
-          </li>
-        </ul>
-        <div class="card-footer">
-          <div class="card-footer-badge" style="background:#fef2f2; color:#ef4444">
-            ⚠️ 1 grounded truck = Rs 5,000–8,000 lost per day
-          </div>
-        </div>
-      </div>
-      <!-- Gain -->
-      <div class="card-gain">
-        <div class="card-header">
-          <div class="card-icon">✅</div>
-          <div>
-            <div class="card-title">With Fleetsure</div>
-            <div class="card-subtitle">Control, uptime &amp; peace of mind</div>
-          </div>
-        </div>
-        <ul class="card-items">
-          <li class="card-item">
-            <div class="card-item-dot" style="background:#34d399"></div>
-            <div>
-              <div class="card-item-title">Proactive Auto-Alerts</div>
-              <div class="card-item-desc">Get WhatsApp &amp; email alerts days before Insurance, PUC, Fitness, and Permits expire.</div>
-            </div>
-          </li>
-          <li class="card-item">
-            <div class="card-item-dot" style="background:#34d399"></div>
-            <div>
-              <div class="card-item-title">Cloud Document Vault</div>
-              <div class="card-item-desc">Access RCs, Insurance, PUC certificates instantly from anywhere. No more scattered WhatsApp files.</div>
-            </div>
-          </li>
-          <li class="card-item">
-            <div class="card-item-dot" style="background:#34d399"></div>
-            <div>
-              <div class="card-item-title">Predictive Maintenance</div>
-              <div class="card-item-desc">Full service history, tyre lifecycle tracking, and fuel logs. Prevent costly highway breakdowns.</div>
-            </div>
-          </li>
-        </ul>
-        <div class="card-footer">
-          <div class="card-footer-badge" style="background:#f0fdf4; color:#16a34a">
-            ✓ Zero challans. Maximum uptime.
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
+ <div class="section-inner">
+ <div class="section-center" style="margin-bottom: 0">
+ <span class="section-tag">The Fleetsure Advantage</span>
+ <h2 class="section-h2">Every Mistake Costs You.</h2>
+ <p class="section-sub">Non-compliance is no longer a paperwork problem. It's a business risk. Here's the difference Fleetsure makes.</p>
+ </div>
+ <div class="two-col">
+ <div class="vs-badge">VS</div>
+ <!-- Pain -->
+ <div class="card-pain">
+ <div class="card-header">
+ <div class="card-icon"></div>
+ <div>
+ <div class="card-title">Without Fleetsure</div>
+ <div class="card-subtitle">Chaos, fines &amp; downtime</div>
+ </div>
+ </div>
+ <ul class="card-items">
+ <li class="card-item">
+ <div class="card-item-dot" style="background:#f87171"></div>
+ <div>
+ <div class="card-item-title">Insurance Expired Unnoticed</div>
+ <div class="card-item-desc">Rs 2,000–4,000 fine + massive accidental liability. Vehicle grounded instantly by traffic police.</div>
+ </div>
+ </li>
+ <li class="card-item">
+ <div class="card-item-dot" style="background:#f87171"></div>
+ <div>
+ <div class="card-item-title">Permit Lapsed</div>
+ <div class="card-item-desc">Rs 10,000 fine + truck is seized by state highway authorities. Costly legal hassle to recover.</div>
+ </div>
+ </li>
+ <li class="card-item">
+ <div class="card-item-dot" style="background:#f87171"></div>
+ <div>
+ <div class="card-item-title">PUC Missed</div>
+ <div class="card-item-desc">Up to Rs 10,000 fine (MV Act Sec 190). ANPR cameras now auto-detect and issue e-challans.</div>
+ </div>
+ </li>
+ </ul>
+ <div class="card-footer">
+ <div class="card-footer-badge" style="background:#fef2f2; color:#ef4444">
+ 1 grounded truck = Rs 5,000–8,000 lost per day
+ </div>
+ </div>
+ </div>
+ <!-- Gain -->
+ <div class="card-gain">
+ <div class="card-header">
+ <div class="card-icon"></div>
+ <div>
+ <div class="card-title">With Fleetsure</div>
+ <div class="card-subtitle">Control, uptime &amp; peace of mind</div>
+ </div>
+ </div>
+ <ul class="card-items">
+ <li class="card-item">
+ <div class="card-item-dot" style="background:#34d399"></div>
+ <div>
+ <div class="card-item-title">Proactive Auto-Alerts</div>
+ <div class="card-item-desc">Get WhatsApp &amp; email alerts days before Insurance, PUC, Fitness, and Permits expire.</div>
+ </div>
+ </li>
+ <li class="card-item">
+ <div class="card-item-dot" style="background:#34d399"></div>
+ <div>
+ <div class="card-item-title">Cloud Document Vault</div>
+ <div class="card-item-desc">Access RCs, Insurance, PUC certificates instantly from anywhere. No more scattered WhatsApp files.</div>
+ </div>
+ </li>
+ <li class="card-item">
+ <div class="card-item-dot" style="background:#34d399"></div>
+ <div>
+ <div class="card-item-title">Predictive Maintenance</div>
+ <div class="card-item-desc">Full service history, tyre lifecycle tracking, and fuel logs. Prevent costly highway breakdowns.</div>
+ </div>
+ </li>
+ </ul>
+ <div class="card-footer">
+ <div class="card-footer-badge" style="background:#f0fdf4; color:#16a34a">
+ Zero challans. Maximum uptime.
+ </div>
+ </div>
+ </div>
+ </div>
+ </div>
 </section>
 
 <!-- INDUSTRY UPDATES -->
 <section class="section news-section" id="news">
-  <div class="section-inner">
-    <div class="section-center">
-      <span class="section-tag">Industry Reality Check</span>
-      <h2 class="section-h2">The Rules Have Changed.</h2>
-      <p class="section-sub">Government crackdowns and automated enforcement are reshaping fleet operations. Stay ahead or pay the price.</p>
-    </div>
-    <div class="news-grid">
-      <!-- Hero Card -->
-      <div class="news-card news-card-hero">
-        <div class="news-tag" style="background:rgba(239,68,68,0.15); color:#f87171">
-          <span style="width:6px;height:6px;background:#ef4444;border-radius:50%;display:inline-block;animation:ping 2s infinite"></span>
-          Live Enforcement
-        </div>
-        <h3 class="news-card-title">AI Cameras Now Issue E-Challans Instantly on Highways</h3>
-        <p class="news-card-desc" style="max-width:700px">ANPR cameras across Delhi, Mumbai and 12+ state highways are actively detecting expired insurance, PUC, and permits in real-time — without stopping the vehicle. The fine arrives by SMS before you reach the next toll booth.</p>
-        <div class="news-impact">Impact: Instant Rs 2,000–10,000 fine per violation. No warning given.</div>
-      </div>
-      <!-- Card 2 -->
-      <div class="news-card">
-        <div class="news-tag" style="background:#fffbeb; color:#d97706">Policy</div>
-        <h3 class="news-card-title">Vehicle Scrappage Policy Now Active</h3>
-        <p class="news-card-desc">Commercial vehicles 15+ years old must pass mandatory automated fitness tests. Failures lead to immediate deregistration. ~10 lakh trucks at risk nationwide.</p>
-        <div class="news-impact">Risk: Deregistration &amp; loss of asset</div>
-      </div>
-      <!-- Card 3 -->
-      <div class="news-card">
-        <div class="news-tag" style="background:#f0fdf4; color:#16a34a">Emission</div>
-        <h3 class="news-card-title">BS-VI Stage II Emission Norms</h3>
-        <p class="news-card-desc">Stricter OBD-II monitoring means higher PUC rejection rates for older fleets. More frequent renewals required to stay on the road legally.</p>
-        <div class="news-impact">Impact: Higher frequency of PUC failures</div>
-      </div>
-    </div>
-    <div style="text-align:center; margin-top:20px">
-      <p style="font-size:11px; color:#94a3b8">Sources: Ministry of Road Transport &amp; Highways, Union Budget 2025-26, SIAM India</p>
-    </div>
-  </div>
+ <div class="section-inner">
+ <div class="section-center">
+ <span class="section-tag">Industry Reality Check</span>
+ <h2 class="section-h2">The Rules Have Changed.</h2>
+ <p class="section-sub">Government crackdowns and automated enforcement are reshaping fleet operations. Stay ahead or pay the price.</p>
+ </div>
+ <div class="news-grid">
+ <!-- Hero Card -->
+ <div class="news-card news-card-hero">
+ <div class="news-tag" style="background:rgba(239,68,68,0.15); color:#f87171">
+ <span style="width:6px;height:6px;background:#ef4444;border-radius:50%;display:inline-block;animation:ping 2s infinite"></span>
+ Live Enforcement
+ </div>
+ <h3 class="news-card-title">AI Cameras Now Issue E-Challans Instantly on Highways</h3>
+ <p class="news-card-desc" style="max-width:700px">ANPR cameras across Delhi, Mumbai and 12+ state highways are actively detecting expired insurance, PUC, and permits in real-time — without stopping the vehicle. The fine arrives by SMS before you reach the next toll booth.</p>
+ <div class="news-impact">Impact: Instant Rs 2,000–10,000 fine per violation. No warning given.</div>
+ </div>
+ <!-- Card 2 -->
+ <div class="news-card">
+ <div class="news-tag" style="background:#fffbeb; color:#d97706">Policy</div>
+ <h3 class="news-card-title">Vehicle Scrappage Policy Now Active</h3>
+ <p class="news-card-desc">Commercial vehicles 15+ years old must pass mandatory automated fitness tests. Failures lead to immediate deregistration. ~10 lakh trucks at risk nationwide.</p>
+ <div class="news-impact">Risk: Deregistration &amp; loss of asset</div>
+ </div>
+ <!-- Card 3 -->
+ <div class="news-card">
+ <div class="news-tag" style="background:#f0fdf4; color:#16a34a">Emission</div>
+ <h3 class="news-card-title">BS-VI Stage II Emission Norms</h3>
+ <p class="news-card-desc">Stricter OBD-II monitoring means higher PUC rejection rates for older fleets. More frequent renewals required to stay on the road legally.</p>
+ <div class="news-impact">Impact: Higher frequency of PUC failures</div>
+ </div>
+ </div>
+ <div style="text-align:center; margin-top:20px">
+ <p style="font-size:11px; color:#94a3b8">Sources: Ministry of Road Transport &amp; Highways, Union Budget 2025-26, SIAM India</p>
+ </div>
+ </div>
 </section>
 
 <!-- STATS -->
 <section class="section stats-section" id="stats">
-  <div class="section-inner">
-    <div class="section-center">
-      <span class="section-tag">Why It Matters</span>
-      <h2 class="section-h2">The Numbers Don't Lie.</h2>
-    </div>
-    <div class="stats-grid">
-      <div class="stat-card">
-        <div class="stat-num">₹12<span>K+Cr</span></div>
-        <div class="stat-label">Compliance fines collected since 2019</div>
-        <div class="stat-source">Source: Parliament data, 31 States</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-num">2.7<span>L</span></div>
-        <div class="stat-label">Vehicles fined in Delhi in 2024 alone</div>
-        <div class="stat-source">Source: India TV News</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-num">85<span>%</span></div>
-        <div class="stat-label">Fleet owners run between 5–20 trucks</div>
-        <div class="stat-source">Source: Mordor Intelligence</div>
-      </div>
-    </div>
-  </div>
+ <div class="section-inner">
+ <div class="section-center">
+ <span class="section-tag">Why It Matters</span>
+ <h2 class="section-h2">The Numbers Don't Lie.</h2>
+ </div>
+ <div class="stats-grid">
+ <div class="stat-card">
+ <div class="stat-num">₹12<span>K+Cr</span></div>
+ <div class="stat-label">Compliance fines collected since 2019</div>
+ <div class="stat-source">Source: Parliament data, 31 States</div>
+ </div>
+ <div class="stat-card">
+ <div class="stat-num">2.7<span>L</span></div>
+ <div class="stat-label">Vehicles fined in Delhi in 2024 alone</div>
+ <div class="stat-source">Source: India TV News</div>
+ </div>
+ <div class="stat-card">
+ <div class="stat-num">85<span>%</span></div>
+ <div class="stat-label">Fleet owners run between 5–20 trucks</div>
+ <div class="stat-source">Source: Mordor Intelligence</div>
+ </div>
+ </div>
+ </div>
 </section>
 
 <!-- CTA -->
 <section class="cta-section">
-  <div class="cta-glow"></div>
-  <div class="cta-inner">
-    <span class="section-tag" style="color:#fbbf24">Get Started Today</span>
-    <h2 class="cta-h2">Your Fleet. Protected. Always.</h2>
-    <p class="cta-desc">Join fleet owners who have eliminated compliance chaos and are running smarter, more profitable operations with Fleetsure.</p>
-    <a href="#hero" class="cta-btn">
-      Book Free Fleet Audit
-      <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
-    </a>
-  </div>
+ <div class="cta-glow"></div>
+ <div class="cta-inner">
+ <span class="section-tag" style="color:#fbbf24">Get Started Today</span>
+ <h2 class="cta-h2">Your Fleet. Protected. Always.</h2>
+ <p class="cta-desc">Join fleet owners who have eliminated compliance chaos and are running smarter, more profitable operations with Fleetsure.</p>
+ <a href="#hero" class="cta-btn">
+ Book Free Fleet Audit
+ <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+ </a>
+ </div>
 </section>
 
 <!-- FOOTER -->
 <footer class="footer">
-  <div class="footer-inner">
-    <div class="footer-top">
-      <div>
-        <a href="#hero" class="footer-logo">
-          <div class="footer-logo-icon">F</div>
-          <span class="footer-logo-text">Fleetsure</span>
-        </a>
-        <p class="footer-tagline">Fleet Compliance &amp; Maintenance OS for India</p>
-      </div>
-      <div class="footer-ctas">
-        <a href="#hero" class="footer-btn-primary">Book Free Audit</a>
-        <a href="/login" class="footer-btn-ghost">Login Platform</a>
-      </div>
-    </div>
-    <div class="footer-bottom">
-      <p class="footer-copy">&copy; 2026 Fleetsure Technologies. All rights reserved.</p>
-      <div class="footer-links">
-        <a href="#" class="footer-link">Privacy Policy</a>
-        <a href="#" class="footer-link">Terms of Service</a>
-      </div>
-    </div>
-  </div>
+ <div class="footer-inner">
+ <div class="footer-top">
+ <div>
+ <a href="#hero" class="footer-logo">
+ <div class="footer-logo-icon">F</div>
+ <span class="footer-logo-text">Fleetsure</span>
+ </a>
+ <p class="footer-tagline">Fleet Compliance &amp; Maintenance OS for India</p>
+ </div>
+ <div class="footer-ctas">
+ <a href="#hero" class="footer-btn-primary">Book Free Audit</a>
+ <a href="/login" class="footer-btn-ghost">Login Platform</a>
+ </div>
+ </div>
+ <div class="footer-bottom">
+ <p class="footer-copy">&copy; 2026 Fleetsure Technologies. All rights reserved.</p>
+ <div class="footer-links">
+ <a href="#" class="footer-link">Privacy Policy</a>
+ <a href="#" class="footer-link">Terms of Service</a>
+ </div>
+ </div>
+ </div>
 </footer>
 
 <!-- FLOATING WHATSAPP -->
 <a href="https://wa.me/917249342758?text=Hi%2C%20I%20want%20a%20demo%20of%20Fleetsure" target="_blank" rel="noopener" class="wa-float" aria-label="Chat on WhatsApp">
-  <div class="wa-float-ring"></div>
-  <svg width="28" height="28" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+ <div class="wa-float-ring"></div>
+ <svg width="28" height="28" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
 </a>
 
 <script>
-  // Mobile menu button
-  document.addEventListener('DOMContentLoaded', () => {
-    // Lead form
-    const form = document.getElementById('leadForm');
-    const formMsg = document.getElementById('formMsg');
-    const formBtn = document.getElementById('formBtn');
-    
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      formMsg.style.display = 'none';
-      formBtn.disabled = true;
-      const origHtml = formBtn.innerHTML;
-      formBtn.innerHTML = 'Submitting...';
-      
-      const data = {
-        name: form.name.value.trim(),
-        fleetType: form.fleetType?.value || '',
-        fleetSize: form.fleetSize.value,
-        phone: form.phone.value.replace(/\D/g, ''),
-        city: form.city.value.trim()
-      };
-      
-      try {
-        const res = await fetch('/api/leads', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
-        const result = await res.json();
-        if (res.ok) {
-          formMsg.textContent = result.message || 'Done! We\'ll call you within 24 hours.';
-          formMsg.style.cssText = 'display:block; background:rgba(52,211,153,0.1); color:#34d399; border:1px solid rgba(52,211,153,0.2); border-radius:10px; padding:12px; font-size:13px; font-weight:600; text-align:center;';
-          form.reset();
-        } else {
-          formMsg.textContent = result.error || 'Something went wrong. Please try again.';
-          formMsg.style.cssText = 'display:block; background:rgba(248,113,113,0.1); color:#f87171; border:1px solid rgba(248,113,113,0.2); border-radius:10px; padding:12px; font-size:13px; font-weight:600; text-align:center;';
-        }
-      } catch {
-        formMsg.textContent = 'Network error. Please try again.';
-        formMsg.style.cssText = 'display:block; background:rgba(248,113,113,0.1); color:#f87171; border:1px solid rgba(248,113,113,0.2); border-radius:10px; padding:12px; font-size:13px; font-weight:600; text-align:center;';
-      }
-      
-      formBtn.disabled = false;
-      formBtn.innerHTML = origHtml;
-    });
+ // Mobile menu button
+ document.addEventListener('DOMContentLoaded', () => {
+ // Lead form
+ const form = document.getElementById('leadForm');
+ const formMsg = document.getElementById('formMsg');
+ const formBtn = document.getElementById('formBtn');
 
-    // ── Dashboard Chart Animations ──
-    const chartBars = document.querySelectorAll('.chart-bar');
-    const savedHeights = Array.from(chartBars).map(b => b.style.getPropertyValue('--h'));
-    chartBars.forEach(b => b.style.setProperty('--h', '0%'));
-    let chartAnimated = false;
-    const previewObs = new IntersectionObserver((entries) => {
-      entries.forEach(e => {
-        if (e.isIntersecting && !chartAnimated) {
-          chartAnimated = true;
-          chartBars.forEach((bar, i) => {
-            setTimeout(() => { bar.style.setProperty('--h', savedHeights[i]); }, i * 90);
-          });
-          animateCount('statTrips', 0, 525, 1200);
-          animateCount('statVehicles', 0, 101, 1000);
-        }
-      });
-    }, { threshold: 0.3 });
-    const previewSection = document.getElementById('product');
-    if (previewSection) previewObs.observe(previewSection);
-    function animateCount(id, start, end, duration) {
-      const el = document.getElementById(id);
-      if (!el) return;
-      const step = (end - start) / (duration / 16);
-      let current = start;
-      const timer = setInterval(() => {
-        current += step;
-        if (current >= end) { current = end; clearInterval(timer); }
-        el.textContent = Math.floor(current);
-      }, 16);
-    }
+ form.addEventListener('submit', async (e) => {
+ e.preventDefault();
+ formMsg.style.display = 'none';
+ formBtn.disabled = true;
+ const origHtml = formBtn.innerHTML;
+ formBtn.innerHTML = 'Submitting...';
 
-    // ── Live Alert Cycling ──
-    const alertData = [
-      { cls: 'alert-red',    icon: '⚠️', title: 'MH 14 BP 7432 — Insurance', desc: 'Expires in 3 days' },
-      { cls: 'alert-yellow', icon: '⏰', title: 'MH 04 AX 2211 — PUC',        desc: 'Expires in 12 days' },
-      { cls: 'alert-yellow', icon: '📋', title: 'MH 12 CJ 9901 — Permit',     desc: 'Expires in 18 days' },
-      { cls: 'alert-yellow', icon: '🔧', title: 'MH 09 TK 3344 — Fitness',    desc: 'Expires in 25 days' },
-      { cls: 'alert-red',    icon: '🚨', title: 'MH 20 LR 8812 — Insurance',  desc: 'Expired yesterday!' },
-    ];
-    let alertIdx = 3;
-    setInterval(() => {
-      const list = document.getElementById('alertList');
-      if (!list) return;
-      alertIdx = (alertIdx + 1) % alertData.length;
-      const d = alertData[alertIdx];
-      const newItem = document.createElement('div');
-      newItem.className = `dash-alert-item ${d.cls} alert-new`;
-      newItem.innerHTML = `<div class="alert-icon">${d.icon}</div><div><div class="alert-title">${d.title}</div><div class="alert-desc">${d.desc}</div></div>`;
-      list.insertBefore(newItem, list.firstChild);
-      if (list.children.length > 3) list.removeChild(list.lastChild);
-    }, 4000);
+ const data = {
+ name: form.name.value.trim(),
+ fleetType: form.fleetType?.value || '',
+ fleetSize: form.fleetSize.value,
+ phone: form.phone.value.replace(/\D/g, ''),
+ city: form.city.value.trim()
+ };
 
-  });
+ try {
+ const res = await fetch('/api/leads', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+ const result = await res.json();
+ if (res.ok) {
+ formMsg.textContent = result.message || 'Done! We\'ll call you within 24 hours.';
+ formMsg.style.cssText = 'display:block; background:rgba(52,211,153,0.1); color:#34d399; border:1px solid rgba(52,211,153,0.2); border-radius:10px; padding:12px; font-size:13px; font-weight:600; text-align:center;';
+ form.reset();
+ } else {
+ formMsg.textContent = result.error || 'Something went wrong. Please try again.';
+ formMsg.style.cssText = 'display:block; background:rgba(248,113,113,0.1); color:#f87171; border:1px solid rgba(248,113,113,0.2); border-radius:10px; padding:12px; font-size:13px; font-weight:600; text-align:center;';
+ }
+ } catch {
+ formMsg.textContent = 'Network error. Please try again.';
+ formMsg.style.cssText = 'display:block; background:rgba(248,113,113,0.1); color:#f87171; border:1px solid rgba(248,113,113,0.2); border-radius:10px; padding:12px; font-size:13px; font-weight:600; text-align:center;';
+ }
+
+ formBtn.disabled = false;
+ formBtn.innerHTML = origHtml;
+ });
+
+ // ── Dashboard Chart Animations ──
+ const chartBars = document.querySelectorAll('.chart-bar');
+ const savedHeights = Array.from(chartBars).map(b => b.style.getPropertyValue('--h'));
+ chartBars.forEach(b => b.style.setProperty('--h', '0%'));
+ let chartAnimated = false;
+ const previewObs = new IntersectionObserver((entries) => {
+ entries.forEach(e => {
+ if (e.isIntersecting && !chartAnimated) {
+ chartAnimated = true;
+ chartBars.forEach((bar, i) => {
+ setTimeout(() => { bar.style.setProperty('--h', savedHeights[i]); }, i * 90);
+ });
+ animateCount('statTrips', 0, 525, 1200);
+ animateCount('statVehicles', 0, 101, 1000);
+ }
+ });
+ }, { threshold: 0.3 });
+ const previewSection = document.getElementById('product');
+ if (previewSection) previewObs.observe(previewSection);
+ function animateCount(id, start, end, duration) {
+ const el = document.getElementById(id);
+ if (!el) return;
+ const step = (end - start) / (duration / 16);
+ let current = start;
+ const timer = setInterval(() => {
+ current += step;
+ if (current >= end) { current = end; clearInterval(timer); }
+ el.textContent = Math.floor(current);
+ }, 16);
+ }
+
+ // ── Live Alert Cycling ──
+ const alertData = [
+ { cls: 'alert-red', icon: '', title: 'MH 14 BP 7432 — Insurance', desc: 'Expires in 3 days' },
+ { cls: 'alert-yellow', icon: '', title: 'MH 04 AX 2211 — PUC', desc: 'Expires in 12 days' },
+ { cls: 'alert-yellow', icon: '', title: 'MH 12 CJ 9901 — Permit', desc: 'Expires in 18 days' },
+ { cls: 'alert-yellow', icon: '', title: 'MH 09 TK 3344 — Fitness', desc: 'Expires in 25 days' },
+ { cls: 'alert-red', icon: '', title: 'MH 20 LR 8812 — Insurance', desc: 'Expired yesterday!' },
+ ];
+ let alertIdx = 3;
+ setInterval(() => {
+ const list = document.getElementById('alertList');
+ if (!list) return;
+ alertIdx = (alertIdx + 1) % alertData.length;
+ const d = alertData[alertIdx];
+ const newItem = document.createElement('div');
+ newItem.className = `dash-alert-item ${d.cls} alert-new`;
+ newItem.innerHTML = `<div class="alert-icon">${d.icon}</div><div><div class="alert-title">${d.title}</div><div class="alert-desc">${d.desc}</div></div>`;
+ list.insertBefore(newItem, list.firstChild);
+ if (list.children.length > 3) list.removeChild(list.lastChild);
+ }, 4000);
+
+ });
 </script>
 </body>
 </html>

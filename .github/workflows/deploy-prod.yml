@@ -1,0 +1,41 @@
+name: deploy-prod
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-prod
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+      RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_PROJECT_ID }}
+      RAILWAY_PROD_ENV: ${{ secrets.RAILWAY_PROD_ENV }}
+      RAILWAY_SERVICE: ${{ secrets.RAILWAY_SERVICE }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Railway CLI
+        run: npm i -g @railway/cli
+
+      - name: Link Railway project
+        run: railway link --project "${RAILWAY_PROJECT_ID}"
+
+      - name: Deploy to production
+        run: |
+          ENV_NAME="${RAILWAY_PROD_ENV:-production}"
+          if [ -n "${RAILWAY_SERVICE}" ]; then
+            railway up --service "${RAILWAY_SERVICE}" --environment "${ENV_NAME}" --detach
+          else
+            railway up --environment "${ENV_NAME}" --detach
+          fi
