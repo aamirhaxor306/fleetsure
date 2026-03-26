@@ -25,3 +25,13 @@ export function requireOpsAuth(req, res, next) {
     return res.status(401).json({ error: 'Invalid or expired ops session' })
   }
 }
+
+// Requires ops user to have ADMIN role.
+export function requireOpsAdmin(req, res, next) {
+  // requireOpsAuth must run before this
+  const role = req.opsUser?.role
+  if (role !== 'ADMIN') {
+    return res.status(403).json({ error: 'Admin access required' })
+  }
+  return next()
+}

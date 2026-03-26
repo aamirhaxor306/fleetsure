@@ -316,6 +316,9 @@ export const fastag = {
 // ── Platform admin ─────────────────────────────────────
 export const admin = {
   performance: () => request('/admin/performance'),
+  tenantSummary: (tenantId) => request(`/admin/performance/tenants/${tenantId}/summary`),
+  deleteTenant: (tenantId, confirm) =>
+    request(`/admin/performance/tenants/${tenantId}`, { method: 'DELETE', body: JSON.stringify({ confirm }) }),
 }
 
 // ── Ops admin (no Clerk) ─────────────────────────────────────

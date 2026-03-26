@@ -86,6 +86,15 @@ export default function Performance() {
   const [err, setErr] = useState(null)
   const [perfLoading, setPerfLoading] = useState(false)
 
+  const [dangerOpen, setDangerOpen] = useState(false)
+  const [dangerTenant, setDangerTenant] = useState(null)
+  const [dangerSummary, setDangerSummary] = useState(null)
+  const [dangerLoading, setDangerLoading] = useState(false)
+  const [dangerDeleting, setDangerDeleting] = useState(false)
+  const [dangerConfirm, setDangerConfirm] = useState('')
+  const [dangerErr, setDangerErr] = useState(null)
+  const [dangerDone, setDangerDone] = useState(null)
+
   useEffect(() => {
     let cancelled = false
     ;(async () => {
@@ -223,6 +232,7 @@ export default function Performance() {
                   <th className="px-3 py-3 font-semibold tabular-nums">Trips</th>
                   <th className="px-3 py-3 font-semibold tabular-nums">Tracked min</th>
                   <th className="px-5 py-3 font-semibold">Since</th>
+                  <th className="px-5 py-3 font-semibold text-right">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -239,6 +249,32 @@ export default function Performance() {
                     <td className="px-3 py-3 tabular-nums text-slate-700 dark:text-slate-200">{t.trackedTripMinutes}</td>
                     <td className="px-5 py-3 text-slate-500 dark:text-slate-400 text-xs whitespace-nowrap">
                       {t.createdAt ? new Date(t.createdAt).toLocaleDateString() : '—'}
+                    </td>
+                    <td className="px-5 py-3 text-right">
+                      <button
+                        type="button"
+                        className="text-xs font-semibold text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
+                        onClick={async () => {
+                          setDangerErr(null)
+                          setDangerDone(null)
+                          setDangerConfirm('')
+                          setDangerSummary(null)
+                          setDangerTenant(t)
+                          setDangerOpen(true)
+                        setDangerLoading(true)
+                        setDangerDeleting(false)
+                          try {
+                            const s = await adminApi.tenantSummary(t.tenantId)
+                            setDangerSummary(s)
+                          } catch (e) {
+                            setDangerErr(e?.message || 'Failed to load summary')
+                          } finally {
+                            setDangerLoading(false)
+                          }
+                        }}
+                      >
+                        Delete fleet…
+                      </button>
                     </td>
                   </tr>
                 ))}
@@ -279,5 +315,150 @@ export default function Performance() {
     )
   }
 
-  return content
+  return (
+    <>
+      {content}
+      <DangerModal
+        open={dangerOpen}
+        onClose={() => {
+          if (dangerDeleting) return
+          setDangerOpen(false)
+          setDangerTenant(null)
+          setDangerSummary(null)
+          setDangerConfirm('')
+          setDangerErr(null)
+          setDangerDone(null)
+        }}
+        tenant={dangerTenant}
+        summary={dangerSummary}
+        loading={dangerLoading}
+        err={dangerErr}
+        confirmValue={dangerConfirm}
+        setConfirmValue={setDangerConfirm}
+        deleting={dangerDeleting}
+        done={dangerDone}
+        onDelete={async () => {
+          if (!dangerTenant?.tenantId) return
+          setDangerErr(null)
+          setDangerDeleting(true)
+          try {
+            const resp = await adminApi.deleteTenant(dangerTenant.tenantId, 'DELETE')
+            setDangerDone(resp)
+            await fetchPerf()
+          } catch (e) {
+            setDangerErr(e?.message || 'Delete failed')
+          } finally {
+            setDangerDeleting(false)
+          }
+        }}
+      />
+    </>
+  )
+}
+
+function DangerModal({
+  open,
+  onClose,
+  tenant,
+  summary,
+  loading,
+  err,
+  confirmValue,
+  setConfirmValue,
+  onDelete,
+  deleting,
+  done,
+}) {
+  if (!open) return null
+
+  const counts = summary?.counts || null
+  const canDelete = confirmValue === 'DELETE' && !deleting
+
+  return (
+    <div className="fixed inset-0 z-[300] flex items-end sm:items-center justify-center p-4 sm:p-6">
+      <button
+        type="button"
+        className="absolute inset-0 bg-slate-900/60 dark:bg-black/70 backdrop-blur-[2px]"
+        aria-label="Close"
+        onClick={onClose}
+      />
+      <div className="relative w-full max-w-lg rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 shadow-2xl p-5 sm:p-6">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <div className="text-[11px] font-semibold uppercase tracking-wider text-red-600 dark:text-red-400">
+              Dangerous action
+            </div>
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white mt-1">
+              Delete fleet: {tenant?.name || '—'}
+            </h3>
+            <p className="text-sm text-slate-600 dark:text-slate-300 mt-1">
+              This permanently deletes this tenant’s users, vehicles, trips and related data. This cannot be undone.
+            </p>
+          </div>
+          <button
+            type="button"
+            className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
+            onClick={onClose}
+            aria-label="Close"
+          >
+            ✕
+          </button>
+        </div>
+
+        <div className="mt-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/30 p-4">
+          {loading ? (
+            <div className="text-sm text-slate-500 dark:text-slate-400">Loading fleet summary…</div>
+          ) : counts ? (
+            <div className="grid grid-cols-2 gap-2 text-sm text-slate-700 dark:text-slate-200">
+              {Object.entries(counts).slice(0, 10).map(([k, v]) => (
+                <div key={k} className="flex items-center justify-between gap-2">
+                  <span className="text-slate-500 dark:text-slate-400">{k}</span>
+                  <span className="font-semibold tabular-nums">{v}</span>
+                </div>
+              ))}
+              <div className="col-span-2 text-[11px] text-slate-500 dark:text-slate-400 mt-1">
+                (Showing some counts; delete will remove all tenant-scoped records.)
+              </div>
+            </div>
+          ) : (
+            <div className="text-sm text-slate-500 dark:text-slate-400">No summary available.</div>
+          )}
+        </div>
+
+        {err && <div className="mt-3 text-sm text-red-600 dark:text-red-400">{err}</div>}
+        {done && (
+          <div className="mt-3 text-sm text-emerald-700 dark:text-emerald-400">
+            Deleted. Vehicles: {done?.deleted?.vehicles ?? '—'}, Users: {done?.deleted?.users ?? '—'}.
+          </div>
+        )}
+
+        <div className="mt-4">
+          <label className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+            Type <span className="text-red-600">DELETE</span> to confirm
+          </label>
+          <input
+            value={confirmValue}
+            onChange={(e) => setConfirmValue(e.target.value)}
+            className="mt-2 w-full rounded-xl bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-sm text-slate-800 dark:text-slate-100 p-2.5"
+            placeholder="DELETE"
+            autoComplete="off"
+          />
+        </div>
+
+        <div className="mt-5 flex gap-2 justify-end">
+          <button type="button" className="btn-secondary" onClick={onClose} disabled={deleting}>
+            Cancel
+          </button>
+          <button
+            type="button"
+            className="btn-primary !bg-red-600 hover:!bg-red-700"
+            disabled={!canDelete}
+            onClick={onDelete}
+          >
+            {deleting ? 'Deleting…' : 'Delete fleet'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
 }
