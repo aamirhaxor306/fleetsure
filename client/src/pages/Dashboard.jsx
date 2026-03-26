@@ -8,7 +8,6 @@ import {
  fleetHealth as fleetHealthApi,
  insurance as insuranceApi,
  drivers as driversApi,
- moneyLost as moneyLostApi,
  fuel as fuelApi,
  // tripStats endpoint not available — weekly chart uses trip list instead
 } from '../api'
@@ -206,8 +205,6 @@ export default function Dashboard() {
  const [docList, setDocList] = useState([])
  const [insuranceData, setInsuranceData] = useState(null)
  const [driverList, setDriverList] = useState([])
- const [moneyData, setMoneyData] = useState(null)
- const [moneyExpanded, setMoneyExpanded] = useState(null)
  const [setupDismissed, setSetupDismissed] = useState(false)
  const [fuelStats, setFuelStats] = useState(null)
  const [weeklyTrips, setWeeklyTrips] = useState([])
@@ -277,22 +274,11 @@ export default function Dashboard() {
  }
  }, [])
 
- const fetchMoneyData = useCallback(async () => {
- updateSection('money', { loading: true, error: null })
- try {
- const m = await moneyLostApi.get()
- setMoneyData(m)
- updateSection('money', { loading: false, error: null })
- } catch {
- updateSection('money', { loading: false, error: null }) // silent — optional card
- }
- }, [])
-
  const fetchAll = useCallback(async () => {
  setRefreshing(true)
- await Promise.allSettled([fetchFleetData(), fetchTripData(), fetchHealthData(), fetchMoneyData()])
+ await Promise.allSettled([fetchFleetData(), fetchTripData(), fetchHealthData()])
  setRefreshing(false)
- }, [fetchFleetData, fetchTripData, fetchHealthData, fetchMoneyData])
+ }, [fetchFleetData, fetchTripData, fetchHealthData])
 
  useEffect(() => { fetchAll() }, [fetchAll])
 
@@ -368,72 +354,6 @@ export default function Dashboard() {
  <span className="hidden sm:inline">{refreshing ? t('refreshing') : t('refreshData')}</span>
  </button>
  </div>
-
- {/* ═══ Money Lost Card (Glassmorphism) ═══ */}
- {moneyData && moneyData.totalLost > 0 && (
- <div className="glass-card rounded-2xl border border-red-200 overflow-hidden shadow-sm">
- <div className="px-5 py-4">
- <div className="flex items-center justify-between">
- <div>
- <div className="text-xs font-semibold text-red-500 uppercase tracking-wider">{moneyData.month} — {t('avoidableLosses')}</div>
- <div className="text-2xl sm:text-3xl font-black text-red-700 mt-1">
- <AnimatedNumber value={moneyData.totalLost} prefix="₹" format={(v) => Math.round(v).toLocaleString('en-IN')} />
- </div>
- <div className="text-xs text-red-500/80 mt-0.5">{t('avoidableLossesSub')}</div>
- </div>
- <div className="w-14 h-14 rounded-2xl bg-red-100 flex items-center justify-center text-2xl shrink-0"></div>
- </div>
- </div>
-
- <div className="divide-y divide-slate-100">
- {['freight', 'fuel', 'idle', 'penalty'].map(key => {
- const bucket = moneyData.buckets[key]
- if (!bucket || bucket.amount === 0) return null
- const isOpen = moneyExpanded === key
- const icons = { freight: '', fuel: '', idle: '', penalty: '' }
- const colors = { freight: 'text-amber-700 bg-amber-50', fuel: 'text-orange-700 bg-orange-50', idle: 'text-slate-700 bg-slate-100', penalty: 'text-red-700 bg-red-50' }
- const actions = {
- freight: { label: 'Set floor rates', to: '/trips' },
- fuel: { label: 'Check vehicles', to: '/vehicles' },
- idle: { label: 'View idle trucks', to: '/vehicles' },
- penalty: { label: 'Renew now', to: '/renewals' },
- }
- return (
- <div key={key}>
- <button type="button" onClick={() => setMoneyExpanded(isOpen ? null : key)}
- className="w-full px-5 py-3 flex items-center gap-3 hover:bg-white/40 transition-colors text-left">
- <span className="text-lg">{icons[key]}</span>
- <div className="flex-1 min-w-0">
- <div className="text-sm font-semibold text-slate-800">{bucket.label}</div>
- </div>
- <div className="text-sm font-bold text-red-600">{inr(bucket.amount)}</div>
- <span className={`text-slate-400 text-xs transition-transform ${isOpen ? 'rotate-180' : ''}`}>▾</span>
- </button>
- {isOpen && (
- <div className="px-5 pb-4">
- <div className="space-y-2 mb-3">
- {bucket.items.map((item, i) => (
- <div key={i} className={`flex items-center justify-between rounded-lg px-3 py-2 text-xs ${colors[key]}`}>
- <div className="min-w-0">
- <span className="font-bold">{item.vehicle}</span>
- {key === 'freight' && <span className="ml-2 text-[11px] opacity-70">Got {inr(item.got)} vs avg {inr(item.avg)}</span>}
- {key === 'fuel' && <span className="ml-2 text-[11px] opacity-70">{item.kmPerL} km/L vs fleet avg {item.fleetAvg}</span>}
- {key === 'idle' && <span className="ml-2 text-[11px] opacity-70">{item.idleDays} days idle</span>}
- {key === 'penalty' && <span className="ml-2 text-[11px] opacity-70">{item.type} {item.daysLeft < 0 ? `expired ${Math.abs(item.daysLeft)}d ago` : `expires in ${item.daysLeft}d`}</span>}
- </div>
- <span className="font-bold shrink-0 ml-2">{inr(item.lost)}</span>
- </div>
- ))}
- </div>
- <Link to={actions[key].to} className="btn-primary text-xs !py-1.5">{actions[key].label} →</Link>
- </div>
- )}
- </div>
- )
- })}
- </div>
- </div>
- )}
 
  {/* ═══ Setup Wizard ═══ */}
  {showSetupWizard && (
