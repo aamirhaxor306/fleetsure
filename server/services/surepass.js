@@ -2,13 +2,29 @@ import dotenv from 'dotenv'
 
 dotenv.config()
 
-const SUREPASS_BASE = process.env.SUREPASS_SANDBOX === 'false'
- ? 'https://kyc-api.surepass.io/api/v1'
- : 'https://sandbox.surepass.app/api/v1'
+const SUREPASS_BASE = (process.env.SUREPASS_API_BASE_URL || 'https://sandbox.surepass.app').replace(/\/+$/, '')
 const TOKEN = process.env.SUREPASS_API_TOKEN
 
 export function isSurepassConfigured() {
  return Boolean(TOKEN)
+}
+
+async function callSurepass(path, body) {
+  if (!TOKEN) {
+    throw new Error('SUREPASS_API_TOKEN is not configured')
+  }
+
+  const res = await fetch(`${SUREPASS_BASE}${path}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${TOKEN}`,
+    },
+    body: JSON.stringify(body),
+  })
+
+  const json = await res.json().catch(() => ({}))
+  return { res, json }
 }
 
 /**
@@ -17,22 +33,12 @@ export function isSurepassConfigured() {
  * @returns {object} Normalized vehicle + document data
  */
 export async function fetchRCDetails(vehicleNumber) {
- if (!TOKEN) {
- throw new Error('SUREPASS_API_TOKEN is not configured')
- }
-
  const cleaned = vehicleNumber.toUpperCase().replace(/\s+/g, '')
-
- const res = await fetch(`${SUREPASS_BASE}/rc/rc-v2`, {
- method: 'POST',
- headers: {
- 'Content-Type': 'application/json',
- Authorization: `Bearer ${TOKEN}`,
- },
- body: JSON.stringify({ id_number: cleaned }),
- })
-
- const json = await res.json()
+  let { res, json } = await callSurepass('/identity/rc-v2', { id_number: cleaned })
+  // Backward compatibility if account still uses legacy path
+  if (res.status === 404) {
+    ;({ res, json } = await callSurepass('/api/v1/rc/rc-v2', { id_number: cleaned }))
+  }
 
  if (!res.ok || json.status_code !== 200 || !json.data) {
  const msg = json.message || json.message_code || 'Vehicle not found or API error'
@@ -70,6 +76,42 @@ export async function fetchRCDetails(vehicleNumber) {
  // Raw data for reference
  _raw: d,
  }
+}
+
+/**
+ * Fetch driving license details (text API) from Surepass.
+ * @param {string} licenseNumber
+ * @param {string | undefined} dob - Optional date of birth (YYYY-MM-DD)
+ */
+export async function fetchDrivingLicenseText(licenseNumber, dob) {
+  const cleaned = String(licenseNumber || '').toUpperCase().replace(/\s+/g, '')
+  if (!cleaned) throw new Error('licenseNumber is required')
+
+  const payload = { id_number: cleaned }
+  if (dob) payload.date_of_birth = dob
+
+  let { res, json } = await callSurepass('/identity/driving-license-text', payload)
+  if (res.status === 404) {
+    ;({ res, json } = await callSurepass('/api/v1/driving-license/driving-license-text', payload))
+  }
+
+  if (!res.ok || json.status_code !== 200 || !json.data) {
+    const msg = json.message || json.message_code || 'Driving license not found or API error'
+    throw new Error(msg)
+  }
+
+  const d = json.data
+  return {
+    licenseNumber: cleaned,
+    holderName: d.name || d.holder_name || d.full_name || null,
+    fatherName: d.father_name || null,
+    dob: parseDate(d.dob || d.date_of_birth),
+    issueDate: parseDate(d.issue_date || d.issued_on),
+    expiryDate: parseDate(d.expiry_date || d.valid_upto),
+    state: d.state || d.issuing_state || null,
+    bloodGroup: d.blood_group || null,
+    _raw: d,
+  }
 }
 
 /**

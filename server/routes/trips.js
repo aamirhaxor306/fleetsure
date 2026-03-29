@@ -1,10 +1,35 @@
 import { Router } from 'express'
+import multer from 'multer'
 import prisma from '../lib/prisma.js'
 import { requireAuth, requireRole } from '../middleware/auth.js'
 import { estimateTrip, fetchExternalDieselRate, fetchIndiaDieselRateGroq } from '../services/tripEstimate.js'
+import {
+ parseSpreadsheetBuffer,
+ detectTripColumnMapping,
+ buildTripPreview,
+ allTripPayloads,
+} from '../lib/tripSheetImport.js'
 
 const router = Router()
 router.use(requireAuth)
+
+const tripImportUpload = multer({
+ storage: multer.memoryStorage(),
+ limits: { fileSize: 5 * 1024 * 1024 },
+ fileFilter: (_req, file, cb) => {
+ const ok =
+ /\.(xlsx|xls|csv)$/i.test(file.originalname || '') ||
+ [
+ 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+ 'application/vnd.ms-excel',
+ 'text/csv',
+ 'application/csv',
+ 'text/plain',
+ ].includes(file.mimetype)
+ if (ok) cb(null, true)
+ else cb(new Error('Upload .xlsx, .xls, or .csv'))
+ },
+})
 
 // ── POST /api/trips/auto-estimate — Distance + diesel rate suggestions ──────
 router.post('/auto-estimate', requireRole('owner', 'manager'), async (req, res) => {
@@ -77,6 +102,118 @@ router.post('/auto-estimate', requireRole('owner', 'manager'), async (req, res) 
  }
 })
 
+// ── POST /api/trips/import — Preview or commit Excel/CSV trip rows ───────────
+router.post(
+ '/import',
+ requireRole('owner', 'manager'),
+ tripImportUpload.single('file'),
+ async (req, res) => {
+ try {
+ if (!req.file?.buffer) {
+ return res.status(400).json({ error: 'No file uploaded (field name: file)' })
+ }
+ const mode = String(req.body?.mode || 'preview')
+ const parsed = parseSpreadsheetBuffer(req.file.buffer, req.file.originalname)
+ if (parsed.error) {
+ return res.status(400).json({ error: parsed.error })
+ }
+ const { headers, rows } = parsed
+ const mapping = detectTripColumnMapping(headers)
+
+ if (mode === 'preview') {
+ const previewResult = buildTripPreview(headers, rows, mapping, 15)
+ return res.json({
+ mode: 'preview',
+ sheetName: parsed.sheetName,
+ ...previewResult,
+ })
+ }
+
+ if (mode !== 'import') {
+ return res.status(400).json({ error: 'Invalid mode. Use preview or import.' })
+ }
+
+ if (mapping.vehicleNumber < 0) {
+ return res.status(400).json({
+ error:
+ 'Could not find a vehicle / truck column. Use a header like Vehicle Number, Truck, or Registration.',
+ })
+ }
+
+ const payloads = allTripPayloads(rows, mapping)
+ const vehicles = await prisma.vehicle.findMany({
+ where: { tenantId: req.tenantId },
+ select: { id: true, vehicleNumber: true },
+ })
+ const vehicleByPlate = new Map(
+ vehicles.map((v) => [v.vehicleNumber.toUpperCase().replace(/\s+/g, ''), v.id]),
+ )
+
+ const created = []
+ const skipped = []
+ const errors = []
+
+ for (const row of payloads) {
+ const { sheetRow, vehicleNumber, ...rest } = row
+ const vehicleId = vehicleByPlate.get(vehicleNumber)
+ if (!vehicleId) {
+ skipped.push({
+ row: sheetRow,
+ vehicleNumber,
+ reason: 'Vehicle not in fleet',
+ })
+ continue
+ }
+
+ const status = rest.freightAmount != null && rest.freightAmount > 0 ? 'reconciled' : 'logged'
+ const tripDate = rest.tripDate || null
+
+ try {
+ const trip = await prisma.trip.create({
+ data: {
+ tenantId: req.tenantId,
+ vehicleId,
+ loadingLocation: rest.loadingLocation,
+ destination: rest.destination,
+ freightAmount: rest.freightAmount,
+ distance: rest.distance,
+ ratePerKm: rest.ratePerKm,
+ fuelLitres: rest.fuelLitres,
+ dieselRate: rest.dieselRate,
+ fuelExpense: rest.fuelExpense,
+ toll: rest.toll,
+ cashExpense: rest.cashExpense,
+ status,
+ tripDate,
+ loadingSlipNumber: rest.loadingSlipNumber,
+ },
+ })
+ created.push({ row: sheetRow, id: trip.id, vehicleNumber })
+ } catch (err) {
+ errors.push({
+ row: sheetRow,
+ vehicleNumber,
+ message: err.message || 'Create failed',
+ })
+ }
+ }
+
+ return res.json({
+ mode: 'import',
+ created: created.length,
+ skipped: skipped.length,
+ errors: errors.length,
+ createdRows: created,
+ skippedRows: skipped,
+ errorRows: errors,
+ })
+ } catch (err) {
+ console.error('Trip import error:', err)
+ return res.status(500).json({ error: err.message || 'Import failed' })
+ }
+ },
+)
+
 // ── GET /api/trips — List all trips ─────────────────────────────────────────
 
 router.get('/', async (req, res) => {
@@ -92,6 +229,7 @@ router.get('/', async (req, res) => {
  driver: { select: { id: true, name: true } },
  },
  })
+ res.set('Cache-Control', 'private, no-store')
  return res.json(trips)
  } catch (err) {
  console.error('List trips error:', err)
@@ -288,10 +426,12 @@ router.get('/analytics', async (req, res) => {
  // Separate reconciled (have freight) from logged (pending)
  const trips = allTrips.filter((t) => t.status === 'reconciled' && t.freightAmount)
  const pendingTrips = allTrips.filter((t) => t.status === 'logged')
+ const totalTripCount = allTrips.length
 
  if (trips.length === 0) {
+ res.set('Cache-Control', 'private, no-store')
  return res.json({
- fleetPnL: { revenue: 0, expenses: 0, profit: 0, margin: 0, tripCount: 0 },
+ fleetPnL: { revenue: 0, expenses: 0, profit: 0, margin: 0, tripCount: totalTripCount },
  vehicleProfit: [],
  routeProfit: [],
  insights: [],
@@ -319,7 +459,7 @@ router.get('/analytics', async (req, res) => {
  expenses: round(totalExpenses),
  profit: round(fleetProfit),
  margin: round(fleetMargin),
- tripCount: trips.length,
+ tripCount: totalTripCount,
  }
 
  // ── Per-vehicle profit ────────────────────────────────────────────────
@@ -543,6 +683,7 @@ router.get('/analytics', async (req, res) => {
  })
  }
 
+ res.set('Cache-Control', 'private, no-store')
  return res.json({
  fleetPnL,
  vehicleProfit,

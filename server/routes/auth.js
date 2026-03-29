@@ -13,6 +13,7 @@ import jwt from 'jsonwebtoken'
 import { Resend } from 'resend'
 import { requireAuth } from '../middleware/auth.js'
 import { isPlatformAdminEmail } from '../lib/platformAdmin.js'
+import { generateInviteCode } from '../lib/inviteCode.js'
 
 const router = Router()
 
@@ -188,7 +189,7 @@ router.post('/onboard', requireAuth, async (req, res) => {
  }
 
  const tenant = await prisma.tenant.create({
- data: { name: fleetName.trim() },
+ data: { name: fleetName.trim(), inviteCode: generateInviteCode() },
  })
 
  const user = await prisma.user.update({

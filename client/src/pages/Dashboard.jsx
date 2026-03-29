@@ -230,9 +230,12 @@ export default function Dashboard() {
  const fetchTripData = useCallback(async () => {
  updateSection('trips', { loading: true, error: null })
  try {
- const [a, tripList] = await Promise.all([tripsApi.analytics(), tripsApi.list().catch(() => [])])
+ const [a, tripList] = await Promise.all([
+ tripsApi.analytics({ bustCache: true }),
+ tripsApi.list({ bustCache: true }).catch(() => []),
+ ])
  setAnalytics(a)
- // Build last-7-days activity from trip list
+ // Build last-7-days activity from trip list (tripDate = scheduled day; createdAt = logged day)
  const dayMap = {}
  const today = new Date()
  for (let i = 6; i >= 0; i--) {
@@ -240,9 +243,10 @@ export default function Dashboard() {
  dayMap[d.toISOString().slice(0, 10)] = 0
  }
  if (Array.isArray(tripList)) {
- tripList.forEach(tr => {
- const key = (tr.date || tr.createdAt || '').slice(0, 10)
- if (key in dayMap) dayMap[key]++
+ tripList.forEach((tr) => {
+ const raw = tr.tripDate || tr.createdAt
+ const key = raw ? String(raw).slice(0, 10) : ''
+ if (key && key in dayMap) dayMap[key]++
  })
  }
  setWeeklyTrips(Object.entries(dayMap).map(([date, count]) => ({ date, count })))

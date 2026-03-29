@@ -30,6 +30,8 @@ import trackingRoutes from './routes/tracking.js'
 import trackingPublicRoutes from './routes/trackingPublic.js'
 import insuranceRoutes from './routes/insurance.js'
 import settingsRoutes from './routes/settings.js'
+import telegramRoutes from './routes/telegram.js'
+import telegramWebhookRoutes from './routes/telegramWebhooks.js'
 import pdfRoutes from './routes/pdfDocuments.js'
 import fastagRoutes from './routes/fastag.js'
 import fuelRoutes from './routes/fuel.js'
@@ -41,10 +43,11 @@ import prisma from './lib/prisma.js'
 import logger, { httpLogger } from './lib/logger.js'
 import { generalLimiter, authLimiter, heavyLimiter } from './middleware/rateLimiter.js'
 import { errorHandler } from './middleware/errorHandler.js'
-import { isTelegramPollingEnabled } from './lib/telegramPolling.js'
+import { isTelegramPollingEnabled, isTelegramWebhookEnabled, shouldStartTelegramBots } from './lib/telegramPolling.js'
 import { runAlertEngine } from './services/alertEngine.js'
 import { startDriverBot, sendMorningBrief, sendEveningSummary, sendWeeklyReport } from './services/driverBot.js'
 import { startOwnerBot, sendDailyFleetSummary } from './services/ownerBot.js'
+import { backfillTenantInviteCodes } from './services/backfillTenantInviteCodes.js'
 
 const app = express()
 const PORT = process.env.PORT || 4000
@@ -118,6 +121,8 @@ app.use('/api/fleet-health', fleetHealthRoutes)
 app.use('/api/tracking', trackingRoutes)
 app.use('/api/insurance', insuranceRoutes)
 app.use('/api/settings', settingsRoutes)
+app.use('/api/telegram/webhook', telegramWebhookRoutes)
+app.use('/api/telegram', telegramRoutes)
 app.use('/api/pdf', pdfRoutes)
 app.use('/api/fastag', fastagRoutes)
 app.use('/api/fuel', fuelRoutes)
@@ -226,13 +231,16 @@ app.listen(PORT, () => {
   // Never throw from listen callback — unhandled rejections can kill the process during deploy healthchecks
   void (async () => {
     try {
-      if (isTelegramPollingEnabled()) {
+      // Ensure every tenant has an invite code (needed for driver onboarding)
+      await backfillTenantInviteCodes()
+
+      if (shouldStartTelegramBots()) {
         await startDriverBot()
         await startOwnerBot()
       } else {
         logger.info(
-          'Telegram polling off (not production or TELEGRAM_POLLING=false). ' +
-          'Set TELEGRAM_POLLING=true locally to test bots without Railway running.'
+          'Telegram bots are off. Enable polling (TELEGRAM_POLLING=true) ' +
+          'or webhook mode (TELEGRAM_WEBHOOK=true + TELEGRAM_WEBHOOK_BASE_URL).'
         )
       }
     } catch (err) {

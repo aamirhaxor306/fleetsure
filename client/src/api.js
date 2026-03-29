@@ -134,7 +134,9 @@ export const alerts = {
 
 // ── Trips ────────────────────────────────────────────────
 export const trips = {
- list: () => request('/trips'),
+ /** @param {{ bustCache?: boolean }} [opts] — bustCache avoids stale trip list (e.g. PWA / SW cache) after import */
+ list: (opts = {}) =>
+ request(opts.bustCache ? `/trips?_=${Date.now()}` : '/trips'),
  get: (id) => request(`/trips/${id}`),
  create: (data) =>
  request('/trips', { method: 'POST', body: JSON.stringify(data) }),
@@ -142,7 +144,21 @@ export const trips = {
  request('/trips/auto-estimate', { method: 'POST', body: JSON.stringify(data) }),
  update: (id, data) =>
  request(`/trips/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
- analytics: () => request('/trips/analytics'),
+ /** @param {{ bustCache?: boolean }} [opts] */
+ analytics: (opts = {}) =>
+ request(opts.bustCache ? `/trips/analytics?_=${Date.now()}` : '/trips/analytics'),
+ importPreview: (file) => {
+ const fd = new FormData()
+ fd.append('file', file)
+ fd.append('mode', 'preview')
+ return requestMultipart('/trips/import', fd)
+ },
+ importCommit: (file) => {
+ const fd = new FormData()
+ fd.append('file', file)
+ fd.append('mode', 'import')
+ return requestMultipart('/trips/import', fd)
+ },
 }
 
 // ── Drivers ──────────────────────────────────────────────
@@ -264,6 +280,15 @@ export const settings = {
  request(`/settings/team/${id}`, { method: 'DELETE' }),
  updateUserRole: (id, role) =>
  request(`/settings/team/${id}/role`, { method: 'PUT', body: JSON.stringify({ role }) }),
+ rotateInviteCode: () =>
+ request('/settings/invite-code/rotate', { method: 'POST' }),
+}
+
+// ── Telegram ─────────────────────────────────────────────
+export const telegram = {
+ generateLinkCode: () =>
+ request('/telegram/link-code', { method: 'POST' }),
+ status: () => request('/telegram/status'),
 }
 
 // ── Money Lost ──────────────────────────────────────────

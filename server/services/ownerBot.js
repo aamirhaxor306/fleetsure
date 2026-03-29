@@ -15,18 +15,30 @@
 
 import TelegramBot from 'node-telegram-bot-api'
 import prisma from '../lib/prisma.js'
+import { isTelegramWebhookEnabled } from '../lib/telegramPolling.js'
 
 let bot = null
-let ownerChatId = null // Saved after first /start
 
-/**
- * Resolve tenantId for the owner by Telegram chat ID.
- * TODO: Production — map chatId to User (e.g. User.telegramChatId or owner table) then return User.tenantId.
- * For now: use first tenant for dev/testing.
- */
+async function getUserForOwnerChat(chatId) {
+  return prisma.user.findFirst({
+    where: { telegramChatId: String(chatId) },
+    select: { id: true, tenantId: true, role: true, name: true, email: true },
+  })
+}
+
 async function getTenantIdForOwner(chatId) {
- const first = await prisma.tenant.findFirst({ orderBy: { createdAt: 'asc' } })
- return first?.id ?? null
+  const user = await getUserForOwnerChat(chatId)
+  return user?.tenantId ?? null
+}
+
+function linkInstructions() {
+  return (
+    `*Connect your Fleetsure account*\n\n` +
+    `1) Open Fleetsure dashboard → Settings → Connect Telegram\n` +
+    `2) Copy the code\n` +
+    `3) Send here: \`/link YOUR_CODE\`\n\n` +
+    `If you don’t see Connect Telegram yet, ask your admin to enable it.`
+  )
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -54,16 +66,15 @@ export async function startOwnerBot() {
  }
 
  try {
- bot = new TelegramBot(token, { polling: true })
+ const webhookMode = isTelegramWebhookEnabled()
+ bot = new TelegramBot(token, webhookMode ? {} : { polling: true })
  const me = await bot.getMe()
- console.log(`[OwnerBot] Started: @${me.username}`)
-
- // Load saved owner chat ID
- ownerChatId = process.env.OWNER_TELEGRAM_CHAT_ID || null
+ console.log(`[OwnerBot] Started: @${me.username} (${webhookMode ? 'webhook' : 'polling'})`)
 
  // Command handlers
  bot.onText(/\/start/, onStart)
  bot.onText(/\/help/, onHelp)
+  bot.onText(/\/link\s+(.+)/, onLink)
  bot.onText(/\/ask (.+)/, onAsk)
 
  // Callback queries
@@ -72,9 +83,18 @@ export async function startOwnerBot() {
  // Generic text (button presses)
  bot.on('message', onMessage)
 
- bot.on('polling_error', (err) => {
- console.error('[OwnerBot] Polling error:', err.message)
- })
+ if (!webhookMode) {
+   bot.on('polling_error', (err) => {
+     console.error('[OwnerBot] Polling error:', err.message)
+   })
+ } else {
+   const baseUrl = process.env.TELEGRAM_WEBHOOK_BASE_URL
+   const secret = process.env.TELEGRAM_OWNER_WEBHOOK_SECRET || 'owner'
+   const webhookPath = `/api/telegram/webhook/owner/${secret}`
+   if (baseUrl) {
+     await bot.setWebHook(`${baseUrl}${webhookPath}`)
+   }
+ }
 
  return bot
  } catch (err) {
@@ -84,6 +104,10 @@ export async function startOwnerBot() {
 }
 
 export function getOwnerBot() { return bot }
+export async function processOwnerWebhookUpdate(update) {
+  if (!bot) return
+  await bot.processUpdate(update)
+}
 
 // ═══════════════════════════════════════════════════════════════════════════
 // /start
@@ -92,17 +116,19 @@ export function getOwnerBot() { return bot }
 async function onStart(msg) {
  const chatId = msg.chat.id
 
- // Save owner chat ID for push notifications
- ownerChatId = String(chatId)
-
  const tenantId = await getTenantIdForOwner(chatId)
+ if (!tenantId) {
+   return bot.sendMessage(chatId, linkInstructions(), { parse_mode: 'Markdown' })
+ }
+
  const [vehicleCount, driverCount, tripCount] = await Promise.all([
  prisma.vehicle.count({ where: tenantId ? { tenantId } : undefined }),
  prisma.driver.count({ where: { active: true, ...(tenantId && { tenantId }) } }),
  prisma.trip.count({ where: tenantId ? { tenantId } : undefined }),
  ])
 
- const code = process.env.FLEET_INVITE_CODE || 'FLEET-7X2K'
+ const tenant = await prisma.tenant.findUnique({ where: { id: tenantId }, select: { inviteCode: true } })
+ const code = tenant?.inviteCode || process.env.FLEET_INVITE_CODE || 'FLEET-7X2K'
 
  return bot.sendMessage(chatId,
  `*Welcome to Fleetsure Fleet Manager!*\n\n`+
@@ -114,6 +140,53 @@ async function onStart(msg) {
  `Share this with drivers so they can join via @fleetsure\\_driver\\_bot\n\n`+
  `Neeche buttons se fleet manage karo:`,
  { parse_mode: 'Markdown', reply_markup: HOME_KEYBOARD })
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// /link — Link Telegram chat to dashboard user
+// ═══════════════════════════════════════════════════════════════════════════
+
+async function onLink(msg, match) {
+  const chatId = msg.chat.id
+  const code = match?.[1]?.trim()
+  if (!code || code.length < 4) {
+    return bot.sendMessage(chatId, 'Send: `/link YOUR_CODE`', { parse_mode: 'Markdown' })
+  }
+
+  try {
+    const now = new Date()
+    const link = await prisma.telegramLinkCode.findUnique({
+      where: { code: code.toUpperCase() },
+      select: { code: true, userId: true, tenantId: true, expiresAt: true, usedAt: true },
+    })
+
+    if (!link || link.usedAt || link.expiresAt <= now) {
+      return bot.sendMessage(chatId, 'Link code is invalid or expired. Generate a new one from the dashboard Settings.', {
+        parse_mode: 'Markdown',
+      })
+    }
+
+    const user = await prisma.user.findUnique({ where: { id: link.userId }, select: { id: true, tenantId: true, role: true } })
+    if (!user?.tenantId || user.tenantId !== link.tenantId) {
+      return bot.sendMessage(chatId, 'This code is no longer valid. Generate a new one from the dashboard.', { parse_mode: 'Markdown' })
+    }
+
+    await prisma.$transaction([
+      prisma.user.update({
+        where: { id: user.id },
+        data: { telegramChatId: String(chatId) },
+      }),
+      prisma.telegramLinkCode.update({
+        where: { code: link.code },
+        data: { usedAt: now },
+      }),
+    ])
+
+    return bot.sendMessage(chatId, 'Connected! Type `Dashboard` to begin.', { parse_mode: 'Markdown', reply_markup: HOME_KEYBOARD })
+  } catch (err) {
+    console.error('[OwnerBot] /link error:', err)
+    return bot.sendMessage(chatId, 'Could not link account. Please try again.', { parse_mode: 'Markdown' })
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -149,6 +222,10 @@ const chatConversations = new Map()
 
 async function onAsk(msg, match) {
  const chatId = msg.chat.id
+ const tenantId = await getTenantIdForOwner(chatId)
+ if (!tenantId) {
+   return bot.sendMessage(chatId, linkInstructions(), { parse_mode: 'Markdown' })
+ }
  const question = match[1]?.trim()
  if (!question || question.length < 3) {
  return bot.sendMessage(chatId, 'Please provide a question.\n\nExample: `/ask Which vehicle earns the most?`', { parse_mode: 'Markdown' })
@@ -157,7 +234,6 @@ async function onAsk(msg, match) {
  const waitMsg = await bot.sendMessage(chatId, 'Agent is analyzing...')
 
  try {
- const tenantId = await getTenantIdForOwner(chatId)
  const { runAgentTurn } = await import('./agentLoop.js')
  const convId = chatConversations.get(chatId) || null
  const result = await runAgentTurn(question, convId, tenantId)
@@ -214,6 +290,13 @@ async function onCallbackQuery(query) {
  const data = query.data
 
  try {
+  const tenantId = await getTenantIdForOwner(chatId)
+  if (!tenantId) {
+    await bot.answerCallbackQuery(query.id, { text: 'Link your account first' })
+    await bot.sendMessage(chatId, linkInstructions(), { parse_mode: 'Markdown' })
+    return
+  }
+
  // Agent approval/rejection
  if (data.startsWith('agent_approve:') || data.startsWith('agent_reject:')) {
  const confirmed = data.startsWith('agent_approve:')
@@ -263,7 +346,6 @@ async function onCallbackQuery(query) {
  // Resolve alert
  if (data.startsWith('resolve_alert:')) {
  const alertId = data.split(':')[1]
- const tenantId = await getTenantIdForOwner(chatId)
  await prisma.alert.update({
  where: { id: alertId, ...(tenantId && { tenantId }) },
  data: { resolved: true },
@@ -301,6 +383,11 @@ async function onMessage(msg) {
  const chatId = msg.chat.id
  if (!msg.text || msg.text.startsWith('/')) return
 
+ const tenantId = await getTenantIdForOwner(chatId)
+ if (!tenantId) {
+   return bot.sendMessage(chatId, linkInstructions(), { parse_mode: 'Markdown' })
+ }
+
  const text = msg.text.trim()
 
  if (text === 'Dashboard') return sendDashboard(chatId)
@@ -319,6 +406,7 @@ async function sendDashboard(chatId) {
  const today = new Date()
  today.setHours(0, 0, 0, 0)
  const tenantId = await getTenantIdForOwner(chatId)
+  if (!tenantId) return bot.sendMessage(chatId, linkInstructions(), { parse_mode: 'Markdown' })
 
  const [vehicles, drivers, todayTrips, unresolvedAlerts] = await Promise.all([
  prisma.vehicle.findMany({
@@ -375,6 +463,7 @@ async function sendDashboard(chatId) {
 
 async function sendFleetStatus(chatId) {
  const tenantId = await getTenantIdForOwner(chatId)
+  if (!tenantId) return bot.sendMessage(chatId, linkInstructions(), { parse_mode: 'Markdown' })
  const vehicles = await prisma.vehicle.findMany({
  where: tenantId ? { tenantId } : undefined,
  orderBy: { vehicleNumber: 'asc' },
@@ -434,6 +523,7 @@ async function sendFleetStatus(chatId) {
 
 async function sendVehicleDetail(chatId, vehicleId) {
  const tenantId = await getTenantIdForOwner(chatId)
+  if (!tenantId) return bot.sendMessage(chatId, linkInstructions(), { parse_mode: 'Markdown' })
  const vehicle = await prisma.vehicle.findFirst({
  where: { id: vehicleId, ...(tenantId && { tenantId }) },
  include: {
@@ -520,6 +610,7 @@ async function sendPnlReport(chatId, period) {
  }
 
  const tenantId = await getTenantIdForOwner(chatId)
+  if (!tenantId) return bot.sendMessage(chatId, linkInstructions(), { parse_mode: 'Markdown' })
  const trips = await prisma.trip.findMany({
  where: { createdAt: { gte: since }, ...(tenantId && { tenantId }) },
  include: {
@@ -608,6 +699,7 @@ async function sendPnlReport(chatId, period) {
 
 async function sendAlerts(chatId) {
  const tenantId = await getTenantIdForOwner(chatId)
+  if (!tenantId) return bot.sendMessage(chatId, linkInstructions(), { parse_mode: 'Markdown' })
  const alerts = await prisma.alert.findMany({
  where: { resolved: false, ...(tenantId && { tenantId }) },
  orderBy: [{ severity: 'desc' }, { createdAt: 'desc' }],
@@ -647,6 +739,7 @@ async function sendAlerts(chatId) {
 
 async function sendDriverList(chatId) {
  const tenantId = await getTenantIdForOwner(chatId)
+  if (!tenantId) return bot.sendMessage(chatId, linkInstructions(), { parse_mode: 'Markdown' })
  const drivers = await prisma.driver.findMany({
  where: { active: true, ...(tenantId && { tenantId }) },
  include: {
@@ -710,6 +803,7 @@ async function sendDriverList(chatId) {
 
 async function sendDriverDetail(chatId, driverId) {
  const tenantId = await getTenantIdForOwner(chatId)
+  if (!tenantId) return bot.sendMessage(chatId, linkInstructions(), { parse_mode: 'Markdown' })
  const driver = await prisma.driver.findFirst({
  where: { id: driverId, ...(tenantId && { tenantId }) },
  include: {
@@ -790,9 +884,29 @@ async function sendAIInsights(chatId) {
 // ═══════════════════════════════════════════════════════════════════════════
 
 export async function sendOwnerNotification(event, payload) {
- if (!bot || !ownerChatId) return
+ if (!bot) return
 
  try {
+ let tenantId =
+   payload?.trip?.tenantId ||
+   payload?.driver?.tenantId ||
+   payload?.tenantId ||
+   null
+
+ if (!tenantId) return
+
+ const recipients = await prisma.user.findMany({
+   where: {
+     tenantId,
+     role: { in: ['owner', 'manager'] },
+     telegramChatId: { not: null },
+   },
+   select: { telegramChatId: true },
+ })
+
+ const chatIds = recipients.map(r => r.telegramChatId).filter(Boolean)
+ if (chatIds.length === 0) return
+
  let text = ''
 
  switch (event) {
@@ -855,8 +969,13 @@ export async function sendOwnerNotification(event, payload) {
  return
  }
 
- if (text) {
- await bot.sendMessage(ownerChatId, text, { parse_mode: 'Markdown' })
+ if (!text) return
+ for (const chatId of chatIds) {
+   try {
+     await bot.sendMessage(chatId, text, { parse_mode: 'Markdown' })
+   } catch (err) {
+     console.error(`[OwnerBot] Push notification failed (${event}) to ${chatId}:`, err.message)
+   }
  }
  } catch (err) {
  console.error(`[OwnerBot] Push notification failed (${event}):`, err.message)
@@ -868,54 +987,72 @@ export async function sendOwnerNotification(event, payload) {
 // ═══════════════════════════════════════════════════════════════════════════
 
 export async function sendDailyFleetSummary() {
- if (!bot || !ownerChatId) return
+ if (!bot) return
 
  try {
  const today = new Date()
  today.setHours(0, 0, 0, 0)
- const tenantId = await getTenantIdForOwner(ownerChatId)
+  const recipients = await prisma.user.findMany({
+    where: { role: { in: ['owner', 'manager'] }, telegramChatId: { not: null }, tenantId: { not: null } },
+    select: { tenantId: true, telegramChatId: true },
+  })
 
- const [vehicles, trips, unresolvedAlerts, expiringDocs] = await Promise.all([
- prisma.vehicle.findMany({
- where: tenantId ? { tenantId } : undefined,
- select: { status: true },
- }),
- prisma.trip.findMany({
- where: { createdAt: { gte: today }, ...(tenantId && { tenantId }) },
- include: { expenses: true },
- }),
- prisma.alert.count({ where: { resolved: false, ...(tenantId && { tenantId }) } }),
- prisma.document.count({
- where: {
- ...(tenantId && { tenantId }),
- expiryDate: {
- lte: new Date(Date.now() + 7 * 86400000),
- gte: new Date(),
- },
- },
- }),
- ])
+  const byTenant = new Map()
+  for (const r of recipients) {
+    if (!r.tenantId || !r.telegramChatId) continue
+    if (!byTenant.has(r.tenantId)) byTenant.set(r.tenantId, [])
+    byTenant.get(r.tenantId).push(r.telegramChatId)
+  }
 
- const activeVehicles = vehicles.filter(v => v.status === 'active').length
- const revenue = trips.reduce((s, t) => s + (t.freightAmount || 0), 0)
- const expenses = trips.reduce((s, t) => {
- if (t.expenses.length > 0) return s + t.expenses.reduce((se, e) => se + e.amount, 0)
- return s + (t.fuelExpense || 0) + (t.toll || 0) + (t.cashExpense || 0)
- }, 0)
- const profit = revenue - expenses
+  for (const [tenantId, chatIds] of byTenant.entries()) {
+    const [vehicles, trips, unresolvedAlerts, expiringDocs] = await Promise.all([
+      prisma.vehicle.findMany({
+        where: tenantId ? { tenantId } : undefined,
+        select: { status: true },
+      }),
+      prisma.trip.findMany({
+        where: { createdAt: { gte: today }, ...(tenantId && { tenantId }) },
+        include: { expenses: true },
+      }),
+      prisma.alert.count({ where: { resolved: false, ...(tenantId && { tenantId }) } }),
+      prisma.document.count({
+        where: {
+          ...(tenantId && { tenantId }),
+          expiryDate: {
+            lte: new Date(Date.now() + 7 * 86400000),
+            gte: new Date(),
+          },
+        },
+      }),
+    ])
 
- let text = `*Daily Fleet Report — ${new Date().toLocaleDateString('en-IN')}*\n\n`
- text += ` ${activeVehicles}/${vehicles.length} vehicles active\n`
- text += ` ${trips.length} trips\n`
- if (revenue > 0) text += `Revenue: ₹${revenue.toLocaleString('en-IN')}\n`
- text += `Expenses: ₹${expenses.toLocaleString('en-IN')}\n`
- if (revenue > 0) {
- text += `Profit: ₹${profit.toLocaleString('en-IN')} (${revenue > 0 ? Math.round((profit / revenue) * 100) : 0}%)\n`
- }
- if (unresolvedAlerts > 0) text += `\n ${unresolvedAlerts} unresolved alerts`
- if (expiringDocs > 0) text += `\n ${expiringDocs} documents expiring this week`
+    const activeVehicles = vehicles.filter(v => v.status === 'active').length
+    const revenue = trips.reduce((s, t) => s + (t.freightAmount || 0), 0)
+    const expenses = trips.reduce((s, t) => {
+      if (t.expenses.length > 0) return s + t.expenses.reduce((se, e) => se + e.amount, 0)
+      return s + (t.fuelExpense || 0) + (t.toll || 0) + (t.cashExpense || 0)
+    }, 0)
+    const profit = revenue - expenses
 
- await bot.sendMessage(ownerChatId, text, { parse_mode: 'Markdown' })
+    let text = `*Daily Fleet Report — ${new Date().toLocaleDateString('en-IN')}*\n\n`
+    text += ` ${activeVehicles}/${vehicles.length} vehicles active\n`
+    text += ` ${trips.length} trips\n`
+    if (revenue > 0) text += `Revenue: ₹${revenue.toLocaleString('en-IN')}\n`
+    text += `Expenses: ₹${expenses.toLocaleString('en-IN')}\n`
+    if (revenue > 0) {
+      text += `Profit: ₹${profit.toLocaleString('en-IN')} (${revenue > 0 ? Math.round((profit / revenue) * 100) : 0}%)\n`
+    }
+    if (unresolvedAlerts > 0) text += `\n ${unresolvedAlerts} unresolved alerts`
+    if (expiringDocs > 0) text += `\n ${expiringDocs} documents expiring this week`
+
+    for (const chatId of chatIds) {
+      try {
+        await bot.sendMessage(chatId, text, { parse_mode: 'Markdown' })
+      } catch (err) {
+        console.error('[OwnerBot] Daily summary failed to send:', err.message)
+      }
+    }
+  }
  } catch (err) {
  console.error('[OwnerBot] Daily summary failed:', err)
  }

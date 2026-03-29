@@ -11,9 +11,20 @@ function parseBool(v) {
   return null
 }
 
+export function isTelegramWebhookEnabled() {
+  const explicit = parseBool(process.env.TELEGRAM_WEBHOOK)
+  if (explicit !== null) return explicit
+  return process.env.NODE_ENV === 'production' && !!process.env.TELEGRAM_WEBHOOK_BASE_URL
+}
+
 /** @returns {boolean} Whether driver + owner bots should start polling. */
 export function isTelegramPollingEnabled() {
+  if (isTelegramWebhookEnabled()) return false
   const explicit = parseBool(process.env.TELEGRAM_POLLING)
   if (explicit !== null) return explicit
   return process.env.NODE_ENV === 'production'
+}
+
+export function shouldStartTelegramBots() {
+  return isTelegramWebhookEnabled() || isTelegramPollingEnabled()
 }

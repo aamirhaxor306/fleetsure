@@ -17,6 +17,7 @@ model Tenant {
   city      String?                       // City
   gstin     String?                       // GST Identification Number
   phone     String?                       // Company phone
+  inviteCode String?  @unique @map("invite_code")
   createdAt DateTime @default(now()) @map("created_at")
 
   users             User[]
@@ -47,6 +48,7 @@ model Tenant {
   opsInvoices        Invoice[]
   opsLedgerEntries   FleetLedger[]
   fleetMessages      FleetMessage[]
+  telegramLinkCodes  TelegramLinkCode[]
 
   @@map("tenants")
 }
@@ -62,14 +64,35 @@ model User {
   name         String?
   role         String    @default("owner")  // owner / manager / viewer
   whatsappPhone String?  @map("whatsapp_phone")
+  telegramChatId String? @unique @map("telegram_chat_id")
   otpCode      String?   @map("otp_code")
   otpExpiresAt DateTime? @map("otp_expires_at")
   createdAt    DateTime  @default(now()) @map("created_at")
 
   tenant       Tenant?       @relation(fields: [tenantId], references: [id])
   npsResponses NpsResponse[]
+  telegramLinkCodes TelegramLinkCode[]
 
   @@map("users")
+}
+
+// ─── Telegram linking codes (one-time, short-lived) ─────────────────────────
+
+model TelegramLinkCode {
+  id        String   @id @default(uuid())
+  code      String   @unique
+  userId    String   @map("user_id")
+  tenantId  String   @map("tenant_id")
+  expiresAt DateTime @map("expires_at")
+  usedAt    DateTime? @map("used_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([userId])
+  @@map("telegram_link_codes")
 }
 
 // ─── Vehicles ────────────────────────────────────────────────────────────────

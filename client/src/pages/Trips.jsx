@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { useNavigate, Link, useSearchParams } from 'react-router-dom'
 import { trips as tripsApi } from '../api'
-import { SearchIcon, PlusIcon, MapPinIcon, TruckIcon, CalendarIcon, RouteIcon, ChevronRightIcon } from '../components/Icons'
+import { useLang } from '../context/LanguageContext'
+import { SearchIcon, PlusIcon, MapPinIcon, TruckIcon, CalendarIcon, RouteIcon, ChevronRightIcon, UploadIcon, XIcon } from '../components/Icons'
 
 // Approximate coordinates for known LPG plant locations (for map markers)
 const LOCATION_COORDS = {
@@ -41,8 +42,23 @@ function getTripCoords(trip) {
  return { start, end }
 }
 
+function downloadSampleTripsCsv() {
+ const csv = `Truck,Loading,Dest,Freight,Dist,Rate,Fuel,Diesel Rate,Fuel Exp,Toll,Cash,Trip Date,Loading Slip
+MP04HE9634,"12434 - GAIL GANDHAR BP","12507 - INDORE LPG PLANT",59335.45,972,3.5164,324,92.67,30025.08,7776,2000,,
+`
+ const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' })
+ const url = URL.createObjectURL(blob)
+ const a = document.createElement('a')
+ a.href = url
+ a.download = 'fleetsure-trips-sample.csv'
+ a.click()
+ URL.revokeObjectURL(url)
+}
+
 export default function Trips() {
+ const { t } = useLang()
  const navigate = useNavigate()
+ const [searchParams, setSearchParams] = useSearchParams()
  const [trips, setTrips] = useState([])
  const [loading, setLoading] = useState(true)
  const [search, setSearch] = useState('')
@@ -51,9 +67,81 @@ export default function Trips() {
  const [mapReady, setMapReady] = useState(false)
  const [leaflet, setLeaflet] = useState(null)
 
+ const [showImport, setShowImport] = useState(false)
+ const [importFile, setImportFile] = useState(null)
+ const [importPreview, setImportPreview] = useState(null)
+ const [importBusy, setImportBusy] = useState(false)
+ const [importResult, setImportResult] = useState(null)
+ const [importErr, setImportErr] = useState('')
+
+ const runImportPreview = useCallback(async (file) => {
+ if (!file) return
+ setImportBusy(true)
+ setImportErr('')
+ setImportResult(null)
+ try {
+ const data = await tripsApi.importPreview(file)
+ setImportPreview(data)
+ } catch (e) {
+ setImportPreview(null)
+ setImportErr(e.message || 'Preview failed')
+ }
+ setImportBusy(false)
+ }, [])
+
+ const closeImport = () => {
+ setShowImport(false)
+ setImportFile(null)
+ setImportPreview(null)
+ setImportResult(null)
+ setImportErr('')
+ setImportBusy(false)
+ }
+
+ const handleImportFile = (e) => {
+ const f = e.target.files?.[0]
+ e.target.value = ''
+ if (!f) return
+ setImportFile(f)
+ setImportPreview(null)
+ setImportResult(null)
+ setImportErr('')
+ runImportPreview(f)
+ }
+
+ const handleImportCommit = async () => {
+ if (!importFile || importPreview?.missingVehicleColumn) return
+ setImportBusy(true)
+ setImportErr('')
+ try {
+ const data = await tripsApi.importCommit(importFile)
+ setImportResult(data)
+ const list = await tripsApi.list({ bustCache: true })
+ setTrips(Array.isArray(list) ? list : [])
+ setSearch('')
+ setStatusFilter('all')
+ } catch (e) {
+ setImportErr(e.message || 'Import failed')
+ }
+ setImportBusy(false)
+ }
+
  useEffect(() => {
- tripsApi.list()
- .then(setTrips)
+ if (searchParams.get('import') === '1') {
+ setShowImport(true)
+ setImportFile(null)
+ setImportPreview(null)
+ setImportResult(null)
+ setImportErr('')
+ const next = new URLSearchParams(searchParams)
+ next.delete('import')
+ setSearchParams(next, { replace: true })
+ }
+ }, [searchParams, setSearchParams])
+
+ useEffect(() => {
+ tripsApi.list({ bustCache: true })
+ .then((list) => setTrips(Array.isArray(list) ? list : []))
  .catch(() => {})
  .finally(() => setLoading(false))
  }, [])
@@ -144,7 +232,20 @@ export default function Trips() {
  ))}
  </div>
  </div>
- <div className="trips-topbar-right">
+ <div className="trips-topbar-right flex items-center gap-2">
+ <button
+ type="button"
+ onClick={() => {
+ setShowImport(true)
+ setImportFile(null)
+ setImportPreview(null)
+ setImportResult(null)
+ setImportErr('')
+ }}
+ className="btn-secondary flex items-center gap-1 text-xs"
+ >
+ <UploadIcon className="w-3.5 h-3.5" /> {t('tripImportBtn')}
+ </button>
  <Link to="/quick-add" className="btn-primary flex items-center gap-1 text-xs">
  <PlusIcon className="w-3.5 h-3.5" /> Log Trip
  </Link>
@@ -164,8 +265,12 @@ export default function Trips() {
  {filtered.length === 0 ? (
  <div className="trips-empty">
  <RouteIcon className="w-10 h-10 text-slate-300 mb-2" />
- <div className="text-sm font-medium text-slate-400">No trips found</div>
- <div className="text-xs text-slate-300 mt-1">Log your first trip to start tracking</div>
+ <div className="text-sm font-medium text-slate-400">
+ {trips.length > 0 ? t('tripsListNoMatch') : 'No trips found'}
+ </div>
+ <div className="text-xs text-slate-300 mt-1">
+ {trips.length > 0 ? t('tripsListNoMatchHint') : 'Log your first trip to start tracking'}
+ </div>
  </div>
  ) : (
  filtered.map((trip) => {
@@ -250,6 +355,154 @@ export default function Trips() {
  )}
  </div>
  </div>
+
+ {showImport && (
+ <div className="fixed inset-0 z-50 flex items-center justify-center px-4 bg-black/40 backdrop-blur-sm" onClick={closeImport}>
+ <div
+ className="bg-white rounded-2xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col border border-slate-200"
+ onClick={(e) => e.stopPropagation()}
+ >
+ <div className="flex items-start justify-between gap-3 px-5 py-4 border-b border-slate-100">
+ <div>
+ <h2 className="text-lg font-bold text-slate-900">{t('tripImportTitle')}</h2>
+ <p className="text-xs text-slate-500 mt-1">{t('tripImportSubtitle')}</p>
+ </div>
+ <button type="button" onClick={closeImport} className="p-2 rounded-lg text-slate-400 hover:bg-slate-100" aria-label={t('tripImportClose')}>
+ <XIcon className="w-5 h-5" />
+ </button>
+ </div>
+
+ <div className="px-5 py-4 overflow-y-auto flex-1 space-y-4">
+ <div className="flex flex-wrap items-center gap-2">
+ <label className="btn-secondary text-xs cursor-pointer inline-flex items-center gap-1.5">
+ <UploadIcon className="w-4 h-4" />
+ {t('tripImportChooseFile')}
+ <input type="file" accept=".csv,.xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv" className="hidden" onChange={handleImportFile} />
+ </label>
+ <button type="button" className="text-xs font-semibold text-teal-700 hover:underline" onClick={downloadSampleTripsCsv}>
+ {t('tripImportDownloadSample')}
+ </button>
+ </div>
+ <p className="text-[11px] text-slate-500 leading-relaxed">{t('tripImportHelpColumns')}</p>
+
+ {importBusy && !importPreview && !importResult && (
+ <p className="text-sm text-slate-500">{t('tripImportPreviewing')}</p>
+ )}
+ {importErr && (
+ <div className="rounded-xl bg-red-50 border border-red-200 text-red-800 text-sm px-3 py-2">{importErr}</div>
+ )}
+
+ {importPreview && !importResult && (
+ <>
+ {importPreview.missingVehicleColumn ? (
+ <div className="rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-sm px-3 py-2">
+ {t('tripImportMissingColumn')}
+ </div>
+ ) : (
+ <>
+ <div>
+ <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">{t('tripImportMapping')}</h3>
+ <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1 text-xs">
+ {Object.entries(importPreview.mappingLabels || {}).map(([k, v]) => (
+ <div key={k} className="flex justify-between gap-2 border-b border-slate-50 pb-1">
+ <dt className="text-slate-500 capitalize">{k.replace(/([A-Z])/g, ' $1').trim()}</dt>
+ <dd className="font-medium text-slate-800 text-right">{v || '—'}</dd>
+ </div>
+ ))}
+ </dl>
+ <p className="text-xs text-slate-500 mt-2">{t('tripImportDataRows', { count: String(importPreview.totalRows ?? 0) })}</p>
+ </div>
+ <div>
+ <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">{t('tripImportPreviewRows')}</h3>
+ <div className="overflow-x-auto rounded-xl border border-slate-200">
+ <table className="w-full text-[10px]">
+ <thead>
+ <tr className="bg-slate-50 text-slate-600 text-left">
+ <th className="px-1.5 py-1.5 font-semibold">#</th>
+ <th className="px-1.5 py-1.5 font-semibold">Truck</th>
+ <th className="px-1.5 py-1.5 font-semibold">From</th>
+ <th className="px-1.5 py-1.5 font-semibold">To</th>
+ <th className="px-1.5 py-1.5 font-semibold">Km</th>
+ <th className="px-1.5 py-1.5 font-semibold">Freight</th>
+ <th className="px-1.5 py-1.5 font-semibold">Fuel</th>
+ <th className="px-1.5 py-1.5 font-semibold">Toll</th>
+ <th className="px-1.5 py-1.5 font-semibold">{t('date')}</th>
+ </tr>
+ </thead>
+ <tbody>
+ {(importPreview.preview || []).map((row) => (
+ <tr key={row.row} className="border-t border-slate-100">
+ <td className="px-1.5 py-1 text-slate-400">{row.row}</td>
+ <td className="px-1.5 py-1 font-mono font-semibold whitespace-nowrap">{row.vehicleNumber}</td>
+ <td className="px-1.5 py-1 max-w-[100px] truncate" title={row.loadingLocation}>{row.loadingLocation}</td>
+ <td className="px-1.5 py-1 max-w-[100px] truncate" title={row.destination}>{row.destination}</td>
+ <td className="px-1.5 py-1">{row.distance}</td>
+ <td className="px-1.5 py-1">{row.freightAmount ?? '—'}</td>
+ <td className="px-1.5 py-1">{row.fuelExpense}</td>
+ <td className="px-1.5 py-1">{row.toll}</td>
+ <td className="px-1.5 py-1 whitespace-nowrap">{row.tripDate || '—'}</td>
+ </tr>
+ ))}
+ </tbody>
+ </table>
+ </div>
+ </div>
+ </>
+ )}
+ </>
+ )}
+
+ {importResult && (
+ <div className="rounded-xl border border-emerald-200 bg-emerald-50/80 px-4 py-3 space-y-2">
+ <h3 className="text-sm font-bold text-emerald-900">{t('tripImportDone')}</h3>
+ <ul className="text-sm text-emerald-800 space-y-1">
+ <li>{t('tripImportCreated', { n: String(importResult.created ?? 0) })}</li>
+ <li>{t('tripImportSkipped', { n: String(importResult.skipped ?? 0) })}</li>
+ {(importResult.errors > 0) && (
+ <li>{t('tripImportErrors', { n: String(importResult.errors) })}</li>
+ )}
+ </ul>
+ {Array.isArray(importResult.errorRows) && importResult.errorRows.length > 0 && (
+ <ul className="text-xs text-red-700 mt-2 max-h-32 overflow-y-auto list-disc pl-4">
+ {importResult.errorRows.map((er, i) => (
+ <li key={i}>Row {er.row}: {er.vehicleNumber || '?'} — {er.message}</li>
+ ))}
+ </ul>
+ )}
+ {Array.isArray(importResult.skippedRows) && importResult.skippedRows.length > 0 && (
+ <details className="text-xs text-slate-600 mt-2">
+ <summary className="cursor-pointer font-medium">{t('tripImportSkippedList')}</summary>
+ <ul className="mt-1 max-h-28 overflow-y-auto list-disc pl-4">
+ {importResult.skippedRows.map((s, i) => (
+ <li key={i}>Row {s.row}: {s.vehicleNumber} — {s.reason}</li>
+ ))}
+ </ul>
+ </details>
+ )}
+ </div>
+ )}
+ </div>
+
+ <div className="px-5 py-3 border-t border-slate-100 flex justify-end gap-2 bg-slate-50/80">
+ {importResult ? (
+ <button type="button" className="btn-primary text-xs" onClick={closeImport}>{t('tripImportClose')}</button>
+ ) : (
+ <>
+ <button type="button" className="btn-secondary text-xs" onClick={closeImport}>{t('cancel')}</button>
+ <button
+ type="button"
+ className="btn-primary text-xs"
+ disabled={importBusy || !importFile || importPreview?.missingVehicleColumn}
+ onClick={handleImportCommit}
+ >
+ {importBusy ? t('loading') : t('tripImportRunBtn')}
+ </button>
+ </>
+ )}
+ </div>
+ </div>
+ </div>
+ )}
  </div>
  )
 }

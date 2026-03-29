@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '../App'
-import { auth as authApi, settings as settingsApi } from '../api'
+import { auth as authApi, settings as settingsApi, telegram as telegramApi } from '../api'
 import PageHeader from '../components/PageHeader'
 
 const ROLES = { owner: 'Owner', manager: 'Manager', viewer: 'Viewer' }
@@ -22,13 +22,15 @@ export default function Settings() {
  const { user, logout } = useAuth()
  const [tab, setTab] = useState('business')
  const [profile, setProfile] = useState({ name: '', email: '' })
- const [company, setCompany] = useState({ name: '', plan: '', address: '', city: '', gstin: '', phone: '' })
+ const [company, setCompany] = useState({ name: '', plan: '', address: '', city: '', gstin: '', phone: '', inviteCode: '' })
  const [team, setTeam] = useState([])
  const [inviteEmail, setInviteEmail] = useState('')
  const [inviteRole, setInviteRole] = useState('viewer')
  const [saving, setSaving] = useState(false)
  const [success, setSuccess] = useState('')
  const [error, setError] = useState('')
+ const [tgLink, setTgLink] = useState({ code: '', expiresAt: '' })
+ const [tgBusy, setTgBusy] = useState(false)
 
  useEffect(() => {
  loadData()
@@ -38,7 +40,15 @@ export default function Settings() {
  try {
  const p = await settingsApi.getProfile()
  setProfile({ name: p.name || '', email: p.email || '' })
- setCompany({ name: p.tenantName || '', plan: p.plan || 'free', address: p.tenantAddress || '', city: p.tenantCity || '', gstin: p.tenantGstin || '', phone: p.tenantPhone || '' })
+ setCompany({
+  name: p.tenantName || '',
+  plan: p.plan || 'free',
+  address: p.tenantAddress || '',
+  city: p.tenantCity || '',
+  gstin: p.tenantGstin || '',
+  phone: p.tenantPhone || '',
+  inviteCode: p.tenantInviteCode || '',
+ })
  const t = await settingsApi.getTeam()
  setTeam(Array.isArray(t) ? t : [])
  } catch {}
@@ -101,6 +111,27 @@ export default function Settings() {
  flash('Role updated')
  loadData()
  } catch (e) { flash(e.message, true) }
+ }
+
+ const handleGenerateTelegramLink = async () => {
+ setTgBusy(true)
+ try {
+ const res = await telegramApi.generateLinkCode()
+ setTgLink({ code: res.code || '', expiresAt: res.expiresAt || '' })
+ flash('Telegram link code generated')
+ } catch (e) { flash(e.message, true) }
+ setTgBusy(false)
+ }
+
+ const handleRotateInviteCode = async () => {
+ if (!confirm('Rotate invite code? Old codes will stop working for new driver registrations.')) return
+ setSaving(true)
+ try {
+ const res = await settingsApi.rotateInviteCode()
+ setCompany(c => ({ ...c, inviteCode: res.inviteCode || '' }))
+ flash('Invite code rotated')
+ } catch (e) { flash(e.message, true) }
+ setSaving(false)
  }
 
  const tabs = [
@@ -349,7 +380,14 @@ export default function Settings() {
 
  {/* ── Connections Tab ── */}
  {tab === 'connections' && (
- <ConnectionsTab flash={flash} />
+ <ConnectionsTab
+  inviteCode={company.inviteCode}
+  canRotateInvite={user?.role === 'owner'}
+  onRotateInvite={handleRotateInviteCode}
+  tgLink={tgLink}
+  onGenerateTelegramLink={handleGenerateTelegramLink}
+  tgBusy={tgBusy}
+ />
  )}
  </div>
  </div>
@@ -357,8 +395,7 @@ export default function Settings() {
 }
 
 // ── Telegram Bot Connections Component ─────────────────────────────────────────
-function ConnectionsTab() {
- const inviteCode = 'FLEET-7X2K'
+function ConnectionsTab({ inviteCode, canRotateInvite, onRotateInvite, tgLink, onGenerateTelegramLink, tgBusy }) {
 
  return (
  <>
@@ -385,11 +422,46 @@ function ConnectionsTab() {
  </a>
  </div>
  <div className="mt-2 text-[11px] text-slate-400">
- Open the bot in Telegram and press /start to connect
+ Open the bot in Telegram, then connect your dashboard using a one-time code.
  </div>
  </div>
  </div>
  </div>
+ <div className="border-t border-slate-100" />
+ <div className="flex items-center justify-between gap-3">
+ <div>
+ <div className="text-sm font-medium text-slate-900">Connect Telegram to your dashboard</div>
+ <div className="text-xs text-slate-500 mt-0.5">
+ Generate a code here, then send: <span className="font-mono font-bold">/link CODE</span>
+ </div>
+ </div>
+ <button
+ onClick={onGenerateTelegramLink}
+ disabled={tgBusy}
+ className="bg-slate-900 hover:bg-slate-800 disabled:bg-slate-300 text-white text-xs font-medium rounded-lg px-4 py-2 transition whitespace-nowrap"
+ >
+ {tgBusy ? 'Generating...' : 'Generate Code'}
+ </button>
+ </div>
+
+ {tgLink?.code && (
+ <div className="bg-slate-50 rounded-lg p-3 border border-slate-200">
+ <div className="flex items-center justify-between gap-3">
+ <div>
+ <div className="text-xs font-medium text-slate-700">Your Telegram link code</div>
+ <div className="text-[11px] text-slate-500 mt-0.5">
+ Expires: {tgLink.expiresAt ? new Date(tgLink.expiresAt).toLocaleString('en-IN') : 'soon'}
+ </div>
+ </div>
+ <code className="bg-white px-3 py-1.5 rounded-lg text-xs font-mono font-bold text-slate-900 border border-slate-200">
+ {tgLink.code}
+ </code>
+ </div>
+ <div className="text-[11px] text-slate-500 mt-2">
+ Send this in Telegram: <span className="font-mono font-bold">/link {tgLink.code}</span>
+ </div>
+ </div>
+ )}
  </Section>
 
  <Section title="Driver Telegram Bot" subtitle="Share with drivers so they can log trips via Telegram">
@@ -411,7 +483,17 @@ function ConnectionsTab() {
  <div className="text-sm font-medium text-slate-900">Fleet Invite Code</div>
  <div className="text-xs text-slate-500 mt-0.5">Give this code to drivers so they can join your fleet</div>
  </div>
- <code className="bg-slate-100 px-3 py-1 rounded text-xs font-mono font-bold text-slate-700">{inviteCode}</code>
+ <div className="flex items-center gap-2">
+ <code className="bg-slate-100 px-3 py-1 rounded text-xs font-mono font-bold text-slate-700">{inviteCode || '—'}</code>
+ {canRotateInvite && (
+ <button
+ onClick={onRotateInvite}
+ className="text-xs font-medium px-3 py-1 rounded-md bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 transition"
+ >
+ Rotate
+ </button>
+ )}
+ </div>
  </div>
  <div className="border-t border-slate-100" />
  <div className="bg-slate-50 rounded-lg p-3">
@@ -419,7 +501,7 @@ function ConnectionsTab() {
  <ol className="text-[11px] text-slate-500 space-y-1 list-decimal list-inside">
  <li>Share the bot link: <code className="font-mono font-bold">t.me/fleetsure_driver_bot</code></li>
  <li>Driver opens the bot and presses /start</li>
- <li>Driver enters their name, phone, and fleet code: <code className="font-mono font-bold">{inviteCode}</code></li>
+ <li>Driver enters their name, phone, and fleet code: <code className="font-mono font-bold">{inviteCode || 'YOUR_CODE'}</code></li>
  <li>Done! Driver can log trips, fuel, toll, and expenses via buttons</li>
  </ol>
  </div>

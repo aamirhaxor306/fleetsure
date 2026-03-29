@@ -1,10 +1,35 @@
 import { Router } from 'express'
 import prisma from '../lib/prisma.js'
 import { requireAuth, requireRole } from '../middleware/auth.js'
+import { fetchDrivingLicenseText, isSurepassConfigured } from '../services/surepass.js'
 
 const router = Router()
 
 router.use(requireAuth)
+
+// ── POST /api/drivers/verify-license — Verify DL via Surepass ─────────────
+router.post('/verify-license', requireRole('owner', 'manager'), async (req, res) => {
+  try {
+    if (!isSurepassConfigured()) {
+      return res.status(200).json({
+        provider: 'surepass',
+        available: false,
+        message: 'Auto verification is not configured. You can continue with manual entry.',
+      })
+    }
+
+    const { licenseNumber, dob } = req.body
+    if (!licenseNumber) {
+      return res.status(400).json({ error: 'licenseNumber is required' })
+    }
+
+    const data = await fetchDrivingLicenseText(licenseNumber, dob)
+    return res.json({ source: 'surepass', ...data })
+  } catch (err) {
+    console.error('Verify license error:', err)
+    return res.status(400).json({ error: err.message || 'License verification failed' })
+  }
+})
 
 // ── GET /api/drivers — List all drivers ───────────────────────────────────
 

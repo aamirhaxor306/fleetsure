@@ -221,6 +221,29 @@ const translations = {
  vehicleImportHelpColumns: 'Headers we recognize: Vehicle Number / Registration / RC, Type, Year, KM / Odometer, Axle (6W–14W), Status (active/idle). Missing fields use defaults (truck, current year, 6W).',
  vehicleImportSkippedList: 'Skipped rows',
 
+ // ── Trip import (Excel / CSV) ──────────────────────────────
+ tripImportBtn: 'Import Excel',
+ tripImportTitle: 'Import trips from file',
+ tripImportSubtitle: 'Upload .xlsx, .xls, or .csv. Row 1 must be headers. Vehicles must already exist in your fleet.',
+ tripImportDownloadSample: 'Download sample CSV',
+ tripImportChooseFile: 'Choose file',
+ tripImportPreviewing: 'Reading file…',
+ tripImportRunBtn: 'Import trips',
+ tripImportMapping: 'Detected columns',
+ tripImportDataRows: '{count} data rows',
+ tripImportPreviewRows: 'Preview (first rows)',
+ tripImportMissingColumn: 'No vehicle / truck column found. Use a header like Vehicle Number, Truck, or Registration.',
+ tripImportDone: 'Import finished',
+ tripImportCreated: '{n} trips added',
+ tripImportSkipped: '{n} skipped (unknown vehicle or errors)',
+ tripImportErrors: '{n} errors',
+ tripImportClose: 'Close',
+ tripImportHelpColumns:
+ 'Headers we recognize: Truck / Vehicle Number, Loading / From, Destination / To, Freight, Distance, Rate (per km), Fuel (litres), Diesel rate, Fuel expense, Toll, Cash, Trip date, Loading slip. Missing numbers default to 0; missing locations default to Unknown.',
+ tripImportSkippedList: 'Skipped rows',
+ tripsListNoMatch: 'No trips match your search or tab.',
+ tripsListNoMatchHint: 'Clear the search box or select All.',
+
  // ── Tyre Management ──────────────────────────────────────
  'tyres.tabMaintenance': 'Maintenance',
  'tyres.tabTyres': 'Tyres',
@@ -471,6 +494,31 @@ const translations = {
  vehicleImportClose: 'बंद करो',
  vehicleImportHelpColumns: 'पहचान: Vehicle Number / Registration / RC, Type, Year, KM, Axle (6W–14W), Status। खाली रहने पर डिफ़ॉल्ट (ट्रक, मौजूदा साल, 6W)।',
  vehicleImportSkippedList: 'छोड़ी गई पंक्तियाँ',
+
+ // ── Trip import (Excel / CSV) ──────────────────────────────
+ tripImportBtn: 'Excel से ट्रिप आयात',
+ tripImportTitle: 'फ़ाइल से ट्रिप लोड करो',
+ tripImportSubtitle:
+ '.xlsx, .xls, या .csv। पहली लाइन हेडर। गाड़ियाँ पहले से फ्लीट में होनी चाहिए।',
+ tripImportDownloadSample: 'नमूना CSV डाउनलोड',
+ tripImportChooseFile: 'फ़ाइल चुनो',
+ tripImportPreviewing: 'फ़ाइल पढ़ रहे हैं…',
+ tripImportRunBtn: 'ट्रिप आयात करो',
+ tripImportMapping: 'पहचाने गए कॉलम',
+ tripImportDataRows: '{count} डेटा पंक्तियाँ',
+ tripImportPreviewRows: 'झलक (पहली पंक्तियाँ)',
+ tripImportMissingColumn:
+ 'गाड़ी / ट्रक वाला कॉलम नहीं मिला। Vehicle Number, Truck, या Registration जैसा शीर्षक लगाओ।',
+ tripImportDone: 'आयात पूरा',
+ tripImportCreated: '{n} ट्रिप जुड़ीं',
+ tripImportSkipped: '{n} छोड़ दी (अज्ञात गाड़ी या गलती)',
+ tripImportErrors: '{n} गलतियाँ',
+ tripImportClose: 'बंद करो',
+ tripImportHelpColumns:
+ 'पहचान: Truck / Vehicle Number, Loading / From, Destination / To, Freight, Distance, Rate, Fuel, Diesel rate, Fuel expense, Toll, Cash, Trip date, Slip। खाली संख्या 0; खाली जगह Unknown।',
+ tripImportSkippedList: 'छोड़ी गई पंक्तियाँ',
+ tripsListNoMatch: 'सर्च या टैब से कोई ट्रिप नहीं मिली।',
+ tripsListNoMatchHint: 'सर्च खाली करो या All चुनो।',
 
  // ── Tyre Management ──────────────────────────────────────
  'tyres.tabMaintenance': 'मरम्मत',

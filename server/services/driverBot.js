@@ -25,6 +25,8 @@ import { fileURLToPath } from 'url'
 import { dirname, join } from 'path'
 import { writeFile, mkdir } from 'fs/promises'
 import { parseFuelSms } from '../lib/fuelSmsParser.js'
+import { normalizeInviteCode } from '../lib/inviteCode.js'
+import { isTelegramWebhookEnabled } from '../lib/telegramPolling.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
@@ -46,14 +48,13 @@ function clearState(chatId) {
  chatState.set(chatId, { state: 'idle', data: {} })
 }
 
-/** Resolve tenantId for a driver by their Telegram chat ID. Falls back to first tenant during onboarding. */
+/** Resolve tenantId for a driver by their Telegram chat ID. */
 async function getTenantIdForDriver(chatId) {
  const driver = await prisma.driver.findFirst({
  where: { telegramChatId: String(chatId) },
  })
  if (driver?.tenantId) return driver.tenantId
- const first = await prisma.tenant.findFirst({ orderBy: { createdAt: 'asc' } })
- return first?.id ?? null
+ return null
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -96,9 +97,10 @@ export async function startDriverBot() {
  }
 
  try {
- bot = new TelegramBot(token, { polling: true })
+ const webhookMode = isTelegramWebhookEnabled()
+ bot = new TelegramBot(token, webhookMode ? {} : { polling: true })
  const me = await bot.getMe()
- console.log(`[DriverBot] Started: @${me.username}`)
+ console.log(`[DriverBot] Started: @${me.username} (${webhookMode ? 'webhook' : 'polling'})`)
 
  // Command handlers
  bot.onText(/\/start/, onStart)
@@ -114,9 +116,18 @@ export async function startDriverBot() {
  // Generic text — must be last
  bot.on('message', onMessage)
 
- bot.on('polling_error', (err) => {
- console.error('[DriverBot] Polling error:', err.message)
- })
+ if (!webhookMode) {
+   bot.on('polling_error', (err) => {
+     console.error('[DriverBot] Polling error:', err.message)
+   })
+ } else {
+   const baseUrl = process.env.TELEGRAM_WEBHOOK_BASE_URL
+   const secret = process.env.TELEGRAM_DRIVER_WEBHOOK_SECRET || 'driver'
+   const webhookPath = `/api/telegram/webhook/driver/${secret}`
+   if (baseUrl) {
+     await bot.setWebHook(`${baseUrl}${webhookPath}`)
+   }
+ }
 
  return bot
  } catch (err) {
@@ -126,6 +137,10 @@ export async function startDriverBot() {
 }
 
 export function getDriverBot() { return bot }
+export async function processDriverWebhookUpdate(update) {
+  if (!bot) return
+  await bot.processUpdate(update)
+}
 
 // ═══════════════════════════════════════════════════════════════════════════
 // /start — ONBOARDING
@@ -228,7 +243,8 @@ async function onCallbackQuery(query) {
  return bot.sendMessage(chatId, 'Route likho (e.g. `Bhopal Indore`):', { parse_mode: 'Markdown' })
  }
 
- const tenantId = await getTenantIdForDriver(chatId)
+  const driver = await findDriver(chatId)
+  const tenantId = driver?.tenantId ?? null
  const route = await prisma.savedRoute.findFirst({
  where: { id: routeId, ...(tenantId && { tenantId }) },
  })
@@ -344,7 +360,19 @@ async function onPhoto(msg) {
  // Receipt photo after trip (tenantId from driver)
  if (state === 'trip_receipt') {
  try {
- await savePhotoFromTelegram(msg, 'receipt')
+     const url = await savePhotoFromTelegram(msg, 'receipt')
+     // Persist receipt photo on the trip record (we reuse loadingSlipImageUrl field).
+     // Only set it if it's currently empty, so we don't destroy the OCR loading-slip photo.
+     if (url) {
+       const { data: d } = getState(chatId)
+       const tripId = d?.activeTripId
+       if (tripId) {
+         await prisma.trip.updateMany({
+           where: { id: tripId, loadingSlipImageUrl: null },
+           data: { loadingSlipImageUrl: url },
+         })
+       }
+     }
  clearState(chatId)
  return bot.sendMessage(chatId, 'Receipt saved! Naya trip shuru karo.',
  { reply_markup: HOME_KEYBOARD })
@@ -397,13 +425,26 @@ async function onLocation(msg) {
 
  // Start location for new trip
  if (state === 'trip_start_location' && tripId) {
- await prisma.trip.update({
- where: { id: tripId },
- data: { startLat: latitude, startLng: longitude },
- })
- await prisma.locationLog.create({
- data: { tenantId: driver.tenantId, driverId: driver.id, tripId, latitude, longitude },
- })
+   try {
+     await prisma.trip.update({
+       where: { id: tripId },
+       data: { startLat: latitude, startLng: longitude },
+     })
+     await prisma.locationLog.create({
+       data: { tenantId: driver.tenantId, driverId: driver.id, tripId, latitude, longitude },
+     })
+   } catch (err) {
+     console.error('[DriverBot] Start location log error:', {
+       tripId,
+       driverId: driver.id,
+       tenantId: driver.tenantId,
+       latitude,
+       longitude,
+       err: err?.message,
+     })
+     return bot.sendMessage(chatId, 'Start location save nahi ho payi. Dobara try karo.',
+     { reply_markup: ACTIVE_TRIP_KEYBOARD })
+   }
 
  setState(chatId, 'trip_active')
  await bot.sendMessage(chatId,
@@ -429,13 +470,26 @@ async function onLocation(msg) {
 
  // End location after delivery
  if (state === 'trip_end_location' && tripId) {
- await prisma.trip.update({
- where: { id: tripId },
- data: { endLat: latitude, endLng: longitude },
- })
- await prisma.locationLog.create({
- data: { tenantId: driver.tenantId, driverId: driver.id, tripId, latitude, longitude },
- })
+   try {
+     await prisma.trip.update({
+       where: { id: tripId },
+       data: { endLat: latitude, endLng: longitude },
+     })
+     await prisma.locationLog.create({
+       data: { tenantId: driver.tenantId, driverId: driver.id, tripId, latitude, longitude },
+     })
+   } catch (err) {
+     console.error('[DriverBot] End location log error:', {
+       tripId,
+       driverId: driver.id,
+       tenantId: driver.tenantId,
+       latitude,
+       longitude,
+       err: err?.message,
+     })
+     return bot.sendMessage(chatId, 'Delivery location save nahi ho payi. Dobara try karo.',
+     { reply_markup: ACTIVE_TRIP_KEYBOARD })
+   }
 
  await showTripSummary(chatId, tripId, driver)
  return
@@ -443,9 +497,22 @@ async function onLocation(msg) {
 
  // Mid-trip location point
  if (state === 'trip_active' && tripId) {
- await prisma.locationLog.create({
- data: { tenantId: driver.tenantId, driverId: driver.id, tripId, latitude, longitude },
- })
+   try {
+     await prisma.locationLog.create({
+       data: { tenantId: driver.tenantId, driverId: driver.id, tripId, latitude, longitude },
+     })
+   } catch (err) {
+     console.error('[DriverBot] Mid-trip location log error:', {
+       tripId,
+       driverId: driver.id,
+       tenantId: driver.tenantId,
+       latitude,
+       longitude,
+       err: err?.message,
+     })
+     return bot.sendMessage(chatId, 'Location log nahi ho payi. Dobara try karo.',
+     { reply_markup: ACTIVE_TRIP_KEYBOARD })
+   }
  return bot.sendMessage(chatId, `Location logged!`, { reply_markup: ACTIVE_TRIP_KEYBOARD })
  }
 }
@@ -499,19 +566,36 @@ async function onMessage(msg) {
  const phone = text.replace(/[\s\-+]/g, '').replace(/^91/, '')
  if (!/^\d{10}$/.test(phone)) return bot.sendMessage(chatId, '10 digit ka sahi phone number daalo.')
  setState(chatId, 'onboarding_code', { phone })
- const code = process.env.FLEET_INVITE_CODE || 'FLEET-7X2K'
+  const code = process.env.FLEET_INVITE_CODE || 'FLEET-AB12'
  return bot.sendMessage(chatId,
  `Fleet owner ne ek code diya hoga.\nWoh code bhejiye:\n_(e.g. ${code})_`,
  { parse_mode: 'Markdown' })
  }
 
  if (state === 'onboarding_code') {
- const expected = (process.env.FLEET_INVITE_CODE || 'FLEET-7X2K').toUpperCase()
- if (text.toUpperCase() !== expected) {
- return bot.sendMessage(chatId, 'Galat code. Fleet owner se sahi code lo aur dobara bhejo.')
- }
- setState(chatId, 'onboarding_vehicle')
- await sendVehicleSelection(chatId)
+  const entered = normalizeInviteCode(text)
+  const tenant = await prisma.tenant.findFirst({
+    where: { inviteCode: entered },
+    select: { id: true },
+  })
+
+  // Optional dev fallback for single-tenant setups
+  const envExpected = normalizeInviteCode(process.env.FLEET_INVITE_CODE || '')
+  if (!tenant && envExpected && entered === envExpected) {
+    const first = await prisma.tenant.findFirst({ orderBy: { createdAt: 'asc' }, select: { id: true } })
+    if (first?.id) {
+      setState(chatId, 'onboarding_vehicle', { tenantId: first.id })
+      await sendVehicleSelection(chatId)
+      return
+    }
+  }
+
+  if (!tenant) {
+    return bot.sendMessage(chatId, 'Galat code. Fleet owner se sahi code lo aur dobara bhejo.')
+  }
+
+  setState(chatId, 'onboarding_vehicle', { tenantId: tenant.id })
+  await sendVehicleSelection(chatId)
  return
  }
 
@@ -1032,7 +1116,8 @@ async function handleMyProfile(chatId, driver) {
 // ═══════════════════════════════════════════════════════════════════════════
 
 async function sendVehicleSelection(chatId) {
- const tenantId = await getTenantIdForDriver(chatId)
+ const { data } = getState(chatId)
+ const tenantId = data?.tenantId || (await getTenantIdForDriver(chatId))
  const vehicles = await prisma.vehicle.findMany({
  where: { status: 'active', ...(tenantId && { tenantId }) },
  orderBy: { vehicleNumber: 'asc' },
@@ -1062,7 +1147,11 @@ async function sendVehicleSelection(chatId) {
 async function completeOnboarding(chatId, vehicleId) {
  const { data } = getState(chatId)
  try {
- const tenantId = await getTenantIdForDriver(chatId)
+  const tenantId = data?.tenantId || (await getTenantIdForDriver(chatId))
+  if (!tenantId) {
+    clearState(chatId)
+    return bot.sendMessage(chatId, 'Fleet code missing. /start se dobara register karo.', { reply_markup: { remove_keyboard: true } })
+  }
  const driverData = {
  name: data.name,
  phone: data.phone,

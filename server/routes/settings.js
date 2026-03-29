@@ -12,6 +12,7 @@
 import { Router } from 'express'
 import prisma from '../lib/prisma.js'
 import { requireAuth, requireRole } from '../middleware/auth.js'
+import { generateInviteCode } from '../lib/inviteCode.js'
 
 const router = Router()
 router.use(requireAuth)
@@ -32,6 +33,7 @@ router.get('/profile', async (req, res) => {
  let tenantCity = null
  let tenantGstin = null
  let tenantPhone = null
+ let tenantInviteCode = null
  if (user.tenantId) {
  const tenant = await prisma.tenant.findUnique({ where: { id: user.tenantId } })
  tenantName = tenant?.name || null
@@ -40,9 +42,10 @@ router.get('/profile', async (req, res) => {
  tenantCity = tenant?.city || null
  tenantGstin = tenant?.gstin || null
  tenantPhone = tenant?.phone || null
+ tenantInviteCode = tenant?.inviteCode || null
  }
 
- return res.json({ ...user, tenantName, plan, tenantAddress, tenantCity, tenantGstin, tenantPhone })
+ return res.json({ ...user, tenantName, plan, tenantAddress, tenantCity, tenantGstin, tenantPhone, tenantInviteCode })
  } catch (err) {
  console.error('Settings profile error:', err)
  return res.status(500).json({ error: 'Server error' })
@@ -257,6 +260,36 @@ router.delete('/team/:id', requireRole('owner'), async (req, res) => {
  return res.json({ ok: true })
  } catch (err) {
  console.error('Settings remove user error:', err)
+ return res.status(500).json({ error: 'Server error' })
+ }
+})
+
+// ── POST /api/settings/invite-code/rotate (owner only) ──────────────────────
+
+router.post('/invite-code/rotate', requireRole('owner'), async (req, res) => {
+ try {
+ if (!req.tenantId) return res.status(400).json({ error: 'No tenant linked' })
+
+ let updated = null
+ for (let attempt = 0; attempt < 10; attempt++) {
+ const code = generateInviteCode()
+ try {
+ updated = await prisma.tenant.update({
+ where: { id: req.tenantId },
+ data: { inviteCode: code },
+ select: { id: true, inviteCode: true },
+ })
+ break
+ } catch (err) {
+ if (String(err?.code) === 'P2002') continue
+ throw err
+ }
+ }
+
+ if (!updated) return res.status(500).json({ error: 'Failed to rotate invite code' })
+ return res.json({ ok: true, inviteCode: updated.inviteCode })
+ } catch (err) {
+ console.error('Settings rotate invite code error:', err)
  return res.status(500).json({ error: 'Server error' })
  }
 })
