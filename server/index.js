@@ -71,6 +71,10 @@ app.get('/api/health', (_req, res) => {
 app.use(helmet({
   contentSecurityPolicy: false,  // CSP handled by Vite in dev
   crossOriginEmbedderPolicy: false,
+  // Needed for OpenStreetMap tiles (their servers may require Referer).
+  // "strict-origin-when-cross-origin" sends full URL to same-origin,
+  // and only the origin on cross-origin requests.
+  referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
 }))
 app.use(express.json({ limit: '1mb' }))  // Prevent payload bombs
 app.use(express.urlencoded({ extended: false, limit: '1mb' }))
